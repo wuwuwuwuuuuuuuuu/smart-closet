@@ -1,0 +1,167 @@
+<!-- 衣物信息录入页面 -->
+<view class="container">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="goBack">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img26.png" class="nav-icon" />
+    </view>
+    <text class="nav-title">衣物信息录入</text>
+    <view class="nav-right">
+      <text class="save-btn {{canSave ? 'active' : ''}}" bindtap="saveClothing">保存</text>
+    </view>
+  </view>
+
+  <!-- 衣物预览区 -->
+  <view class="preview-card">
+    <image src="{{uploadedImage}}" class="preview-image" mode="aspectFill" />
+    <text class="preview-hint">请确认衣物图片无误，若有误可返回重新上传</text>
+  </view>
+
+  <!-- 信息录入表单 -->
+  <view class="form-container">
+    <!-- 衣物分类（必填） -->
+    <view class="form-card">
+      <view class="form-item">
+        <text class="form-label">衣物分类</text>
+        <picker 
+          class="form-picker" 
+          range="{{categoryOptions}}" 
+          value="{{categoryIndex}}"
+          bindchange="onCategoryChange">
+          <text class="picker-text {{categoryIndex === -1 ? 'placeholder' : ''}}">
+            {{categoryIndex === -1 ? '请选择' : categoryOptions[categoryIndex]}}
+          </text>
+        </picker>
+      </view>
+    </view>
+
+    <!-- 材质（选填） -->
+    <view class="form-card">
+      <view class="form-item">
+        <text class="form-label">材质</text>
+        <view class="material-container">
+          <!-- 材质选项 -->
+          <view class="material-tags">
+            <view 
+              class="material-tag {{selectedMaterial === '棉' ? 'selected' : ''}}"
+              bindtap="selectMaterial"
+              data-material="棉">
+              <text>棉</text>
+            </view>
+            <view 
+              class="material-tag {{selectedMaterial === '麻' ? 'selected' : ''}}"
+              bindtap="selectMaterial"
+              data-material="麻">
+              <text>麻</text>
+            </view>
+            <view 
+              class="material-tag {{selectedMaterial === '真丝' ? 'selected' : ''}}"
+              bindtap="selectMaterial"
+              data-material="真丝">
+              <text>真丝</text>
+            </view>
+            <view 
+              class="material-tag {{selectedMaterial === '羊毛' ? 'selected' : ''}}"
+              bindtap="selectMaterial"
+              data-material="羊毛">
+              <text>羊毛</text>
+            </view>
+            <view 
+              class="material-tag {{selectedMaterial === '化纤' ? 'selected' : ''}}"
+              bindtap="selectMaterial"
+              data-material="化纤">
+              <text>化纤</text>
+            </view>
+            <view 
+              class="material-tag {{selectedMaterial === '牛仔' ? 'selected' : ''}}"
+              bindtap="selectMaterial"
+              data-material="牛仔">
+              <text>牛仔</text>
+            </view>
+          </view>
+          
+          <!-- 自定义输入 -->
+          <view class="custom-material">
+            <input 
+              class="material-input" 
+              placeholder="其他材质"
+              value="{{customMaterial}}"
+              bindinput="onCustomMaterialInput" />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 适用季节（必填） -->
+    <view class="form-card">
+      <view class="form-item">
+        <text class="form-label">适用季节</text>
+        <view class="season-tags">
+          <view 
+            class="season-tag {{selectedSeasons.includes('春') ? 'selected' : ''}}"
+            bindtap="toggleSeason"
+            data-season="春">
+            <text>春</text>
+          </view>
+          <view 
+            class="season-tag {{selectedSeasons.includes('夏') ? 'selected' : ''}}"
+            bindtap="toggleSeason"
+            data-season="夏">
+            <text>夏</text>
+          </view>
+          <view 
+            class="season-tag {{selectedSeasons.includes('秋') ? 'selected' : ''}}"
+            bindtap="toggleSeason"
+            data-season="秋">
+            <text>秋</text>
+          </view>
+          <view 
+            class="season-tag {{selectedSeasons.includes('冬') ? 'selected' : ''}}"
+            bindtap="toggleSeason"
+            data-season="冬">
+            <text>冬</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 自定义标签（选填） -->
+    <view class="form-card">
+      <view class="form-item">
+        <text class="form-label">自定义标签</text>
+        <view class="tag-input-container">
+          <input 
+            class="tag-input" 
+            placeholder="输入标签后按回车添加"
+            value="{{tagInput}}"
+            bindinput="onTagInput"
+            bindconfirm="addTag" />
+          <view class="add-tag-btn" bindtap="addTag">
+            <text>添加</text>
+          </view>
+        </view>
+        
+        <!-- 已添加标签 -->
+        <view class="tags-container" wx:if="{{customTags.length > 0}}">
+          <view 
+            class="custom-tag" 
+            wx:for="{{customTags}}" 
+            wx:key="index">
+            <text class="tag-text">{{item}}</text>
+            <view class="tag-close" bindtap="removeTag" data-index="{{index}}">
+              <text>×</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作区 -->
+  <view class="action-section">
+    <view class="save-action-btn {{canSave ? 'active' : ''}}" bindtap="saveClothing">
+      <text class="save-text">保存并添加至衣橱</text>
+    </view>
+    <text class="action-hint">保存后将无法修改基础信息，请确认无误</text>
+  </view>
+</view>

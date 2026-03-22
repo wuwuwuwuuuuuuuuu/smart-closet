@@ -1,0 +1,112 @@
+/* 生成历史页面样式 */
+.container {
+  padding: 40rpx 20rpx 20rpx;
+  box-sizing: border-box;
+  background: #EDEDED;
+  min-height: 100vh;
+}
+
+/* 历史列表 */
+.history-list {
+  height: 100vh;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  padding: 0 0 20rpx;
+}
+
+.history-item {
+  position: relative;
+  background: #F8F9FA;
+  border-radius: 12rpx;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.history-item:active {
+  transform: scale(0.98);
+}
+
+/* 选择圆圈 */
+.selection-circle {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  width: 48rpx;
+  height: 48rpx;
+  border: 2rpx solid #FFFFFF;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.selection-circle.selected {
+  background: #FF9EBD;
+  border-color: #FF9EBD;
+}
+
+.circle-inner {
+  width: 0rpx;
+  height: 0rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transition: all 0.3s ease;
+}
+
+.selection-circle.selected .circle-inner {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.history-image {
+  width: 100%;
+  height: 300rpx;
+  display: block;
+}
+
+.history-date {
+  display: block;
+  padding: 16rpx;
+  font-size: 24rpx;
+  color: #666666;
+  text-align: center;
+}
+
+/* 加载更多提示 */
+.load-more {
+  text-align: center;
+  padding: 32rpx;
+}
+
+.load-more-text {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.no-more {
+  text-align: center;
+  padding: 32rpx;
+}
+
+.no-more-text {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 120rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999999;
+}

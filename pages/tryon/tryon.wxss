@@ -1,0 +1,256 @@
+/* 试穿主界面样式 */
+.container {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 左侧折叠按钮 */
+.toggle-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60rpx;
+  height: 60rpx;
+  background: #EDEDED;
+  border-radius: 0 12rpx 12rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+  left: 400rpx;
+}
+
+.toggle-icon {
+  width: 24rpx;
+  height: 24rpx;
+  transition: transform 0.3s ease;
+}
+
+.toggle-btn.active .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* 侧边栏 */
+.sidebar {
+  position: absolute;
+  left: -400rpx;
+  top: 0;
+  width: 400rpx;
+  height: 100%;
+  background: #FFFFFF;
+  border-right: 1rpx solid #E0E0E0;
+  z-index: 99;
+  transition: left 0.3s ease;
+}
+
+.sidebar.show {
+  left: 0;
+}
+
+/* 侧边栏头部 */
+.sidebar-header {
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.add-btn {
+  width: 44rpx;
+  height: 44rpx;
+  background: #EDEDED;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.add-icon {
+  width: 20rpx;
+  height: 20rpx;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.search-input {
+  width: 100%;
+  height: 44rpx;
+  background: #EDEDED;
+  border-radius: 12rpx;
+  padding: 0 44rpx 0 20rpx;
+  font-size: 24rpx;
+  color: #333333;
+  box-sizing: border-box;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20rpx;
+  height: 20rpx;
+}
+
+/* 季节标签 */
+.season-tabs {
+  padding: 0 20rpx;
+  white-space: nowrap;
+}
+
+.tabs-container {
+  display: inline-flex;
+  gap: 16rpx;
+}
+
+.tab-item {
+  padding: 12rpx 24rpx;
+  background: #EDEDED;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #333333;
+  white-space: nowrap;
+}
+
+.tab-item.active {
+  background: #FFFFFF;
+  border: 1rpx solid #E0E0E0;
+}
+
+/* 侧边栏内容 */
+.sidebar-content {
+  display: flex;
+  height: calc(100vh - 200rpx);
+}
+
+.category-list {
+  width: 120rpx;
+  background: #EDEDED;
+}
+
+.category-item {
+  padding: 28rpx 20rpx;
+  font-size: 26rpx;
+  color: #999999;
+  text-align: center;
+  border-bottom: 1rpx solid #E0E0E0;
+  line-height: 1.2;
+}
+
+.category-item.active {
+  color: #333333;
+  font-weight: 600;
+  background: #FFFFFF;
+}
+
+.clothes-grid {
+  flex: 1;
+  padding: 24rpx;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.clothes-item {
+  aspect-ratio: 1;
+  background: #EDEDED;
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.clothes-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.empty-tip {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999999;
+  font-weight: 500;
+}
+
+/* 试穿区域 */
+.tryon-area {
+  width: 100%;
+  height: 100%;
+  background: #FFFFFF;
+}
+
+.movable-area {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.clothes-view {
+  width: 120rpx;
+  height: 120rpx;
+  position: relative;
+}
+
+.clothes-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 8rpx;
+}
+
+.delete-btn {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  width: 32rpx;
+  height: 32rpx;
+  background: #FF4444;
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+/* 确认按钮 */
+.confirm-btn {
+  position: absolute;
+  right: 32rpx;
+  bottom: 120rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 98;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+}
+
+.confirm-icon {
+  width: 40rpx;
+  height: 40rpx;
+}

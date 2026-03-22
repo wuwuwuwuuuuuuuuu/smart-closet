@@ -1,0 +1,214 @@
+/* 我的衣橱页面样式 */
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+}
+
+/* 搜索框 */
+.search-section {
+  padding: 40rpx 20rpx 20rpx;
+}
+
+.search-box {
+  height: 80rpx;
+  background: #EDEDED;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx;
+}
+
+.search-placeholder {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.search-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+/* 季节分类标签 */
+.season-tabs {
+  padding: 0 20rpx 20rpx;
+}
+
+.tab-scroll {
+  white-space: nowrap;
+}
+
+.tab-container {
+  display: inline-flex;
+  gap: 16rpx;
+}
+
+.tab-item {
+  padding: 16rpx 32rpx;
+  background: #EDEDED;
+  border-radius: 12rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
+}
+
+.tab-text {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 400;
+}
+
+.tab-item.active .tab-text {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* 主体内容区 */
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 左侧分类侧边栏 */
+.sidebar {
+  width: 220rpx;
+  background: #EDEDED;
+  display: flex;
+  flex-direction: column;
+  padding: 20rpx 0;
+}
+
+.category-item {
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  padding: 0 24rpx;
+  margin: 0 0 8rpx 0;
+  transition: all 0.3s ease;
+}
+
+.category-item.active {
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
+  border-radius: 0 12rpx 12rpx 0;
+}
+
+.category-text {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 400;
+}
+
+.category-item.active .category-text {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* 右侧内容区 */
+.content-area {
+  flex: 1;
+  background: #FFFFFF;
+  padding: 20rpx;
+  overflow-y: auto;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999999;
+  margin-bottom: 40rpx;
+}
+
+.add-btn {
+  width: 200rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-btn-text {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* 衣物网格布局 */
+.clothes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+
+.clothes-item {
+  background: #EDEDED;
+  border-radius: 12rpx;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.clothes-image {
+  width: 100%;
+  height: 200rpx;
+  background: #EDEDED;
+}
+
+.clothes-name {
+  font-size: 24rpx;
+  color: #333333;
+  padding: 16rpx;
+  text-align: center;
+  display: block;
+}
+
+/* 右下角悬浮加号按钮 */
+.floating-add-btn {
+  position: fixed;
+  right: 40rpx;
+  bottom: 40rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
+  border-radius: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.add-icon {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+/* 平滑过渡动画 */
+.tab-item,
+.category-item,
+.clothes-item {
+  transition: all 0.3s ease;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .clothes-grid {
+    grid-template-columns: 1fr;
+  }
+}
