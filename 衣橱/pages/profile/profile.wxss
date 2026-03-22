@@ -1,0 +1,121 @@
+/* 我的页面样式 */
+.container {
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  background: #EDEDED;
+  min-height: 100vh;
+}
+
+/* 顶部用户信息 */
+.user-header {
+  padding: 40rpx 20rpx;
+  margin: 0 -20rpx 24rpx;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.avatar-container {
+  width: 120rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #EDEDED;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 32rpx;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.user-desc {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+/* 功能图标区 */
+.function-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 32rpx;
+}
+
+.function-item {
+  background: #FFFFFF;
+  border-radius: 12rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.function-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-img {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.function-text {
+  font-size: 24rpx;
+  color: #333333;
+}
+
+/* 设置区 */
+.settings-section {
+  background: #FFFFFF;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.setting-item {
+  padding: 32rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #E0E0E0;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-text {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.arrow-icon {
+  width: 24rpx;
+  height: 24rpx;
+}

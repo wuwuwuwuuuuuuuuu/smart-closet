@@ -1,0 +1,170 @@
+/* 海报操作页样式 */
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 海报预览 */
+.poster-preview {
+  flex: 1;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.poster-image {
+  width: 100%;
+  max-height: 80vh;
+  border-radius: 12rpx;
+}
+
+/* 底部操作栏 */
+.action-bar {
+  height: 120rpx;
+  background: #EDEDED;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 20rpx;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.action-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.action-text {
+  font-size: 24rpx;
+  color: #333333;
+}
+
+/* 标签选择弹窗 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  width: 80%;
+  max-height: 70%;
+  background: #FFFFFF;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #E0E0E0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  color: #333333;
+  font-weight: 600;
+}
+
+.modal-close {
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #999999;
+}
+
+.tag-section {
+  padding: 32rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.tag-item {
+  padding: 12rpx 24rpx;
+  background: #EDEDED;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #333333;
+}
+
+.tag-item.active {
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
+  color: #333333;
+}
+
+.custom-tag {
+  padding: 0 32rpx 32rpx;
+  display: flex;
+  gap: 16rpx;
+}
+
+.tag-input {
+  flex: 1;
+  background: #EDEDED;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 24rpx;
+  color: #333333;
+}
+
+.add-tag-btn {
+  padding: 16rpx 24rpx;
+  background: #EDEDED;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #333333;
+}
+
+.modal-actions {
+  padding: 32rpx;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
+  color: #333333;
+  text-align: center;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+}

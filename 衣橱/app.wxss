@@ -1,0 +1,151 @@
+/* 全局样式 */
+page {
+  background-color: #FFFFFF;
+  font-family: PingFang SC, -apple-system, sans-serif;
+  color: #333333;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+/* 通用容器样式 */
+.container {
+  padding: 0 20rpx;
+  box-sizing: border-box;
+}
+
+/* 卡片样式 */
+.card {
+  background: #EDEDED;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 按钮样式 */
+.btn {
+  background: #EDEDED;
+  border-radius: 12rpx;
+  padding: 20rpx 32rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333333;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
+  color: #333333;
+}
+
+.btn:active {
+  opacity: 0.8;
+}
+
+/* 输入框样式 */
+.input {
+  background: #EDEDED;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: #333333;
+  border: 1rpx solid #E0E0E0;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #999999;
+}
+
+/* 分割线 */
+.divider {
+  height: 1rpx;
+  background: #E0E0E0;
+  margin: 24rpx 0;
+}
+
+/* 文字样式 */
+.text-primary {
+  color: #333333;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.text-normal {
+  color: #333333;
+  font-size: 28rpx;
+  font-weight: 400;
+}
+
+.text-secondary {
+  color: #999999;
+  font-size: 24rpx;
+  font-weight: 400;
+}
+
+/* 布局工具 */
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 图标样式 */
+.icon {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+/* 底部导航栏样式 */
+.tab-bar {
+  background: #FFFFFF;
+  border-top: 1rpx solid #E0E0E0;
+}
+
+.tab-bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 0;
+}
+
+.tab-bar-icon {
+  width: 36rpx;
+  height: 36rpx;
+  margin-bottom: 8rpx;
+}
+
+.tab-bar-text {
+  font-size: 24rpx;
+  font-family: PingFang SC;
+}
+
+/* 图片样式 */
+.image {
+  border-radius: 12rpx;
+}
+
+/* 可点击区域 */
+.clickable {
+  min-width: 44rpx;
+  min-height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

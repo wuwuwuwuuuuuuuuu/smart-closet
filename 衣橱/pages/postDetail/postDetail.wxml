@@ -1,0 +1,75 @@
+<!-- 帖子详情页 -->
+<view class="container">
+  <!-- 顶部导航 -->
+  <view class="nav-bar">
+    <view class="nav-right" wx:if="{{isAuthor}}" bindtap="showDeleteConfirm">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img25.png" class="nav-icon" />
+    </view>
+  </view>
+
+  <!-- 帖子内容 -->
+  <scroll-view class="content-scroll" scroll-y="true">
+    <!-- 帖子大图 -->
+    <image src="{{post.image}}" class="post-image" mode="widthFix" />
+    
+    <!-- 帖子信息 -->
+    <view class="post-info">
+      <text class="post-title">{{post.title}}</text>
+      <view class="post-meta">
+        <text class="post-author">{{post.author}}</text>
+        <text class="post-time">{{post.time}}</text>
+      </view>
+      <text class="post-content">{{post.content}}</text>
+      
+      <!-- 点赞区域 -->
+      <view class="like-section">
+        <view class="like-btn {{post.liked ? 'liked' : ''}}" bindtap="toggleLike">
+          <image 
+            src="{{post.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
+            class="like-icon" />
+          <text class="like-count">{{post.likes}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评论区 -->
+    <view class="comment-section">
+      <text class="section-title">评论 ({{comments.length}})</text>
+      
+      <view class="comment-list">
+        <view class="comment-item" wx:for="{{comments}}" wx:key="id">
+          <view class="comment-header">
+            <text class="comment-author">{{item.author}}</text>
+            <view class="comment-like" bindtap="toggleCommentLike" data-index="{{index}}">
+              <image 
+                src="{{item.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
+                class="comment-like-icon" />
+              <text class="comment-like-count">{{item.likes}}</text>
+            </view>
+          </view>
+          <text class="comment-content">{{item.content}}</text>
+          <text class="comment-time">{{item.time}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部输入栏 -->
+  <view class="input-bar">
+    <input 
+      class="comment-input" 
+      placeholder="说点什么…" 
+      bindinput="onCommentInput"
+      value="{{commentText}}" />
+    <view class="action-buttons">
+      <view class="like-btn-small" bindtap="toggleLike">
+        <image 
+          src="{{post.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
+          class="like-icon-small" />
+      </view>
+      <view class="send-btn" bindtap="sendComment">
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img29.png" class="send-icon" />
+      </view>
+    </view>
+  </view>
+</view>
