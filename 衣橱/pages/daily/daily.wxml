@@ -1,0 +1,99 @@
+<!-- 每日穿搭页 - 优化版 -->
+<view class="container">
+  <!-- 顶部导航栏（无图标版） -->
+  <view class="nav-bar">
+    <view class="nav-left"></view>
+    <text class="nav-title">每日穿搭</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 横向日期滚动栏 -->
+  <view class="date-scroll-container">
+    <scroll-view class="date-scroll" scroll-x="true">
+      <view class="date-list">
+        <view 
+          class="date-tag {{item.isToday ? 'active' : ''}}" 
+          wx:for="{{dateList}}" 
+          wx:key="date"
+          bindtap="selectDate"
+          data-date="{{item.dateNum}}">
+          <text class="week-day">{{item.weekDay}}</text>
+          <text class="date-num">{{item.dateNum}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 天气信息卡片 -->
+  <view class="weather-card">
+    <!-- 温度与天气信息 -->
+    <view class="weather-info">
+      <text class="temperature">9/11℃</text>
+      <text class="weather-type">小雨</text>
+    </view>
+    
+    <!-- 城市与日期 -->
+    <view class="location-info">
+      <text class="city-name">武汉市</text>
+      <text class="chinese-date">丙午年 辛卯月 庚寅日</text>
+    </view>
+
+    <!-- 分隔线 -->
+    <view class="divider"></view>
+
+    <!-- 穿搭建议 -->
+    <view class="suggestion-section">
+      <text class="suggestion-title">今日穿搭建议</text>
+      <text class="suggestion-text">建议穿厚卫衣、风衣、毛衣、长裤等，搭配防水鞋子，携带雨具。</text>
+    </view>
+
+    <!-- 幸运色标签 -->
+    <view class="lucky-colors">
+      <view class="lucky-item">
+        <view class="color-dot brown"></view>
+        <text class="lucky-text">招财</text>
+      </view>
+      <view class="lucky-item">
+        <view class="color-dot yellow"></view>
+        <text class="lucky-text">招桃花</text>
+      </view>
+      <view class="lucky-item">
+        <view class="color-dot gray"></view>
+        <text class="lucky-text">旺事业</text>
+      </view>
+      <view class="lucky-item">
+        <view class="color-dot green"></view>
+        <text class="lucky-text">旺学业</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 当前日期穿搭内容展示区域 -->
+  <view class="ootd-content-section">
+    <view class="section-header">
+      <text class="section-title">{{currentDate}}日穿搭内容</text>
+    </view>
+    
+    <!-- 如果有上传的图片，显示图片 -->
+    <view class="poster-preview" wx:if="{{selectedPoster}}">
+      <image src="{{selectedPoster.image}}" class="poster-image" mode="widthFix" />
+    </view>
+    
+    <!-- 如果没有上传图片，显示文字提示 -->
+    <view class="no-upload-section" wx:if="{{!selectedPoster}}">
+      <view class="no-upload-icon">📸</view>
+      <text class="no-upload-text">该日期暂无上传的穿搭图片</text>
+      <text class="no-upload-hint">点击下方按钮上传今日穿搭</text>
+    </view>
+  </view>
+
+  <!-- 上传按钮区域 -->
+  <view class="upload-section">
+    <view class="upload-btn" bindtap="showUploadOptions">
+      <text class="upload-text">上传今日穿搭</text>
+    </view>
+
+    <!-- 底部提示文字 -->
+    <text class="bottom-hint">选择我的搭配 选择我的衣橱</text>
+  </view>
+</view>

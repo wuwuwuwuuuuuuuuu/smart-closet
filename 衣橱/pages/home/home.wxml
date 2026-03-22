@@ -1,0 +1,51 @@
+<!-- 首页 -->
+<view class="container">
+  <!-- 顶部轮播图 -->
+  <view class="swiper-container">
+    <swiper 
+      indicator-dots="{{true}}" 
+      autoplay="{{true}}" 
+      interval="3000" 
+      duration="500"
+      circular="{{true}}"
+      indicator-color="rgba(255,255,255,0.5)"
+      indicator-active-color="#FFFFFF">
+      <swiper-item>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img39.jpg" mode="aspectFill" class="swiper-image" />
+      </swiper-item>
+      <swiper-item>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img40.jpg" mode="aspectFill" class="swiper-image" />
+      </swiper-item>
+      <swiper-item>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img41.jpg" mode="aspectFill" class="swiper-image" />
+      </swiper-item>
+      <swiper-item>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img42.jpg" mode="aspectFill" class="swiper-image" />
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 穿搭日记卡片 -->
+  <view class="diary-card" bindtap="goToDaily">
+    <text class="diary-title">穿搭日记</text>
+    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="diary-icon" />
+  </view>
+
+  <!-- 功能按钮区 -->
+  <view class="function-grid">
+    <view class="function-item" bindtap="uploadClothes">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img6.png" class="function-icon" />
+      <text class="function-text">服饰上传</text>
+    </view>
+    <view class="function-item" bindtap="goToTryOn">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img37.png" class="function-icon" />
+      <text class="function-text">AI试穿</text>
+    </view>
+  </view>
+
+  <!-- 商品试穿按钮 -->
+  <view class="product-btn" bindtap="chooseProductImage">
+    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img36.png" class="product-icon" />
+    <text class="product-text">商品试穿</text>
+  </view>
+</view>

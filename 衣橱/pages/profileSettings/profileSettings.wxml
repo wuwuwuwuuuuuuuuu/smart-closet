@@ -1,0 +1,112 @@
+<!-- 个人信息设置页面 -->
+<view class="container">
+
+  <!-- 头像编辑区 -->
+  <view class="avatar-section">
+    <view class="avatar-container" bindtap="changeAvatar">
+      <image src="{{avatarUrl}}" class="avatar-image" />
+      <view class="edit-button">
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img43.png" class="edit-icon" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 信息录入表单 -->
+  <view class="form-section">
+    <!-- 昵称 -->
+    <view class="form-item" bindtap="editNickname">
+      <text class="item-label">昵称</text>
+      <view class="item-content">
+        <text class="item-value">{{nickname || 'XXX'}}</text>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img44.png" class="arrow-icon" />
+      </view>
+    </view>
+
+    <!-- 生日 -->
+    <view class="form-item" bindtap="showDatePicker">
+      <text class="item-label">生日</text>
+      <view class="item-content">
+        <text class="item-value {{birthday ? '' : 'placeholder'}}">{{birthday || '去选择'}}</text>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img44.png" class="arrow-icon" />
+      </view>
+    </view>
+
+    <!-- 性别 -->
+    <view class="form-item" bindtap="selectGender">
+      <text class="item-label">性别</text>
+      <view class="item-content">
+        <text class="item-value {{gender ? '' : 'placeholder'}}">{{gender || '去选择'}}</text>
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img44.png" class="arrow-icon" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部保存按钮 -->
+  <view class="save-section">
+    <view class="save-btn {{canSave ? 'active' : ''}}" bindtap="saveProfile">
+      <text class="save-text">保存</text>
+    </view>
+  </view>
+
+  <!-- 昵称编辑弹窗 -->
+  <view class="modal {{showNicknameModal ? 'show' : ''}}">
+    <view class="modal-content">
+      <text class="modal-title">修改昵称</text>
+      <input 
+        class="nickname-input" 
+        placeholder="请输入昵称" 
+        value="{{nickname}}" 
+        bindinput="onNicknameInput"
+        maxlength="20"
+      />
+      <view class="modal-buttons">
+        <view class="modal-btn cancel" bindtap="cancelEditNickname">取消</view>
+        <view class="modal-btn confirm" bindtap="confirmEditNickname">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 性别选择弹窗 -->
+  <view class="modal {{showGenderModal ? 'show' : ''}}">
+    <view class="modal-content">
+      <text class="modal-title">选择性别</text>
+      <view class="gender-options">
+        <view class="gender-option {{tempGender === '男' ? 'selected' : ''}}" bindtap="selectGenderOption" data-gender="男">
+          <text class="gender-text">男</text>
+        </view>
+        <view class="gender-option {{tempGender === '女' ? 'selected' : ''}}" bindtap="selectGenderOption" data-gender="女">
+          <text class="gender-text">女</text>
+        </view>
+        <view class="gender-option {{tempGender === '保密' ? 'selected' : ''}}" bindtap="selectGenderOption" data-gender="保密">
+          <text class="gender-text">保密</text>
+        </view>
+      </view>
+      <view class="modal-buttons">
+        <view class="modal-btn confirm" bindtap="confirmSelectGender">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 日期选择器 -->
+  <view class="date-picker-modal {{showDatePicker ? 'show' : ''}}">
+    <view class="date-picker-content">
+      <text class="date-picker-title">选择生日</text>
+      <picker 
+        mode="date" 
+        value="{{tempBirthday || birthday || '2000-01-01'}}" 
+        start="1900-01-01" 
+        end="{{currentDate}}"
+        bindchange="onDateChange"
+        class="date-picker"
+      >
+        <view class="date-picker-display">
+          <text class="date-value">{{tempBirthday || birthday || '请选择日期'}}</text>
+        </view>
+      </picker>
+      <view class="date-picker-buttons">
+        <view class="date-picker-btn cancel" bindtap="hideDatePicker">取消</view>
+        <view class="date-picker-btn confirm" bindtap="confirmDate">确定</view>
+      </view>
+    </view>
+  </view>
+</view>

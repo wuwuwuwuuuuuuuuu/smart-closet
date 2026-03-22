@@ -1,0 +1,54 @@
+<!-- 编辑帖子页 -->
+<view class="container">
+  <!-- 顶部导航 -->
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="onBack">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img26.png" class="nav-icon" />
+    </view>
+    <text class="nav-title">发布穿搭</text>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 内容区域 -->
+  <scroll-view class="content-scroll" scroll-y="true">
+    <!-- 图片区域 -->
+    <view class="image-section">
+      <view class="image-upload" bindtap="chooseImage">
+        <image wx:if="{{postImage}}" src="{{postImage}}" class="uploaded-image" mode="aspectFill" />
+        <view wx:else class="upload-placeholder">
+          <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img35.png" class="add-icon" />
+          <text class="upload-text">添加图片</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 标题输入 -->
+    <view class="input-section">
+      <input 
+        class="title-input" 
+        placeholder="请输入标题" 
+        maxlength="50"
+        bindinput="onTitleInput"
+        value="{{postTitle}}" />
+      <text class="char-count">{{postTitle.length}}/50</text>
+    </view>
+
+    <!-- 正文输入 -->
+    <view class="input-section">
+      <textarea 
+        class="content-input" 
+        placeholder="添加正文（选填）" 
+        maxlength="500"
+        bindinput="onContentInput"
+        value="{{postContent}}" />
+      <text class="char-count">{{postContent.length}}/500</text>
+    </view>
+  </scroll-view>
+
+  <!-- 底部发布按钮 -->
+  <view class="publish-section">
+    <view class="publish-btn {{canPublish ? 'active' : ''}}" bindtap="publishPost">
+      <text class="publish-text">发布</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,45 @@
+<!-- 我的收藏页面 -->
+<view class="container">
+  <!-- 搜索框 -->
+  <view class="search-section">
+    <view class="search-box">
+      <input 
+        class="search-input" 
+        placeholder="请输入收藏标签" 
+        bindinput="onSearchInput"
+        value="{{searchKeyword}}" />
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img8.png" class="search-icon" />
+    </view>
+  </view>
+
+  <!-- 收藏列表 -->
+  <scroll-view 
+    class="collection-list" 
+    scroll-y="true" 
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onRefresh">
+    
+    <view class="grid-container">
+      <view 
+        class="collection-item" 
+        wx:for="{{filteredCollections}}" 
+        wx:key="id"
+        bindtap="goToPoster"
+        data-item="{{item}}">
+        
+        <image src="{{item.image}}" class="collection-image" mode="aspectFill" />
+        <view class="tag-list">
+          <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">
+            {{tag}}
+          </text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{filteredCollections.length === 0}}">
+      <text class="empty-text">暂无收藏内容</text>
+    </view>
+  </scroll-view>
+</view>
