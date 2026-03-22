@@ -1,0 +1,58 @@
+<!-- 我的帖子页面 -->
+<view class="container">
+  <!-- 帖子列表 -->
+  <scroll-view 
+    class="post-list" 
+    scroll-y="true" 
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onRefresh">
+    
+    <view class="grid-container">
+      <view 
+        class="post-card" 
+        wx:for="{{myPosts}}" 
+        wx:key="id"
+        bindtap="goToPostDetail"
+        bindlongpress="showPostOptions"
+        data-id="{{item.id}}"
+        data-index="{{index}}">
+        
+        <image src="{{item.image}}" class="post-image" mode="aspectFill" />
+        <view class="post-info">
+          <text class="post-title">{{item.title}}</text>
+          <view class="post-meta">
+            <text class="post-time">{{item.time}}</text>
+            <view class="like-info">
+              <image 
+                src="{{item.liked ? '/images/icon_heart_filled.png' : '/images/icon_heart.png'}}" 
+                class="like-icon" />
+              <text class="like-count">{{item.likes}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{myPosts.length === 0}}">
+      <text class="empty-text">暂无发布的帖子</text>
+      <text class="empty-hint">快去发布你的穿搭吧！</text>
+    </view>
+  </scroll-view>
+
+  <!-- 帖子操作弹窗 -->
+  <view class="modal {{showOptionsModal ? 'show' : ''}}" bindtap="hideOptionsModal">
+    <view class="modal-content options-modal" catchtap="">
+      <view class="option-item" bindtap="editPost">
+        <text class="option-text">编辑</text>
+      </view>
+      <view class="option-item delete" bindtap="deletePost">
+        <text class="option-text">删除</text>
+      </view>
+      <view class="option-item cancel" bindtap="hideOptionsModal">
+        <text class="option-text">取消</text>
+      </view>
+    </view>
+  </view>
+</view>
