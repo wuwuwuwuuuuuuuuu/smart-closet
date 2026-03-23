@@ -3,16 +3,13 @@
   <!-- 顶部用户信息 -->
   <view class="user-header gradient-bg">
     <view class="user-info">
-      
-      <view class="avatar-container" bindtap="changeAvatar">
-        <image src="{{userInfo.avatar ? baseUrl + userInfo.avatar : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img5.png'}}" class="user-avatar" mode="aspectFill" />
+      <view class="avatar-container" bindtap="goToProfileSettings">
+        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img5.png" class="user-avatar" />
       </view>
-      
-      <view class="user-details" bindtap="goToProfileSettings">
-        <text class="user-name">{{userInfo.name}}</text>
-        <text class="user-desc">{{userInfo.desc}}</text>
+      <view class="user-details">
+        <text class="user-name">XXX</text>
+        <text class="user-desc">时尚穿搭爱好者</text>
       </view>
-
     </view>
   </view>
 
