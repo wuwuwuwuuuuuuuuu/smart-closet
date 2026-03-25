@@ -94,49 +94,70 @@ Page({
     })
   },
 
-  // 处理选中的图片
-  handleImageSelected(tempFilePath) {
-    this.setData({
-      uploadedImage: tempFilePath,
-      currentGuide: {
-        main: '正在上传...',
-        sub: ''
-      },
-      uploading: true,
-      uploadProgress: 0
+ // 处理选中的图片
+ handleImageSelected(tempFilePath) {
+  this.setData({
+    uploadedImage: tempFilePath,
+    currentGuide: {
+      main: '正在上传到云端...',
+      sub: '请保持网络畅通'
+    },
+    uploading: true,
+    uploadProgress: 0
+  })
+  
+  this.uploadToCloud(tempFilePath)
+},
+
+// ☁️ 真实上传到云端的核心逻辑
+uploadToCloud(tempFilePath) {
+  const that = this
+  // 1. 给图片起个永远不重复的名字 (时间戳+随机数)
+  const cloudPath = `clothes_raw/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`
+
+  // 2. 调用云开发上传 API
+  const uploadTask = wx.cloud.uploadFile({
+    cloudPath: cloudPath,
+    filePath: tempFilePath,
+    success: (res) => {
+      // 上传成功，拿到云端的永久链接 (长这样：cloud://...)
+      const fileID = res.fileID
+      console.log('✅ 图片真实上传成功，云端文件ID:', fileID)
+
+      that.setData({
+        uploadProgress: 100,
+        currentGuide: { main: '上传成功！', sub: '准备录入信息...' }
+      })
+
+      // 3. 短暂延迟后，带着真实的云端图片ID跳到下一页！
+      setTimeout(() => {
+        that.uploadComplete(fileID)
+      }, 500)
+    },
+    fail: (err) => {
+      console.error('❌ 图片上传失败:', err)
+      wx.showToast({ title: '上传云端失败', icon: 'error' })
+      that.setData({ uploading: false })
+    }
+  })
+
+  // 4. 监听真实的上传进度，让页面的进度条跟着动！
+  uploadTask.onProgressUpdate((res) => {
+    that.setData({
+      uploadProgress: res.progress
     })
-    
-    // 模拟上传进度
-    this.simulateUpload()
-  },
+  })
+},
 
-  // 模拟上传进度
-  simulateUpload() {
-    const uploadInterval = setInterval(() => {
-      const newProgress = this.data.uploadProgress + 10
-      this.setData({
-        uploadProgress: newProgress
-      })
-      
-      if (newProgress >= 100) {
-        clearInterval(uploadInterval)
-        this.uploadComplete()
-      }
-    }, 200)
-  },
-
-  // 上传完成
-  uploadComplete() {
-    // 模拟后端扣图处理
-    setTimeout(() => {
-      // 这里应该调用后端API进行扣图处理
-      // 暂时使用模拟的扣图后图片
-      const processedImage = this.data.uploadedImage // 实际应该是后端返回的扣图后图片
-      
-      // 跳转到衣物信息录入页面
-      wx.navigateTo({
-        url: `/pages/clothingInfo/clothingInfo?imagePath=${encodeURIComponent(processedImage)}`
-      })
-    }, 500)
-  }
+// 上传完成，跳转页面
+uploadComplete(fileID) {
+  // ⚠️ 注意：这里你兄弟预留了“后端扣图”的注释。
+  // 目前我们先不接入复杂的 AI 扣图，直接把原图传给下一页。
+  // 等基础流程跑通了，咱们再来加魔法！
+  
+  wx.navigateTo({
+    // 把刚才拿到的 cloud:// 链接传给下一页
+    url: `/pages/clothingInfo/clothingInfo?imagePath=${encodeURIComponent(fileID)}`
+  })
+}
 })

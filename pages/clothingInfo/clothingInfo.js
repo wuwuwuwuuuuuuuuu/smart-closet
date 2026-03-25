@@ -1,43 +1,29 @@
-// 衣物信息录入页面逻辑
+// 衣物信息录入页面逻辑 (接入微信云开发版)
 Page({
   data: {
-    // 上传的图片
-    uploadedImage: '',
-    
-    // 衣物分类
+    uploadedImage: '', // 云端图片 fileID
     categoryOptions: ['上衣', '下装', '外套', '连衣裙', '配饰', '鞋包'],
     categoryIndex: -1,
-    
-    // 材质
     selectedMaterial: '',
     customMaterial: '',
-    
-    // 适用季节
     selectedSeasons: [],
-    
-    // 自定义标签
     customTags: [],
     tagInput: '',
-    
-    // 保存状态
     canSave: false
   },
 
   onLoad(options) {
     console.log('衣物信息录入页加载', options)
     
-    // 获取上传的图片路径
+    // 1. 获取上一页上传成功的云端图片路径 (务必解码)
     if (options.imagePath) {
       this.setData({
-        uploadedImage: options.imagePath
+        uploadedImage: decodeURIComponent(options.imagePath)
       })
     }
-    
-    // 检查必填项状态
     this.checkSaveStatus()
   },
 
-  // 返回上一页
   goBack() {
     wx.showModal({
       title: '确认',
@@ -52,142 +38,107 @@ Page({
     })
   },
 
-  // 衣物分类选择
   onCategoryChange(e) {
     const index = e.detail.value
-    this.setData({
-      categoryIndex: index
-    })
+    this.setData({ categoryIndex: index })
     this.checkSaveStatus()
   },
 
-  // 选择材质
   selectMaterial(e) {
     const material = e.currentTarget.dataset.material
-    this.setData({
-      selectedMaterial: material,
-      customMaterial: ''
-    })
+    this.setData({ selectedMaterial: material, customMaterial: '' })
   },
 
-  // 自定义材质输入
   onCustomMaterialInput(e) {
-    this.setData({
-      customMaterial: e.detail.value,
-      selectedMaterial: ''
-    })
+    this.setData({ customMaterial: e.detail.value, selectedMaterial: '' })
   },
 
-  // 切换季节选择
   toggleSeason(e) {
     const season = e.currentTarget.dataset.season
     const selectedSeasons = [...this.data.selectedSeasons]
-    
     if (selectedSeasons.includes(season)) {
-      // 取消选择
       const index = selectedSeasons.indexOf(season)
       selectedSeasons.splice(index, 1)
     } else {
-      // 选择
       selectedSeasons.push(season)
     }
-    
-    this.setData({
-      selectedSeasons: selectedSeasons
-    })
+    this.setData({ selectedSeasons: selectedSeasons })
     this.checkSaveStatus()
   },
 
-  // 标签输入
   onTagInput(e) {
-    this.setData({
-      tagInput: e.detail.value
-    })
+    this.setData({ tagInput: e.detail.value })
   },
 
-  // 添加标签
   addTag() {
     const tag = this.data.tagInput.trim()
     if (tag && !this.data.customTags.includes(tag)) {
       const customTags = [...this.data.customTags, tag]
-      this.setData({
-        customTags: customTags,
-        tagInput: ''
-      })
+      this.setData({ customTags: customTags, tagInput: '' })
     }
   },
 
-  // 删除标签
   removeTag(e) {
     const index = e.currentTarget.dataset.index
     const customTags = [...this.data.customTags]
     customTags.splice(index, 1)
-    this.setData({
-      customTags: customTags
-    })
+    this.setData({ customTags: customTags })
   },
 
-  // 检查保存状态
   checkSaveStatus() {
     const canSave = this.data.categoryIndex !== -1 && this.data.selectedSeasons.length > 0
-    this.setData({
-      canSave: canSave
-    })
+    this.setData({ canSave: canSave })
   },
 
-  // 保存衣物信息
+  // 🚀 核心改造：保存衣物信息到云数据库！
   saveClothing() {
     if (!this.data.canSave) {
-      wx.showToast({
-        title: '请填写必填项',
-        icon: 'none'
-      })
+      wx.showToast({ title: '请填写必填项', icon: 'none' })
       return
     }
 
-    // 确定材质（优先使用自定义材质）
+    const categoryName = this.data.categoryOptions[this.data.categoryIndex]
     const material = this.data.customMaterial || this.data.selectedMaterial || ''
+    
+    // 给衣服自动起个默认名字，比如 "冬季上衣"
+    const defaultName = (this.data.selectedSeasons[0] || '') + categoryName
 
-    // 构建衣物数据
-    const clothingData = {
-      id: Date.now(),
-      image: this.data.uploadedImage,
-      category: this.data.categoryOptions[this.data.categoryIndex],
-      material: material,
-      seasons: this.data.selectedSeasons,
-      tags: this.data.customTags,
-      createTime: new Date().toISOString()
-    }
+    wx.showLoading({ title: '正在存入云衣橱...' })
 
-    // 保存到本地存储
-    this.saveToStorage(clothingData)
-
-    // 显示成功提示
-    wx.showToast({
-      title: '衣物添加成功！',
-      icon: 'success',
-      duration: 2000
+    // 呼叫咱们刚写好的 addClothing 云函数！
+    wx.cloud.callFunction({
+      name: 'addClothing',
+      data: {
+        name: defaultName,
+        image: this.data.uploadedImage, // 传递 cloud:// 链接
+        category: categoryName,
+        material: material,
+        season: this.data.selectedSeasons.join('/'), // 比如 "春季/秋季"
+        tags: this.data.customTags,
+        brand: '' // 目前UI没有品牌输入框，暂传空字符串
+      },
+      success: (res) => {
+        wx.hideLoading()
+        console.log('🎉 云端入库成功：', res.result)
+        
+        if (res.result.code === 200) {
+          wx.showToast({ title: '添加成功！', icon: 'success' })
+          // 延迟 1.5 秒后，连退两步回到主页面
+          setTimeout(() => {
+            wx.navigateBack({ delta: 2 })
+          }, 1500)
+        } else {
+          // 如果没登录（比如直接点进来测的），会提示用户不存在
+          wx.showToast({ title: res.result.message, icon: 'none', duration: 3000 })
+        }
+      },
+      fail: (err) => {
+        wx.hideLoading()
+        console.error('❌ 保存衣物失败:', err)
+        wx.showToast({ title: '网络异常，保存失败', icon: 'error' })
+      }
     })
-
-    // 延迟返回
-    setTimeout(() => {
-      wx.navigateBack({
-        delta: 2 // 返回两级：信息录入页 → 上传弹窗 → 原页面
-      })
-    }, 1500)
-  },
-
-  // 保存到本地存储
-  saveToStorage(clothingData) {
-    // 获取现有的衣物列表
-    let clothingList = wx.getStorageSync('clothingList') || []
-    
-    // 添加新衣物
-    clothingList.unshift(clothingData)
-    
-    // 保存到本地存储
-    wx.setStorageSync('clothingList', clothingList)
-    
-    console.log('衣物保存成功:', clothingData)
   }
+
+  // 🗑️ 注意：我们已经把原来的 saveToStorage(本地缓存函数) 彻底删除了！
 })
