@@ -1,140 +1,60 @@
-<!-- 我的衣橱页面 -->
 <view class="container">
-  <!-- 搜索框 -->
   <view class="search-section">
     <view class="search-box" bindtap="showSearch">
-      <text class="search-placeholder">搜索衣物名称</text>
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img45.png" class="search-icon" />
+      <text class="search-placeholder">{{searchKeyword ? searchKeyword : '搜索衣物名称'}}</text>
+      <image src="/images/icons/search.png" class="search-icon" />
     </view>
+    <view class="clear-search" wx:if="{{searchKeyword}}" bindtap="clearSearch">×</view>
   </view>
 
-  <!-- 顶部季节分类标签 -->
   <view class="season-tabs">
     <scroll-view class="tab-scroll" scroll-x="true">
       <view class="tab-container">
-        <view 
-          class="tab-item {{currentSeason === 'all' ? 'active' : ''}}" 
-          bindtap="selectSeason" 
-          data-season="all"
-        >
-          <text class="tab-text">全部</text>
-        </view>
-        <view 
-          class="tab-item {{currentSeason === 'spring' ? 'active' : ''}}" 
-          bindtap="selectSeason" 
-          data-season="spring"
-        >
-          <text class="tab-text">春</text>
-        </view>
-        <view 
-          class="tab-item {{currentSeason === 'summer' ? 'active' : ''}}" 
-          bindtap="selectSeason" 
-          data-season="summer"
-        >
-          <text class="tab-text">夏</text>
-        </view>
-        <view 
-          class="tab-item {{currentSeason === 'autumn' ? 'active' : ''}}" 
-          bindtap="selectSeason" 
-          data-season="autumn"
-        >
-          <text class="tab-text">秋</text>
-        </view>
-        <view 
-          class="tab-item {{currentSeason === 'winter' ? 'active' : ''}}" 
-          bindtap="selectSeason" 
-          data-season="winter"
-        >
-          <text class="tab-text">冬</text>
+        <view wx:for="{{[{id:'all', name:'全部'}, {id:'spring', name:'春'}, {id:'summer', name:'夏'}, {id:'autumn', name:'秋'}, {id:'winter', name:'冬'}]}}" 
+              wx:key="id"
+              class="tab-item {{currentSeason === item.id ? 'active' : ''}}" 
+              bindtap="selectSeason" 
+              data-season="{{item.id}}">
+          <text class="tab-text">{{item.name}}</text>
         </view>
       </view>
     </scroll-view>
   </view>
 
-  <!-- 主体内容区 -->
   <view class="main-content">
-    <!-- 左侧分类侧边栏 -->
     <view class="sidebar">
-      <view 
-        class="category-item {{currentCategory === 'all' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="all"
-      >
-        <text class="category-text">全部</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'top' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="top"
-      >
-        <text class="category-text">上衣</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'pants' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="pants"
-      >
-        <text class="category-text">裤子</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'skirt' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="skirt"
-      >
-        <text class="category-text">裙子</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'coat' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="coat"
-      >
-        <text class="category-text">外套</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'hat' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="hat"
-      >
-        <text class="category-text">帽子</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'shoes' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="shoes"
-      >
-        <text class="category-text">鞋子</text>
-      </view>
-      <view 
-        class="category-item {{currentCategory === 'accessory' ? 'active' : ''}}" 
-        bindtap="selectCategory" 
-        data-category="accessory"
-      >
-        <text class="category-text">配饰</text>
-      </view>
+      <block wx:for="{{[{id:'all', name:'全部'}, {id:'top', name:'上衣'}, {id:'pants', name:'裤子'}, {id:'skirt', name:'裙子'}, {id:'coat', name:'外套'}, {id:'hat', name:'帽子'}, {id:'shoes', name:'鞋子'}, {id:'accessory', name:'配饰'}]}}" wx:key="id">
+        <view class="category-item {{currentCategory === item.id ? 'active' : ''}}" 
+              bindtap="selectCategory" 
+              data-category="{{item.id}}">
+          <text class="category-text">{{item.name}}</text>
+        </view>
+      </block>
     </view>
 
-    <!-- 右侧衣物展示区 -->
     <view class="content-area">
-      <!-- 空状态 -->
       <view class="empty-state" wx:if="{{clothesList.length === 0}}">
-        <text class="empty-text">暂无衣物，快去添加吧！</text>
-        <view class="add-btn" bindtap="goToUpload">
-          <text class="add-btn-text">添加衣物</text>
+        <text class="empty-text">衣橱空空的，快去添加心爱的衣服吧！</text>
+        <view class="add-btn-large" bindtap="goToUpload">
+          <text class="add-btn-text">立即添加</text>
         </view>
       </view>
 
-      <!-- 有数据状态 -->
-      <view class="clothes-grid" wx:if="{{clothesList.length > 0}}">
-        <view class="clothes-item" wx:for="{{clothesList}}" wx:key="id">
-          <image src="{{item.image}}" class="clothes-image" />
-          <text class="clothes-name">{{item.name}}</text>
+      <view class="clothes-grid" wx:else>
+        <view class="clothes-item" wx:for="{{clothesList}}" wx:key="_id" bindtap="onClothesTap" data-index="{{index}}">
+          <image src="{{item.image}}" class="clothes-image" mode="aspectFill" />
+          <view class="clothes-info">
+            <text class="clothes-name">{{item.name}}</text>
+            <view class="tag-box">
+              <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 右下角悬浮加号按钮 -->
   <view class="floating-add-btn" bindtap="goToUpload" wx:if="{{clothesList.length > 0}}">
-    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img35.png" class="add-icon" />
+    <image src="/images/icons/add.png" class="add-icon" />
   </view>
 </view>
