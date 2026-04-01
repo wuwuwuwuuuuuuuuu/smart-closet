@@ -50,6 +50,7 @@
   "libVersion": "3.15.0",
   "appid": "wx33f87c40a083b664",
   "projectname": "智能衣橱",
+  "cloudfunctionRoot": "cloudfunctions/",
   "isGameTourist": false,
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},
@@ -79,5 +80,6 @@
       "list": []
     }
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
 }

@@ -1,67 +1,65 @@
-<!-- 我的页面 -->
 <view class="container">
-  <!-- 顶部用户信息 -->
   <view class="user-header gradient-bg">
     <view class="user-info">
-      
-      <view class="avatar-container" bindtap="changeAvatar">
-        <image src="{{userInfo.avatar ? baseUrl + userInfo.avatar : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img5.png'}}" class="user-avatar" mode="aspectFill" />
+      <view class="avatar-container" bindtap="goToProfileSettings">
+        <image 
+          src="{{userInfo.avatar ? userInfo.avatar : 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'}}" 
+          class="user-avatar" 
+          mode="aspectFill"
+        />
       </view>
       
-      <view class="user-details" bindtap="goToProfileSettings">
+      <view class="user-details">
         <text class="user-name">{{userInfo.name}}</text>
         <text class="user-desc">{{userInfo.desc}}</text>
       </view>
-
     </view>
   </view>
 
-  <!-- 功能图标区 -->
   <view class="function-grid">
     <view class="function-item" bindtap="goToCollection">
       <view class="function-icon">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img20.png" class="icon-img" />
+        <image src="/images/icons/collection.png" class="icon-img" />
       </view>
       <text class="function-text">我的收藏</text>
     </view>
     
     <view class="function-item" bindtap="goToAvatar">
       <view class="function-icon">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img23.png" class="icon-img" />
+        <image src="/images/icons/avatar.png" class="icon-img" />
       </view>
       <text class="function-text">我的形象</text>
     </view>
     
     <view class="function-item" bindtap="goToWardrobe">
       <view class="function-icon">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img22.png" class="icon-img" />
+        <image src="/images/icons/wardrobe.png" class="icon-img" />
       </view>
       <text class="function-text">我的衣橱</text>
     </view>
     
     <view class="function-item" bindtap="goToMyPosts">
       <view class="function-icon">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img21.png" class="icon-img" />
+        <image src="/images/icons/posts.png" class="icon-img" />
       </view>
       <text class="function-text">我的帖子</text>
     </view>
   </view>
 
-  <!-- 其他设置区 -->
   <view class="settings-section">
     <view class="setting-item" bindtap="goToHistory">
       <text class="setting-text">生成历史</text>
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="arrow-icon" />
+      <text class="arrow">></text> 
     </view>
     
     <view class="setting-item" bindtap="contactUs">
       <text class="setting-text">联系我们</text>
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="arrow-icon" />
+      <text class="arrow">></text>
     </view>
     
     <view class="setting-item" bindtap="goToFeedback">
       <text class="setting-text">意见与反馈</text>
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="arrow-icon" />
+      <text class="arrow">></text>
     </view>
   </view>
 </view>
