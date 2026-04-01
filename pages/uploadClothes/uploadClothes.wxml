@@ -1,47 +1,47 @@
-<!-- 服饰上传页面 -->
 <view class="container">
 
-  <!-- 拍照引导区 -->
-  <view class="guide-section">
-    <view class="guide-card">
-      <view class="guide-frame">
-        <!-- 示例图或拍照预览 -->
-        <image wx:if="{{!uploadedImage}}" src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/upload-guide.jpg" class="guide-image" mode="aspectFill" />
-        <image wx:if="{{uploadedImage}}" src="{{uploadedImage}}" class="guide-image" mode="aspectFill" />
-        
-        <!-- 引导文字 -->
-        <view class="guide-text">
-          <text class="main-guide">{{currentGuide.main}}</text>
-          <text class="sub-guide">{{currentGuide.sub}}</text>
-        </view>
+<view class="guide-section">
+  <view class="guide-card">
+    <view class="guide-frame">
+      <image wx:if="{{!uploadedImage}}" src="/images/guide/upload-guide.jpg" class="guide-image" mode="aspectFill" />
+      <image wx:if="{{uploadedImage}}" src="{{uploadedImage}}" class="guide-image" mode="aspectFill" />
+      
+      <view class="guide-text">
+        <text class="main-guide">{{currentGuide.main || '请拍摄衣物全貌'}}</text>
+        <text class="sub-guide">{{currentGuide.sub || '确保光线充足，背景干净'}}</text>
       </view>
     </view>
-    
-    <!-- 进度条 -->
-    <view class="progress-bar" wx:if="{{uploading}}">
-      <view class="progress-fill" style="width: {{uploadProgress}}%"></view>
-    </view>
   </view>
+  
+  <view class="progress-bar" wx:if="{{uploading}}">
+    <view class="progress-fill" style="width: {{uploadProgress}}%;"></view>
+  </view>
+</view>
 
-  <!-- 上传选项区 -->
-  <view class="options-section">
-    <view class="option-card">
-      <view class="option-item" bindtap="chooseCamera">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/camera-icon.png" class="option-icon" />
+<view class="options-section">
+  <view class="option-card">
+    
+    <view class="option-item" bindtap="chooseCamera">
+      <image src="/images/icons/camera-icon.png" class="option-icon" />
+      <view class="option-content">
         <text class="option-text">拍照上传</text>
         <text class="option-desc">从正上方俯拍衣物，确保光线充足</text>
       </view>
-      
-      <view class="option-item" bindtap="chooseAlbum">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/album-icon.png" class="option-icon" />
+    </view>
+    
+    <view class="option-item" bindtap="chooseAlbum">
+      <image src="/images/icons/album-icon.png" class="option-icon" />
+      <view class="option-content">
         <text class="option-text">相册导入</text>
         <text class="option-desc">选择已拍摄的衣物平铺照片</text>
       </view>
     </view>
+    
   </view>
+</view>
 
-  <!-- 底部提示 -->
-  <view class="bottom-hint">
-    <text class="hint-text">请确保衣物平铺无褶皱，完整展示服饰全貌</text>
-  </view>
+<view class="bottom-hint">
+  <text class="hint-text">请确保衣物平铺无褶皱，完整展示服饰全貌</text>
+</view>
+
 </view>

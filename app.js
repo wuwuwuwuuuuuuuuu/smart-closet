@@ -2,16 +2,24 @@ App({
   globalData: {
     userInfo: null,
     systemInfo: null,
-    
-    // 👇 新增：你的 FastAPI 后端局域网地址 (务必确保你的电脑和运行小程序的手机/电脑连在同一个 Wi-Fi 下)
-    baseUrl: "http://127.0.0.1:8000",
-    
-    // 👇 新增：用来全局存储当前登录用户的 ID。
-    // 比如登录成功后存为 1，之后他传衣服、看衣橱时，直接从这里拿 ID 传给后端
-    currentUserId: null 
+    currentUserId: null // 🌟 新增：用来存放云数据库里 users 表的真实 _id
   },
 
   onLaunch() {
+    console.log('App Launch')
+    
+    // ☁️ 云开发引擎初始化
+    if (!wx.cloud) {
+      console.error('请使用 2.2.3 或以上的基础库以使用云能力')
+    } else {
+      wx.cloud.init({
+        // ⚠️ 确认一下：这里的 ID 必须是你自己在云开发控制台看到的那个环境 ID
+        env: 'cloudbase-2gvrvh4ve926f3d8', 
+        traceUser: true,
+      })
+      console.log('☁️ 微信云开发引擎点火成功！')
+    }
+
     this.getSystemInfo()
   },
 

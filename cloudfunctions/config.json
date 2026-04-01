@@ -1,0 +1,121 @@
+{
+  "triggers": [
+    {
+      "name": "login",
+      "type": "http",
+      "config": {
+        "url": "login",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "getUserInfo",
+      "type": "http",
+      "config": {
+        "url": "user/info",
+        "method": "GET",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "updateProfile",
+      "type": "http",
+      "config": {
+        "url": "user/update",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "getClothesList",
+      "type": "http",
+      "config": {
+        "url": "wardrobe/list",
+        "method": "GET",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "addClothing",
+      "type": "http",
+      "config": {
+        "url": "wardrobe/add",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "updateClothing",
+      "type": "http",
+      "config": {
+        "url": "wardrobe/update",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "deleteClothing",
+      "type": "http",
+      "config": {
+        "url": "wardrobe/delete",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "uploadImage",
+      "type": "http",
+      "config": {
+        "url": "upload/image",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "getPosts",
+      "type": "http",
+      "config": {
+        "url": "forum/posts",
+        "method": "GET",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "createPost",
+      "type": "http",
+      "config": {
+        "url": "forum/create",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "likePost",
+      "type": "http",
+      "config": {
+        "url": "forum/like",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "commentPost",
+      "type": "http",
+      "config": {
+        "url": "forum/comment",
+        "method": "POST",
+        "authType": "none"
+      }
+    },
+    {
+      "name": "aiTryon",
+      "type": "http",
+      "config": {
+        "url": "tryon/ai",
+        "method": "POST",
+        "authType": "none"
+      }
+    }
+  ]
+}
