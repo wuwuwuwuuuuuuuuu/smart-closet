@@ -1,0 +1,121 @@
+page {
+  background-color: #f7f7f7;
+  padding-bottom: 120rpx;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-card {
+  width: 100%;
+  background: #fff;
+  overflow: hidden;
+}
+
+.main-image {
+  width: 100%;
+  display: block;
+}
+
+.info-section {
+  padding: 30rpx;
+  background: #fff;
+  margin-top: 20rpx;
+}
+
+.title-row {
+  margin-bottom: 40rpx;
+}
+
+.clothes-name {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.category-tag {
+  font-size: 24rpx;
+  background: #e1f5fe;
+  color: #03a9f4;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  margin-left: 20rpx;
+}
+
+.detail-list {
+  border-top: 1rpx solid #eee;
+  padding-top: 30rpx;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.label {
+  color: #888;
+  font-size: 28rpx;
+}
+
+.value {
+  color: #333;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.tags-header {
+  font-size: 26rpx;
+  color: #888;
+  margin-top: 40rpx;
+  margin-bottom: 20rpx;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #f0f0f0;
+  color: #666;
+  padding: 8rpx 24rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 110rpx;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.05);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.delete-btn {
+  display: flex;
+  align-items: center;
+  color: #ff4d4f;
+  font-size: 30rpx;
+}
+
+.btn-icon {
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 12rpx;
+}
+
+.loading-state {
+  text-align: center;
+  padding-top: 200rpx;
+  color: #999;
+}

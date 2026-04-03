@@ -8,7 +8,7 @@ Page({
     searchKeyword: '',
     
     clothesList: [],     // 页面展示用的列表
-    allClothes: [],      // 🌟 初始化为空，等待云端数据填充
+    allClothes: [],      // 等待云端数据填充
     isLoading: false     // 加载状态
   },
 
@@ -21,7 +21,7 @@ Page({
     this.loadClothesFromCloud()
   },
 
-  // ☁️ 核心改造：从云端数据库抓取属于当前用户的衣服
+  // ☁️ 核心改造：完全对齐数据库里的 user_id 字段
   async loadClothesFromCloud() {
     const userId = app.globalData.currentUserId
     if (!userId) {
@@ -30,13 +30,15 @@ Page({
     }
 
     this.setData({ isLoading: true })
-    wx.showLoading({ title: '正在整理衣橱...' })
+    wx.showLoading({ title: '正在打开衣橱...' })
 
     try {
-      // 🌟 关键查询：只查 user_id 等于当前登录用户的数据
+      // 🌟 破案核心：按照你的数据库截图，用 user_id 来查！
       const res = await db.collection('clothes')
-        .where({ user_id: userId })
-        .orderBy('created_at', 'desc') // 按时间倒序，新上传的在前面
+        .where({
+          user_id: userId 
+        })
+        .orderBy('_id', 'desc') // 依然用 _id 倒序，防止没建索引报错
         .get()
 
       console.log('✅ 云端拉取成功，共', res.data.length, '件衣物')
@@ -47,41 +49,46 @@ Page({
       })
       wx.hideLoading()
 
-      // 拉取完立刻执行一次筛选（处理当前选中的季节/分类）
+      // 拉取完立刻执行一次筛选
       this.filterClothes()
 
     } catch (err) {
       this.setData({ isLoading: false })
       wx.hideLoading()
       console.error('❌ 拉取衣橱失败:', err)
-      wx.showToast({ title: '加载失败', icon: 'error' })
+      wx.showToast({ title: '加载失败，请检查网络', icon: 'error' })
     }
   },
-
-  // 🔍 筛选逻辑（适配云端的中文字符）
+  // 🔍 筛选逻辑（杀手3解决：完美适配云端的中文字符）
   filterClothes() {
     const { currentSeason, currentCategory, searchKeyword, allClothes } = this.data
     
     let filteredClothes = allClothes.filter(item => {
-      // 1. 季节筛选 
-      // ⚠️ 注意：你之前的 mock 数据是 'summer'，但 addClothing 存的是 '夏季'
-      // 这里做了兼容处理
-      const seasonMap = { 'all':'全部', 'spring':'春季', 'summer':'夏季', 'autumn':'秋季', 'winter':'冬季' }
+      // 1. 季节精准对齐：数据库存的是 '春'，不是 '春季'
+      const seasonMap = { 'all':'全部', 'spring':'春', 'summer':'夏', 'autumn':'秋', 'winter':'冬' }
       const targetSeason = seasonMap[currentSeason]
-      if (currentSeason !== 'all' && !item.season.includes(targetSeason)) {
+      if (currentSeason !== 'all' && (!item.season || !item.season.includes(targetSeason))) {
         return false
       }
       
-      // 2. 分类筛选
-      // ⚠️ 同理：'top' 对应 '上衣'
-      const categoryMap = { 'all':'全部', 'top':'上衣', 'pants':'下装', 'skirt':'连衣裙', 'coat':'外套' }
+      // 2. 分类精准对齐：将侧边栏的词映射到数据库存的词（['上衣', '下装', '外套', '连衣裙', '配饰', '鞋包']）
+      const categoryMap = { 
+        'all': '全部', 
+        'top': '上衣', 
+        'pants': '下装', 
+        'skirt': '连衣裙', 
+        'coat': '外套',
+        'hat': '配饰',
+        'shoes': '鞋包',
+        'accessory': '配饰'
+      }
       const targetCategory = categoryMap[currentCategory]
       if (currentCategory !== 'all' && item.category !== targetCategory) {
         return false
       }
       
       // 3. 关键词搜索
-      if (searchKeyword && !item.name.includes(searchKeyword)) {
+      if (searchKeyword && (!item.name || !item.name.includes(searchKeyword))) {
         return false
       }
       
@@ -93,10 +100,42 @@ Page({
     })
   },
 
-  // ... (保留你原来的 selectSeason, selectCategory, showSearch 等 UI 交互函数)
+  // ================= 以下是 UI 交互相关的函数 =================
+  
+  // 切换季节
+  selectSeason(e) {
+    this.setData({ currentSeason: e.currentTarget.dataset.season })
+    this.filterClothes()
+  },
+
+  // 切换分类
+  selectCategory(e) {
+    this.setData({ currentCategory: e.currentTarget.dataset.category })
+    this.filterClothes()
+  },
+
+  // 点击衣服查看详情（预留接口）
+ onClothesTap(e) {
+    const index = e.currentTarget.dataset.index
+    const clothes = this.data.clothesList[index]
+    
+    // 🌟 核心：带着这件衣服在云数据库里的 _id 跳转
+    wx.navigateTo({
+      url: `/pages/clothesDetail/clothesDetail?id=${clothes._id}`
+    })
+  },
 
   // 跳转到上传页面
   goToUpload() {
     wx.navigateTo({ url: '/pages/uploadClothes/uploadClothes' })
+  },
+
+  // 搜索相关（防错处理）
+  showSearch() {
+    wx.showToast({ title: '搜索功能开发中', icon: 'none' })
+  },
+  clearSearch() {
+    this.setData({ searchKeyword: '' })
+    this.filterClothes()
   }
 })

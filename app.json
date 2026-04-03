@@ -16,7 +16,8 @@
     "pages/myPosts/myPosts",
     "pages/clothingInfo/clothingInfo",
     "pages/uploadClothes/uploadClothes",
-    "pages/wardrobe/wardrobe"
+    "pages/wardrobe/wardrobe",
+    "pages/clothesDetail/clothesDetail"
   ],
   "window": {
     "backgroundTextStyle": "light",
