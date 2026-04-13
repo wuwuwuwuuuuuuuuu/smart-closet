@@ -1,4 +1,6 @@
-// 衣物信息录入页面逻辑 (接入微信云开发版)
+// 🌟 第一处修改：在最顶部引入全局 app 实例
+const app = getApp()
+
 Page({
   data: {
     uploadedImage: '', // 云端图片 fileID
@@ -97,18 +99,26 @@ Page({
       return
     }
 
+    // 🌟 核心防御：获取当前登录用户的 ID
+    const userId = app.globalData.currentUserId
+    if (!userId) {
+      wx.showToast({ title: '尚未登录，无法保存', icon: 'none' })
+      return
+    }
+
     const categoryName = this.data.categoryOptions[this.data.categoryIndex]
     const material = this.data.customMaterial || this.data.selectedMaterial || ''
     
     // 给衣服自动起个默认名字，比如 "冬季上衣"
     const defaultName = (this.data.selectedSeasons[0] || '') + categoryName
 
-    wx.showLoading({ title: '正在存入云衣橱...' })
+    wx.showLoading({ title: '正在存入私人衣橱...' })
 
     // 呼叫咱们刚写好的 addClothing 云函数！
     wx.cloud.callFunction({
       name: 'addClothing',
       data: {
+        userId: userId, // 🌟 第二处修改：打上专属钢印！告诉云函数这衣服是谁的
         name: defaultName,
         image: this.data.uploadedImage, // 传递 cloud:// 链接
         category: categoryName,
@@ -139,6 +149,4 @@ Page({
       }
     })
   }
-
-  // 🗑️ 注意：我们已经把原来的 saveToStorage(本地缓存函数) 彻底删除了！
 })

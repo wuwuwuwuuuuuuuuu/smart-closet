@@ -1,8 +1,9 @@
 const db = wx.cloud.database()
+const app = getApp() // 🌟 获取全局 App 实例，用来拿当前登录的 UserID
 
 Page({
   data: {
-    sidebarVisible: true, // 🌟 默认打开侧边栏
+    sidebarVisible: true, // 默认打开侧边栏
     searchKeyword: '',
     currentSeason: '', 
     currentCategory: '', 
@@ -11,7 +12,7 @@ Page({
     
     clothesList: [], 
     filteredClothes: [], 
-    selectedClothes: [], // 🌟 现在可以存多件衣服了，用于画板搭配
+    selectedClothes: [], // 可以存多件衣服，用于画板搭配
     
     personImage: '', // 模特/自己的人物照片
     isGenerating: false 
@@ -25,18 +26,42 @@ Page({
     this.loadRealClothes()
   },
 
-  // ☁️ 加载衣服
+  // ☁️ 1. 从云数据库拉取“当前用户”的真实衣服
   async loadRealClothes() {
+    wx.showLoading({ title: '加载私人衣橱...' })
     try {
-      const res = await db.collection('clothes').orderBy('created_at', 'desc').get()
+      // 🌟 核心防御：获取当前登录用户的真实 ID
+      const userId = app.globalData.currentUserId 
+      
+      if (!userId) {
+        console.warn('未检测到用户ID，可能未登录')
+        // 如果没登录，清空列表
+        this.setData({ clothesList: [], filteredClothes: [] })
+        wx.hideLoading()
+        return
+      }
+
+      // 🌟 终极修复：使用全小写的 user_id 进行严格的数据隔离
+      const res = await db.collection('clothes')
+        .where({ 
+          user_id: userId // 👈 已经完美修正为小写！
+        })
+        .orderBy('created_at', 'desc')
+        .get()
+      
       const cleanData = res.data.map(item => {
         if (item.image) item.image = item.image.trim()
         return item
       })
-      this.setData({ clothesList: cleanData })
+
+      this.setData({
+        clothesList: cleanData
+      })
       this.filterClothes() 
+      wx.hideLoading()
     } catch (err) {
-      console.error('加载衣服失败:', err)
+      console.error('加载私人衣服失败:', err)
+      wx.hideLoading()
     }
   },
 
@@ -96,9 +121,6 @@ Page({
     if (!personImage) return wx.showToast({ title: 'AI换装需要先上传您的人像', icon: 'none' })
     if (selectedClothes.length === 0) return wx.showToast({ title: '画板上还没有衣服哦', icon: 'none' })
 
-    // 🚨 注意：Fashn V1.6 API 标准一次只接受一件核心衣物（比如一件上衣）。
-    // 这里我们默认取用户在画板上放的“第一件”衣服的图片去做 AI。
-    // 如果后续你用了更高级的接口支持上下装混搭，可以修改这里。
     const garmentImageFileID = selectedClothes[0].image 
 
     this.setData({ isGenerating: true })
