@@ -1,0 +1,17 @@
+<view class="login-container">
+  <view class="header-section">
+    <view class="logo-placeholder">👗</view>
+    <text class="title">智能衣橱</text>
+    <text class="subtitle">你的私人穿搭管家，随时随地掌控衣物</text>
+  </view>
+
+  <view class="bottom-section">
+    <button class="wechat-btn" bindtap="handleLogin">
+      <text class="btn-text">微信一键安全登录</text>
+    </button>
+    
+    <view class="tips">
+      <text>登录即表示同意《用户服务协议》与《隐私政策》</text>
+    </view>
+  </view>
+</view>
