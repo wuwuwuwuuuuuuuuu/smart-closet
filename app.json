@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/login/login",
     "pages/home/home",
     "pages/daily/daily",
     "pages/tryon/tryon",
@@ -16,7 +17,16 @@
     "pages/myPosts/myPosts",
     "pages/clothingInfo/clothingInfo",
     "pages/uploadClothes/uploadClothes",
-    "pages/wardrobe/wardrobe"
+    "pages/wardrobe/wardrobe",
+    "pages/clothesDetail/clothesDetail"
+  ],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "我们需要您的位置来为您提供准确的实时天气和穿搭建议"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
   ],
   "window": {
     "backgroundTextStyle": "light",

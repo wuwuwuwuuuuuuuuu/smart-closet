@@ -1,94 +1,74 @@
-<!-- 试穿主界面 -->
 <view class="container">
-  <!-- 左侧折叠按钮 -->
-  <view class="toggle-btn {{sidebarVisible ? 'active' : ''}}" bindtap="toggleSidebar">
-    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img43.png" class="toggle-icon" />
-  </view>
-
-  <!-- 侧边栏 -->
-  <view class="sidebar {{sidebarVisible ? 'show' : ''}}">
-    <!-- 顶部搜索区域 -->
+  
+  <view class="sidebar {{sidebarVisible ? 'show' : 'collapsed'}}">
     <view class="sidebar-header">
       <view class="add-btn" bindtap="addClothes">
         <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img35.png" class="add-icon" />
       </view>
       <view class="search-box">
-        <input 
-          class="search-input" 
-          placeholder="搜索衣物" 
-          bindinput="onSearchInput"
-          value="{{searchKeyword}}" />
+        <input class="search-input" placeholder="搜索衣物" bindinput="onSearchInput" value="{{searchKeyword}}" />
         <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img8.png" class="search-icon" />
       </view>
     </view>
-
-    <!-- 季节标签 -->
     <scroll-view class="season-tabs" scroll-x="true">
       <view class="tabs-container">
-        <view 
-          class="tab-item {{currentSeason === item ? 'active' : ''}}" 
-          wx:for="{{seasons}}" 
-          wx:key="*this"
-          bindtap="changeSeason"
-          data-season="{{item}}">
-          {{item}}
-        </view>
+        <view class="tab-item {{currentSeason === item ? 'active' : ''}}" wx:for="{{seasons}}" wx:key="*this" bindtap="changeSeason" data-season="{{item}}">{{item}}</view>
       </view>
     </scroll-view>
-
-    <!-- 分类和内容区 -->
     <view class="sidebar-content">
-      <!-- 左侧分类 -->
       <scroll-view class="category-list" scroll-y="true">
-        <view 
-          class="category-item {{currentCategory === item.id ? 'active' : ''}}" 
-          wx:for="{{categories}}" 
-          wx:key="id"
-          bindtap="changeCategory"
-          data-category="{{item.id}}">
-          {{item.name}}
-        </view>
+        <view class="category-item {{currentCategory === item ? 'active' : ''}}" wx:for="{{categories}}" wx:key="*this" bindtap="changeCategory" data-category="{{item}}">{{item}}</view>
       </scroll-view>
-
-      <!-- 右侧衣物网格 -->
       <scroll-view class="clothes-grid" scroll-y="true">
         <view class="grid-container">
-          <view 
-            class="clothes-item" 
-            wx:for="{{clothesList}}" 
-            wx:key="id"
-            bindtap="selectClothes"
-            data-item="{{item}}">
+          <view class="clothes-item" wx:for="{{filteredClothes}}" wx:key="_id" bindtap="selectClothes" data-item="{{item}}">
             <image src="{{item.image}}" class="clothes-image" mode="aspectFill" />
           </view>
-          <view class="empty-tip" wx:if="{{clothesList.length === 0}}">
-            <text class="empty-text">暂无衣物，快去添加吧！</text>
-          </view>
+          <view class="empty-tip" wx:if="{{filteredClothes.length === 0}}"><text class="empty-text">未找到衣物</text></view>
         </view>
       </scroll-view>
     </view>
   </view>
 
-  <!-- 中央试穿区域 -->
-  <view class="tryon-area">
-    <movable-area class="movable-area">
+  <view class="toggle-btn {{sidebarVisible ? 'open' : 'closed'}}" bindtap="toggleSidebar">
+    <text class="arrow">{{sidebarVisible ? '◀' : '▶'}}</text>
+  </view>
+
+  <view class="canvas-area">
+    
+    <view class="bg-layer" bindtap="uploadPersonImage">
+      <image wx:if="{{personImage}}" src="{{personImage}}" class="bg-person" mode="aspectFit" />
+      <view class="bg-placeholder" wx:else>
+        <view class="plus">+</view>
+        <text>点击此处添加模特/人像(可选)</text>
+        <text class="sub">添加衣服后，可自由拖拽搭配</text>
+      </view>
+      <view class="change-person-btn" wx:if="{{personImage}}">换模特</view>
+    </view>
+
+    <movable-area class="clothes-board">
       <movable-view 
-        class="clothes-view" 
+        class="movable-garment" 
         wx:for="{{selectedClothes}}" 
         wx:key="id"
         direction="all"
         x="{{item.x}}" 
         y="{{item.y}}"
         bindchange="onMoveChange"
-        data-index="{{index}}">
-        <image src="{{item.image}}" class="clothes-preview" mode="aspectFit" />
-        <view class="delete-btn" bindtap="removeClothes" data-index="{{index}}">×</view>
+        data-index="{{index}}"
+        out-of-bounds="true"
+      >
+        <image src="{{item.image}}" class="drag-img" mode="aspectFit" />
+        <view class="delete-badge" bindtap="removeClothes" data-index="{{index}}">×</view>
       </movable-view>
     </movable-area>
-  </view>
 
-  <!-- 右下角确认按钮 -->
-  <view class="confirm-btn" bindtap="goToPreview">
-    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img34.png" class="confirm-icon" />
+    <view class="action-bar">
+      <view class="ai-btn {{isGenerating ? 'disabled' : ''}}" bindtap="startAITryOn">
+        <text wx:if="{{!isGenerating}}">✨ 确认搭配，AI上身</text>
+        <text wx:else>⏳ AI施法中...</text>
+      </view>
+    </view>
+
   </view>
 </view>

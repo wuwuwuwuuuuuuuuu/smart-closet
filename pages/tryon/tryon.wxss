@@ -1,256 +1,183 @@
-/* 试穿主界面样式 */
-.container {
-  position: relative;
+page {
   height: 100vh;
   overflow: hidden;
+  background-color: #f5f6fa;
 }
 
-/* 左侧折叠按钮 */
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* --- 🌟 左侧边栏动画控制 --- */
+.sidebar {
+  height: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4rpx 0 15rpx rgba(0,0,0,0.05);
+  transition: width 0.3s ease; /* 核心动画 */
+  overflow: hidden; /* 折叠时隐藏内容 */
+  z-index: 10;
+}
+.sidebar.show { width: 48%; }
+.sidebar.collapsed { width: 0%; } /* 折叠时宽度变为0 */
+
+/* 保持内部不换行变形 */
+.sidebar-header, .season-tabs, .sidebar-content {
+  width: 360rpx; /* 强制给内部一个固定物理宽度，防止挤压变形 */
+}
+/* ... 保持原有侧边栏细节样式不变 ... */
+.sidebar-header { display: flex; align-items: center; padding: 20rpx; gap: 16rpx; }
+.add-btn { width: 56rpx; height: 56rpx; background: #f0f0f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+.add-icon { width: 28rpx; height: 28rpx; }
+.search-box { flex: 1; display: flex; align-items: center; background: #f5f5f5; border-radius: 30rpx; padding: 0 20rpx; height: 56rpx; }
+.search-input { flex: 1; font-size: 24rpx; }
+.search-icon { width: 28rpx; height: 28rpx; margin-left: 10rpx; }
+.season-tabs { height: 70rpx; white-space: nowrap; border-bottom: 1rpx solid #eee; }
+.tabs-container { display: flex; padding: 0 16rpx; align-items: center; height: 100%; }
+.tab-item { display: inline-block; padding: 8rpx 20rpx; font-size: 24rpx; color: #666; border-radius: 30rpx; margin-right: 12rpx; }
+.tab-item.active { background: #333; color: #fff; }
+.sidebar-content { display: flex; flex: 1; overflow: hidden; }
+.category-list { width: 100rpx; background: #f9f9f9; height: 100%; }
+.category-item { padding: 24rpx 0; text-align: center; font-size: 24rpx; color: #666; }
+.category-item.active { background: #fff; color: #333; font-weight: bold; border-left: 6rpx solid #333; }
+.clothes-grid { flex: 1; height: 100%; padding: 16rpx; box-sizing: border-box; }
+.grid-container { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.clothes-item { width: calc(50% - 6rpx); aspect-ratio: 1/1; background: #f0f0f0; border-radius: 12rpx; overflow: hidden; }
+.clothes-image { width: 100%; height: 100%; }
+
+
+/* --- 🌟 动态悬浮的折叠按钮 --- */
 .toggle-btn {
   position: absolute;
-  left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 60rpx;
-  height: 60rpx;
-  background: #EDEDED;
-  border-radius: 0 12rpx 12rpx 0;
+  width: 40rpx;
+  height: 90rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 0 20rpx 20rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  transition: all 0.3s ease;
+  box-shadow: 4rpx 0 10rpx rgba(0,0,0,0.1);
+  transition: left 0.3s ease; /* 跟随侧边栏移动 */
+  z-index: 20;
 }
+.toggle-btn.open { left: 48%; }
+.toggle-btn.closed { left: 0%; }
+.arrow { color: #666; font-size: 24rpx; }
 
-.toggle-btn.active {
-  left: 400rpx;
-}
 
-.toggle-icon {
-  width: 24rpx;
-  height: 24rpx;
-  transition: transform 0.3s ease;
-}
-
-.toggle-btn.active .toggle-icon {
-  transform: rotate(180deg);
-}
-
-/* 侧边栏 */
-.sidebar {
-  position: absolute;
-  left: -400rpx;
-  top: 0;
-  width: 400rpx;
-  height: 100%;
-  background: #FFFFFF;
-  border-right: 1rpx solid #E0E0E0;
-  z-index: 99;
-  transition: left 0.3s ease;
-}
-
-.sidebar.show {
-  left: 0;
-}
-
-/* 侧边栏头部 */
-.sidebar-header {
-  padding: 20rpx;
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.add-btn {
-  width: 44rpx;
-  height: 44rpx;
-  background: #EDEDED;
-  border-radius: 8rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.add-icon {
-  width: 20rpx;
-  height: 20rpx;
-}
-
-.search-box {
+/* --- 🌟 右侧搭配画板区 (Canvas) --- */
+.canvas-area {
   flex: 1;
   position: relative;
-  min-width: 0;
-}
-
-.search-input {
-  width: 100%;
-  height: 44rpx;
-  background: #EDEDED;
-  border-radius: 12rpx;
-  padding: 0 44rpx 0 20rpx;
-  font-size: 24rpx;
-  color: #333333;
-  box-sizing: border-box;
-}
-
-.search-icon {
-  position: absolute;
-  right: 12rpx;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20rpx;
-  height: 20rpx;
-}
-
-/* 季节标签 */
-.season-tabs {
-  padding: 0 20rpx;
-  white-space: nowrap;
-}
-
-.tabs-container {
-  display: inline-flex;
-  gap: 16rpx;
-}
-
-.tab-item {
-  padding: 12rpx 24rpx;
-  background: #EDEDED;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-  color: #333333;
-  white-space: nowrap;
-}
-
-.tab-item.active {
-  background: #FFFFFF;
-  border: 1rpx solid #E0E0E0;
-}
-
-/* 侧边栏内容 */
-.sidebar-content {
   display: flex;
-  height: calc(100vh - 200rpx);
+  flex-direction: column;
+  background: #eef2f5; /* 画板背景色 */
 }
 
-.category-list {
-  width: 120rpx;
-  background: #EDEDED;
+/* 1. 底层：背景或提示框 */
+.bg-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1; /* 在拖拽层下方 */
 }
 
-.category-item {
-  padding: 28rpx 20rpx;
+.bg-person {
+  width: 100%;
+  height: 80%; /* 留出底部按钮空间 */
+}
+
+.bg-placeholder {
+  border: 4rpx dashed #cbd5e1;
+  width: 70%;
+  height: 60%;
+  border-radius: 30rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255,255,255,0.5);
+  color: #94a3b8;
   font-size: 26rpx;
-  color: #999999;
-  text-align: center;
-  border-bottom: 1rpx solid #E0E0E0;
-  line-height: 1.2;
+}
+.bg-placeholder .plus { font-size: 80rpx; margin-bottom: 10rpx; }
+.bg-placeholder .sub { font-size: 22rpx; margin-top: 10rpx; color: #cbd5e1; }
+
+.change-person-btn {
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 22rpx;
 }
 
-.category-item.active {
-  color: #333333;
-  font-weight: 600;
-  background: #FFFFFF;
-}
-
-.clothes-grid {
-  flex: 1;
-  padding: 24rpx;
-}
-
-.grid-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
-}
-
-.clothes-item {
-  aspect-ratio: 1;
-  background: #EDEDED;
-  border-radius: 12rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-}
-
-.clothes-image {
+/* 2. 顶层：可拖拽区域 */
+.clothes-board {
+  position: absolute;
+  top: 0; left: 0;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: 85%; /* 给底部按钮留出点击区域 */
+  z-index: 10;
+  pointer-events: none; /* 穿透点击，让底层的上传人像能点到 */
 }
 
-.empty-tip {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 80rpx 0;
-}
-
-.empty-text {
-  font-size: 28rpx;
-  color: #999999;
-  font-weight: 500;
-}
-
-/* 试穿区域 */
-.tryon-area {
-  width: 100%;
-  height: 100%;
-  background: #FFFFFF;
-}
-
-.movable-area {
-  width: 100%;
-  height: 100%;
+.movable-garment {
+  width: 160rpx; 
+  height: 160rpx;
+  pointer-events: auto; /* 恢复自己的点击响应 */
   position: relative;
 }
 
-.clothes-view {
-  width: 120rpx;
-  height: 120rpx;
-  position: relative;
-}
-
-.clothes-preview {
+.drag-img {
   width: 100%;
   height: 100%;
-  border-radius: 8rpx;
+  border-radius: 10rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.15);
 }
 
-.delete-btn {
+.delete-badge {
   position: absolute;
   top: -10rpx;
   right: -10rpx;
   width: 32rpx;
   height: 32rpx;
-  background: #FF4444;
-  color: #FFFFFF;
+  background: #ff4d4f;
+  color: white;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20rpx;
+  text-align: center;
+  line-height: 28rpx;
+  font-size: 24rpx;
   font-weight: bold;
 }
 
-/* 确认按钮 */
-.confirm-btn {
+/* 3. 底部大按钮 */
+.action-bar {
   position: absolute;
-  right: 32rpx;
-  bottom: 120rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
-  border-radius: 50%;
+  bottom: 40rpx;
+  width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 98;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+  z-index: 20;
 }
 
-.confirm-icon {
-  width: 40rpx;
-  height: 40rpx;
+.ai-btn {
+  background: #111;
+  color: #fff;
+  padding: 24rpx 60rpx;
+  border-radius: 50rpx;
+  font-weight: bold;
+  font-size: 30rpx;
+  box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.2);
 }
+.ai-btn.disabled { background: #888; box-shadow: none; }

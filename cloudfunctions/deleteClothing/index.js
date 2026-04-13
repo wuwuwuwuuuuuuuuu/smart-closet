@@ -1,59 +1,43 @@
 const cloud = require('wx-server-sdk')
-
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-})
-
+// 初始化云环境
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
 exports.main = async (event, context) => {
+  // 接收前端传过来的衣服 ID
+  const { id } = event 
+
+  if (!id) {
+    return { code: 400, message: '缺少要删除的衣服 ID' }
+  }
+
   try {
-    // 从请求头获取token（openid）
-    const token = event.headers.authorization?.replace('Bearer ', '')
-    
-    if (!token) {
-      return {
-        code: 401,
-        message: '未授权'
-      }
+    // 🌟 高级操作 1：先查询这条记录，拿到图片在云存储里的路径 (fileID)
+    const record = await db.collection('clothes').doc(id).get()
+    const imageFileID = record.data.image
+
+    // 🌟 高级操作 2：从数据库把这条记录连根拔起
+    await db.collection('clothes').doc(id).remove()
+
+    // 🌟 高级操作 3：顺藤摸瓜，去云存储把真正的照片文件也删了，给你省空间！
+    if (imageFileID && imageFileID.startsWith('cloud://')) {
+      await cloud.deleteFile({
+        fileList: [imageFileID]
+      })
     }
-    
-    const { id } = event.body
-    
-    // 查找用户
-    const userInfo = await db.collection('users').where({ openid: token }).get()
-    
-    if (userInfo.data.length === 0) {
-      return {
-        code: 404,
-        message: '用户不存在'
-      }
-    }
-    
-    const userId = userInfo.data[0]._id
-    
-    // 查找衣物并验证所有权
-    const clothingInfo = await db.collection('clothes').where({ _id: id, user_id: userId }).get()
-    
-    if (clothingInfo.data.length === 0) {
-      return {
-        code: 404,
-        message: '衣物不存在或无权限'
-      }
-    }
-    
-    // 删除衣物
-    await db.collection('clothes').where({ _id: id }).remove()
-    
+
+    // 功成身退，给前端发个成功的信号
     return {
       code: 200,
-      message: '删除成功'
+      message: '彻底移除成功'
     }
-  } catch (error) {
+
+  } catch (err) {
+    console.error('执行删除操作失败：', err)
     return {
       code: 500,
-      message: '删除衣物失败',
-      error: error.message
+      message: '删除失败，服务器出错了',
+      error: err
     }
   }
 }
