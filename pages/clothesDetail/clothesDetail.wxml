@@ -35,10 +35,36 @@
       </view>
     </view>
 
-    <view class="tags-header" wx:if="{{info.tags.length > 0}}">衣物标签</view>
-    <view class="tags-container" wx:if="{{info.tags.length > 0}}">
-      <view class="tag" wx:for="{{info.tags}}" wx:key="*this"># {{item}}</view>
+    <view class="tags-header-wrap">
+      <view class="tags-header">衣物标签</view>
+      <view class="edit-btn" bindtap="toggleEditTags">
+        {{isEditingTags ? '取消编辑' : '✎ 修改标签'}}
+      </view>
     </view>
+
+    <view class="tags-container" wx:if="{{!isEditingTags}}">
+      <block wx:if="{{info.tags && info.tags.length > 0}}">
+        <view class="tag" wx:for="{{info.tags}}" wx:key="*this"># {{item}}</view>
+      </block>
+      <view class="no-tags" wx:else>暂无标签</view>
+    </view>
+
+    <view class="tags-editor" wx:if="{{isEditingTags}}">
+      <view class="tags-container">
+        <view class="tag edit-mode" wx:for="{{editedTags}}" wx:key="*this">
+          # {{item}}
+          <text class="delete-icon" catchtap="removeEditedTag" data-index="{{index}}">×</text>
+        </view>
+      </view>
+      
+      <view class="add-tag-box">
+        <input class="tag-input" placeholder="输入新标签 (如: 甜美)" value="{{newTagInput}}" bindinput="onTagInput" confirm-type="done" bindconfirm="addTag"/>
+        <view class="add-btn" bindtap="addTag">添加</view>
+      </view>
+
+      <button class="save-tags-btn" bindtap="saveTags">保存修改</button>
+    </view>
+
   </view>
 
   <view class="bottom-bar">
@@ -48,6 +74,8 @@
     </view>
   </view>
 
-</view> <view class="loading-state" wx:if="{{!info}}">
+</view> 
+
+<view class="loading-state" wx:if="{{!info}}">
   <text>正在召唤衣物详情...</text>
 </view>

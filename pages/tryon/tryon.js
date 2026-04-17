@@ -1,111 +1,80 @@
 const db = wx.cloud.database()
-const app = getApp() // 🌟 获取全局 App 实例，用来拿当前登录的 UserID
+const app = getApp()
 
 Page({
   data: {
-    sidebarVisible: true, // 默认打开侧边栏
+    sidebarVisible: true,
     searchKeyword: '',
     currentSeason: '', 
     currentCategory: '', 
     seasons: ['春', '夏', '秋', '冬'],
-    categories: ['上衣', '下装', '配饰', '鞋子', '外套', '连体衣'], 
-    
+    categories: ['上衣', '下装', '外套', '连衣裙', '配饰', '鞋包'], 
     clothesList: [], 
     filteredClothes: [], 
-    selectedClothes: [], // 可以存多件衣服，用于画板搭配
-    
-    personImage: '', // 模特/自己的人物照片
+    selectedClothes: [], 
     isGenerating: false 
   },
 
-  onLoad() {
-    this.loadRealClothes()
-  },
+  onLoad() { this.loadRealClothes() },
+  onShow() { this.loadRealClothes() },
 
-  onShow() {
-    this.loadRealClothes()
-  },
-
-  // ☁️ 1. 从云数据库拉取“当前用户”的真实衣服
   async loadRealClothes() {
     wx.showLoading({ title: '加载私人衣橱...' })
     try {
-      // 🌟 核心防御：获取当前登录用户的真实 ID
       const userId = app.globalData.currentUserId 
-      
       if (!userId) {
-        console.warn('未检测到用户ID，可能未登录')
-        // 如果没登录，清空列表
         this.setData({ clothesList: [], filteredClothes: [] })
-        wx.hideLoading()
-        return
+        wx.hideLoading(); return
       }
-
-      // 🌟 终极修复：使用全小写的 user_id 进行严格的数据隔离
-      const res = await db.collection('clothes')
-        .where({ 
-          user_id: userId // 👈 已经完美修正为小写！
-        })
-        .orderBy('created_at', 'desc')
-        .get()
-      
+      const res = await db.collection('clothes').where({ user_id: userId }).orderBy('created_at', 'desc').get()
       const cleanData = res.data.map(item => {
         if (item.image) item.image = item.image.trim()
         return item
       })
-
-      this.setData({
-        clothesList: cleanData
-      })
+      this.setData({ clothesList: cleanData })
       this.filterClothes() 
       wx.hideLoading()
     } catch (err) {
-      console.error('加载私人衣服失败:', err)
       wx.hideLoading()
     }
   },
 
-  // 🌟 侧边栏收缩/展开切换
-  toggleSidebar() {
-    this.setData({ sidebarVisible: !this.data.sidebarVisible })
-  },
+  toggleSidebar() { this.setData({ sidebarVisible: !this.data.sidebarVisible }) },
+  uploadPersonImage() { wx.navigateTo({ url: '/pages/avatar/avatar' }) },
 
-  // 📸 上传人像 (可作为搭配板的背景)
-  uploadPersonImage() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      success: (res) => {
-        this.setData({ personImage: res.tempFiles[0].tempFilePath })
-      }
-    })
-  },
-
-  // 🌟 选择多件衣服放到搭配板
+  // 选择衣服
   selectClothes(e) {
     const item = e.currentTarget.dataset.item
-    // 给新衣服一个初始随机位置，防止重叠
     const newItem = { 
       ...item, 
-      x: 50 + Math.random() * 50, 
-      y: 50 + Math.random() * 50 
+      x: 30 + Math.random() * 30, 
+      y: 50 + Math.random() * 50,
+      scale: 1 
     }
     this.setData({
       selectedClothes: [...this.data.selectedClothes, newItem] 
     })
   },
 
-  // 🌟 记录衣服拖拽的最新位置
+  // 🌟 记录移动：直接修改数据引用，避免 setData 导致的跳动
   onMoveChange(e) {
-    const index = e.currentTarget.dataset.index
-    const { x, y } = e.detail
-    const selectedClothes = [...this.data.selectedClothes]
-    selectedClothes[index].x = x
-    selectedClothes[index].y = y
-    this.setData({ selectedClothes })
+    if (e.detail.source === 'touch') {
+      const index = e.currentTarget.dataset.index
+      const { x, y } = e.detail
+      // 直接修改内存中的数据，不调用 setData 渲染，防止反馈环
+      this.data.selectedClothes[index].x = x
+      this.data.selectedClothes[index].y = y
+    }
   },
 
-  // 🌟 从搭配板移除衣服
+  // 🌟 记录缩放：直接修改数据引用，不再更新 scale-value
+  onScaleChange(e) {
+    const index = e.currentTarget.dataset.index
+    const { scale } = e.detail
+    // 仅仅记录下缩放倍数，供 AI 试穿使用
+    this.data.selectedClothes[index].scale = scale
+  },
+
   removeClothes(e) {
     const index = e.currentTarget.dataset.index
     const selectedClothes = [...this.data.selectedClothes]
@@ -113,25 +82,28 @@ Page({
     this.setData({ selectedClothes })
   },
 
-  // 🤖 发起 AI 试穿
+  // 发起 AI 试穿
   async startAITryOn() {
-    const { personImage, selectedClothes, isGenerating } = this.data
-
+    const { selectedClothes, isGenerating } = this.data
     if (isGenerating) return 
-    if (!personImage) return wx.showToast({ title: 'AI换装需要先上传您的人像', icon: 'none' })
     if (selectedClothes.length === 0) return wx.showToast({ title: '画板上还没有衣服哦', icon: 'none' })
 
-    const garmentImageFileID = selectedClothes[0].image 
-
     this.setData({ isGenerating: true })
-    wx.showLoading({ title: 'AI生成中...', mask: true }) 
+    wx.showLoading({ title: '正在召唤专属模特...', mask: true }) 
 
     try {
-      const uploadRes = await wx.cloud.uploadFile({
-        cloudPath: `tryon_persons/user_${Date.now()}.png`,
-        filePath: personImage
-      })
-      const personImageFileID = uploadRes.fileID
+      const userId = app.globalData.currentUserId
+      const userRes = await db.collection('users').doc(userId).get()
+      const personImageFileID = userRes.data.avatarImage
+
+      if (!personImageFileID) {
+        this.setData({ isGenerating: false }); wx.hideLoading()
+        return wx.showToast({ title: '请先点击换模特设置形象', icon: 'none' })
+      }
+
+      wx.showLoading({ title: 'AI 试穿中...', mask: true }) 
+      // 此时获取到的就是最新的缩放和位置后的衣服（虽然我们没存 scale 到数据库，但这里能拿到当前内存的值）
+      const garmentImageFileID = selectedClothes[0].image 
 
       const aiRes = await wx.cloud.callFunction({
         name: 'aiTryOn',
@@ -148,26 +120,20 @@ Page({
         throw new Error(aiRes.result.message || 'AI 接口返回错误')
       }
     } catch (err) {
-      wx.hideLoading()
-      this.setData({ isGenerating: false })
+      wx.hideLoading(); this.setData({ isGenerating: false })
       wx.showToast({ title: '换装失败，请重试', icon: 'none' })
     }
   },
 
   // 基础搜索与筛选
-  onSearchInput(e) {
-    this.setData({ searchKeyword: e.detail.value })
-    this.filterClothes()
-  },
-  changeSeason(e) {
+  onSearchInput(e) { this.setData({ searchKeyword: e.detail.value }); this.filterClothes() },
+  changeSeason(e) { 
     const season = e.currentTarget.dataset.season
-    this.setData({ currentSeason: this.data.currentSeason === season ? '' : season })
-    this.filterClothes()
+    this.setData({ currentSeason: this.data.currentSeason === season ? '' : season }); this.filterClothes() 
   },
   changeCategory(e) {
     const category = e.currentTarget.dataset.category
-    this.setData({ currentCategory: this.data.currentCategory === category ? '' : category })
-    this.filterClothes()
+    this.setData({ currentCategory: this.data.currentCategory === category ? '' : category }); this.filterClothes() 
   },
   filterClothes() {
     const { searchKeyword, currentSeason, currentCategory, clothesList } = this.data
