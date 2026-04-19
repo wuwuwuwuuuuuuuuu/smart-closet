@@ -1,29 +1,23 @@
-<!-- 我的形象页面 -->
 <view class="container">
-  <!-- 页面标题 -->
-  <view class="page-header">
-    <text class="page-title">我的形象</text>
-    <text class="page-subtitle">创建你的专属形象，开启智能穿搭体验吧！</text>
+  <view class="header">
+    <text class="title">我的数字分身库</text>
+    <text class="subtitle">点击照片设为当前试穿模特，点击 ✖ 可删除</text>
   </view>
 
-  <!-- 形象预览 -->
-  <view class="avatar-preview">
-    <view class="preview-container" bindtap="chooseImage">
-      <view class="preview-frame">
-        <image wx:if="{{avatarImage}}" src="{{avatarImage}}" class="avatar-image" mode="aspectFit" />
-        <view wx:else class="upload-placeholder">
-          <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img35.png" class="upload-icon" />
-          <text class="upload-text">导入全身照</text>
-          <text class="upload-hint">点击上传全身照片</text>
-        </view>
+  <view class="avatar-grid">
+    <block wx:for="{{avatarList}}" wx:key="*this">
+      <view class="avatar-item {{currentAvatar === item ? 'active' : ''}}" bindtap="setDefaultAvatar" data-url="{{item}}">
+        <image class="avatar-img" src="{{item}}" mode="aspectFill"></image>
+        
+        <view class="current-badge" wx:if="{{currentAvatar === item}}">使用中</view>
+        
+        <view class="delete-btn" catchtap="deleteAvatar" data-url="{{item}}">✕</view>
       </view>
-    </view>
-  </view>
+    </block>
 
-  <!-- 创建按钮 -->
-  <view class="create-section">
-    <view class="create-btn {{canCreate ? 'active' : ''}}" bindtap="createAvatar">
-      <text class="create-text">创建新的形象</text>
+    <view class="avatar-item upload-box" bindtap="uploadNewAvatar">
+      <view class="plus-icon">+</view>
+      <text class="upload-text">添加新形象</text>
     </view>
   </view>
 </view>

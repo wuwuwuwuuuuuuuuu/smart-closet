@@ -66,11 +66,26 @@ page {
   font-weight: 500;
 }
 
+/* ================= 🌟 标签模块样式 ================= */
+.tags-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40rpx;
+  margin-bottom: 20rpx;
+}
+
 .tags-header {
   font-size: 26rpx;
   color: #888;
-  margin-top: 40rpx;
-  margin-bottom: 20rpx;
+}
+
+.edit-btn {
+  font-size: 24rpx;
+  color: #03a9f4;
+  background: #f0f9ff;
+  padding: 6rpx 20rpx;
+  border-radius: 30rpx;
 }
 
 .tags-container {
@@ -86,8 +101,69 @@ page {
   font-size: 24rpx;
   margin-right: 16rpx;
   margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
 }
 
+.no-tags {
+  font-size: 26rpx;
+  color: #bbb;
+  padding: 10rpx 0;
+}
+
+/* 编辑模式下的标签特殊样式 */
+.tag.edit-mode {
+  background: #e1f5fe;
+  color: #03a9f4;
+}
+
+.delete-icon {
+  margin-left: 12rpx;
+  font-size: 32rpx;
+  color: #ff4d4f;
+  line-height: 1;
+  font-weight: 300;
+}
+
+/* 添加标签输入区 */
+.add-tag-box {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.tag-input {
+  flex: 1;
+  background: #f5f7f9;
+  height: 72rpx;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+}
+
+.add-btn {
+  background: #333;
+  color: #fff;
+  line-height: 72rpx;
+  padding: 0 40rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+}
+
+.save-tags-btn {
+  background: #07c160;
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 40rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  width: 90% !important;
+  margin: 10rpx auto 0;
+  display: block;
+}
+
+/* ================= 底部删除按钮 ================= */
 .bottom-bar {
   position: fixed;
   bottom: 0;

@@ -1,183 +1,298 @@
+/* 全局页面容器 */
 page {
   height: 100vh;
   overflow: hidden;
-  background-color: #f5f6fa;
+  background-color: #f5f7f9; /* 极简背景 */
 }
 
-.container {
-  display: flex;
+.page-container {
   width: 100%;
   height: 100%;
   position: relative;
 }
 
-/* --- 🌟 左侧边栏动画控制 --- */
-.sidebar {
+/* ================= 主画板区域 ================= */
+.main-board {
+  width: 100%;
   height: 100%;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 4rpx 0 15rpx rgba(0,0,0,0.05);
-  transition: width 0.3s ease; /* 核心动画 */
-  overflow: hidden; /* 折叠时隐藏内容 */
-  z-index: 10;
-}
-.sidebar.show { width: 48%; }
-.sidebar.collapsed { width: 0%; } /* 折叠时宽度变为0 */
-
-/* 保持内部不换行变形 */
-.sidebar-header, .season-tabs, .sidebar-content {
-  width: 360rpx; /* 强制给内部一个固定物理宽度，防止挤压变形 */
-}
-/* ... 保持原有侧边栏细节样式不变 ... */
-.sidebar-header { display: flex; align-items: center; padding: 20rpx; gap: 16rpx; }
-.add-btn { width: 56rpx; height: 56rpx; background: #f0f0f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-.add-icon { width: 28rpx; height: 28rpx; }
-.search-box { flex: 1; display: flex; align-items: center; background: #f5f5f5; border-radius: 30rpx; padding: 0 20rpx; height: 56rpx; }
-.search-input { flex: 1; font-size: 24rpx; }
-.search-icon { width: 28rpx; height: 28rpx; margin-left: 10rpx; }
-.season-tabs { height: 70rpx; white-space: nowrap; border-bottom: 1rpx solid #eee; }
-.tabs-container { display: flex; padding: 0 16rpx; align-items: center; height: 100%; }
-.tab-item { display: inline-block; padding: 8rpx 20rpx; font-size: 24rpx; color: #666; border-radius: 30rpx; margin-right: 12rpx; }
-.tab-item.active { background: #333; color: #fff; }
-.sidebar-content { display: flex; flex: 1; overflow: hidden; }
-.category-list { width: 100rpx; background: #f9f9f9; height: 100%; }
-.category-item { padding: 24rpx 0; text-align: center; font-size: 24rpx; color: #666; }
-.category-item.active { background: #fff; color: #333; font-weight: bold; border-left: 6rpx solid #333; }
-.clothes-grid { flex: 1; height: 100%; padding: 16rpx; box-sizing: border-box; }
-.grid-container { display: flex; flex-wrap: wrap; gap: 12rpx; }
-.clothes-item { width: calc(50% - 6rpx); aspect-ratio: 1/1; background: #f0f0f0; border-radius: 12rpx; overflow: hidden; }
-.clothes-image { width: 100%; height: 100%; }
-
-
-/* --- 🌟 动态悬浮的折叠按钮 --- */
-.toggle-btn {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40rpx;
-  height: 90rpx;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 0 20rpx 20rpx 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 4rpx 0 10rpx rgba(0,0,0,0.1);
-  transition: left 0.3s ease; /* 跟随侧边栏移动 */
-  z-index: 20;
 }
-.toggle-btn.open { left: 48%; }
-.toggle-btn.closed { left: 0%; }
-.arrow { color: #666; font-size: 24rpx; }
 
-
-/* --- 🌟 右侧搭配画板区 (Canvas) --- */
 .canvas-area {
-  flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: #eef2f5; /* 画板背景色 */
-}
-
-/* 1. 底层：背景或提示框 */
-.bg-layer {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1; /* 在拖拽层下方 */
-}
-
-.bg-person {
-  width: 100%;
-  height: 80%; /* 留出底部按钮空间 */
-}
-
-.bg-placeholder {
-  border: 4rpx dashed #cbd5e1;
-  width: 70%;
-  height: 60%;
-  border-radius: 30rpx;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(255,255,255,0.5);
-  color: #94a3b8;
-  font-size: 26rpx;
-}
-.bg-placeholder .plus { font-size: 80rpx; margin-bottom: 10rpx; }
-.bg-placeholder .sub { font-size: 22rpx; margin-top: 10rpx; color: #cbd5e1; }
-
-.change-person-btn {
-  position: absolute;
-  top: 40rpx;
-  right: 40rpx;
-  background: rgba(0,0,0,0.4);
-  color: #fff;
-  padding: 8rpx 20rpx;
-  border-radius: 30rpx;
-  font-size: 22rpx;
-}
-
-/* 2. 顶层：可拖拽区域 */
-.clothes-board {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 85%; /* 给底部按钮留出点击区域 */
-  z-index: 10;
-  pointer-events: none; /* 穿透点击，让底层的上传人像能点到 */
-}
-
-.movable-garment {
-  width: 160rpx; 
-  height: 160rpx;
-  pointer-events: auto; /* 恢复自己的点击响应 */
-  position: relative;
-}
-
-.drag-img {
   width: 100%;
   height: 100%;
-  border-radius: 10rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.15);
 }
 
-.delete-badge {
+.movable-item {
+  width: 240rpx;
+  height: 320rpx;
+  position: relative;
+}
+
+.clothes-img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 12rpx 16rpx rgba(0,0,0,0.15)); /* 高级衣物投影 */
+}
+
+.remove-icon {
   position: absolute;
   top: -10rpx;
-  right: -10rpx;
-  width: 32rpx;
-  height: 32rpx;
-  background: #ff4d4f;
+  left: -10rpx;
+  width: 44rpx;
+  height: 44rpx;
+  background: rgba(255, 60, 60, 0.95);
   color: white;
   border-radius: 50%;
   text-align: center;
-  line-height: 28rpx;
+  line-height: 44rpx;
   font-size: 24rpx;
   font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 4rpx 10rpx rgba(255, 60, 60, 0.3);
 }
 
-/* 3. 底部大按钮 */
-.action-bar {
+/* ================= 右下角悬浮按钮 ================= */
+.float-action-bar {
   position: absolute;
-  bottom: 40rpx;
-  width: 100%;
+  right: 40rpx;
+  bottom: 80rpx; /* 稍微抬高一点防底部遮挡 */
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+  z-index: 80;
+}
+
+.float-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 44rpx;
+  border-radius: 60rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.12);
+  transition: transform 0.1s;
+}
+
+.float-btn:active {
+  transform: scale(0.92);
+}
+
+.model-btn {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+.generate-btn {
+  background: linear-gradient(135deg, #07c160, #04a552);
+  color: white;
+  box-shadow: 0 10rpx 24rpx rgba(7, 193, 96, 0.3);
+}
+
+.btn-icon {
+  margin-right: 12rpx;
+  font-size: 34rpx;
+}
+
+/* ================= 左侧衣橱呼出按钮 ================= */
+.toggle-open-btn {
+  position: absolute;
+  left: -100rpx; /* 默认藏在屏幕左侧外面 */
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 24rpx 20rpx 24rpx 24rpx;
+  border-radius: 0 40rpx 40rpx 0; /* 左侧贴边，右侧圆角 */
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 6rpx 0 16rpx rgba(0,0,0,0.08);
+  backdrop-filter: blur(10px);
+  transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 80;
+}
+
+.toggle-open-btn.show {
+  left: 0; /* 平滑滑出 */
+}
+
+/* ================= 呼吸遮罩层 ================= */
+.overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4); /* 半透明黑 */
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto; /* 打开时允许点击 */
+}
+
+/* ================= 左侧抽屉式衣橱 ================= */
+.sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 550rpx; /* 🌟 已拉宽：让照片和分类能舒展开 */
+  height: 100%;
+  background: rgba(255, 255, 255, 0.96); /* 微透质感 */
+  backdrop-filter: blur(20px);
+  border-radius: 0 40rpx 40rpx 0; /* 高级大圆角 */
+  box-shadow: 10rpx 0 40rpx rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  
+  /* 平滑动画配置 */
+  transform: translateX(-100%); 
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.sidebar.show {
+  transform: translateX(0); /* 抽屉滑入 */
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40rpx 30rpx 20rpx;
+}
+
+.sidebar-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #222;
+}
+
+.close-btn {
+  width: 50rpx;
+  height: 50rpx;
+  background: #f0f0f0;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
-  z-index: 20;
+  align-items: center;
+  font-size: 24rpx;
+  color: #666;
+  transition: background 0.2s;
 }
 
-.ai-btn {
-  background: #111;
-  color: #fff;
-  padding: 24rpx 60rpx;
-  border-radius: 50rpx;
-  font-weight: bold;
-  font-size: 30rpx;
-  box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.2);
+.close-btn:active {
+  background: #e0e0e0;
 }
-.ai-btn.disabled { background: #888; box-shadow: none; }
+
+/* 搜索框美化 */
+.search-box {
+  width: 100%;
+  padding: 10rpx 30rpx 20rpx;
+  box-sizing: border-box; /* 🌟 核心防溢出 */
+}
+
+.search-inner {
+  display: flex;
+  align-items: center;
+  background: #f4f5f7;
+  padding: 0 24rpx;
+  border-radius: 40rpx;
+  height: 70rpx;
+}
+
+.search-input {
+  flex: 1;
+  margin-left: 14rpx;
+  font-size: 26rpx;
+  color: #333;
+}
+
+/* 分类标签美化 */
+.category-scroll {
+  width: 100%;
+  white-space: nowrap;
+  padding: 0 30rpx;
+  margin-bottom: 20rpx;
+  box-sizing: border-box; /* 🌟 核心防溢出 */
+}
+
+.category-list {
+  display: flex;
+}
+
+.category-item {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  background: #f4f5f7;
+  color: #666;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  margin-right: 20rpx;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.category-item.active {
+  background: #222; /* 高级黑金搭配风格 */
+  color: white;
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.2);
+}
+
+/* 衣物卡片瀑布流美化 */
+.clothes-list-scroll {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  padding: 0 30rpx 40rpx;
+  box-sizing: border-box; /* 🌟 核心防溢出 */
+}
+
+.clothes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.clothes-card {
+  width: 47%;
+  height: 220rpx;
+  background: white;
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.04);
+  border: 1rpx solid #f0f0f0;
+  position: relative;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+}
+
+.add-hover {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  font-size: 22rpx;
+  text-align: center;
+  padding: 6rpx 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.clothes-card:active .add-hover {
+  opacity: 1; /* 点击时闪现“添加”提示 */
+}
+
+.empty-tip {
+  width: 100%;
+  text-align: center;
+  color: #bbb;
+  font-size: 26rpx;
+  margin-top: 100rpx;
+}
