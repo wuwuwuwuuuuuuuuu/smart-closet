@@ -1,327 +1,299 @@
+const { logError, logWarning } = require('../../utils/logger')
+const {
+  buildDateLabel,
+  buildWeatherSuggestion,
+  normalizeReminderResult,
+  buildReminderPayload,
+  buildMockReminderResult,
+  normalizeInput,
+  createMessageId
+} = require('./daily.helpers')
+
+function buildAssistantTextMessage(text) {
+  return {
+    id: createMessageId(),
+    role: 'assistant',
+    type: 'text',
+    text
+  }
+}
+
 Page({
   data: {
-    dateList: [], // 由代码自动生成真实的日期列表
-    currentDate: '', 
-    currentMonth: '',
-    currentOotdContent: '正在为您拉取实时天气...',
-    isAnimating: false,
-    selectedPoster: null,
-
+    heroImage: '/images/smart_recommend_hero_compressed.jpg',
+    tryOnArrowIcon: '/images/896368f1842e54992b5839f2877d838_transparent.png',
     currentCity: '定位中...',
+    currentDateLabel: '',
     weatherInfo: {
       temp: '--',
       text: '获取中',
       icon: '⏳'
     },
-    // 🔑 核心密钥：请在这里填入你的高德 Web 服务 Key
-    amapKey: '请在这里填入你的高德Web服务Key' 
+    weatherSuggestion: '正在为你整理今日天气提醒...',
+    pendingUserInput: '',
+    conversationList: [],
+    reminderResult: null,
+    isReminderLoading: false,
+    reminderRequestId: '',
+    tryonEntryReady: false,
+    amapKey: '请在这里填入你的高德Web服务Key'
   },
 
-  onLoad(options) {
-    console.log('每日穿搭页加载', options)
-    
-    // 1. 初始化真实的日期日历（包含今天前后3天）
-    this.initRealCalendar()
-    
-    // 2. 自动获取当前位置和实时天气
-    this.getRealTimeWeather()
-
-    // 3. 处理从其他页面传回来的参数（历史海报、相册图片、指定日期）
-    this.handleOptions(options)
-  },
-
-  onShow() {
-    console.log('每日穿搭页显示')
-    const selectedPoster = wx.getStorageSync('selectedPoster')
-    if (selectedPoster) {
-      const dateKey = `daily_poster_${this.data.currentDate}`
-      wx.setStorageSync(dateKey, selectedPoster)
-      this.setData({ selectedPoster: selectedPoster })
-      console.log('海报数据已保存到日期', this.data.currentDate)
-      wx.removeStorageSync('selectedPoster')
-    }
-  },
-
-  // 🌟 初始化真实日历
-  initRealCalendar() {
-    const today = new Date()
-    const daysArr = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    let realDateList = []
-
-    for (let i = -3; i <= 3; i++) {
-      let targetDate = new Date()
-      targetDate.setDate(today.getDate() + i)
-      
-      realDateList.push({
-        weekDay: i === 0 ? '今天' : daysArr[targetDate.getDay()],
-        dateNum: targetDate.getDate().toString(),
-        isToday: i === 0,
-        ootdContent: i === 0 ? '正在分析今日穿搭...' : '点击查看其他日期穿搭记录',
-        poster: null
-      })
-    }
-
+  onLoad() {
     this.setData({
-      dateList: realDateList,
-      currentDate: today.getDate().toString(),
-      currentMonth: today.getMonth() + 1 + '月'
+      currentDateLabel: buildDateLabel(new Date()),
+      conversationList: [
+        buildAssistantTextMessage('你好呀，我是你的穿搭助手。告诉我今天的需求，我会结合天气给你建议。')
+      ]
+    })
+    this.ensureVisualAssets()
+    this.getRealTimeWeather()
+  },
+
+  ensureVisualAssets() {
+    if (!this.data.heroImage) {
+      logWarning('daily.hero', 'hero image missing')
+    }
+    if (!this.data.tryOnArrowIcon) {
+      logWarning('daily.tryOnArrowIcon', 'try-on arrow icon missing')
+    }
+  },
+
+  onReminderInput(e) {
+    const value = typeof e.detail.value === 'string' ? e.detail.value : ''
+    if (typeof e.detail.value !== 'string') {
+      logWarning('daily.composer', 'invalid input value', { value: e.detail.value })
+    }
+    this.setData({ pendingUserInput: value })
+  },
+
+  appendConversationMessage(message) {
+    this.setData({
+      conversationList: this.data.conversationList.concat({
+        id: createMessageId(),
+        ...message
+      })
     })
   },
 
-  // 🌟 自动获取定位与天气
   getRealTimeWeather() {
     wx.showNavigationBarLoading()
-    const that = this
-
     wx.getLocation({
       type: 'wgs84',
-      success(res) {
-        that.fetchWeatherFromAmap(res.longitude, res.latitude)
+      success: (res) => {
+        this.fetchWeatherFromAmap(res.longitude, res.latitude)
       },
-      fail(err) {
-        console.error('定位失败', err)
-        wx.hideNavigationBarLoading()
-        that.setData({
+      fail: (error) => {
+        logWarning('daily.getRealTimeWeather', 'location failed', { message: error && error.errMsg })
+        const weatherInfo = {
+          temp: '--',
+          text: '未知',
+          icon: '⛅'
+        }
+        this.setData({
           currentCity: '未授权定位',
-          'weatherInfo.text': '未知',
-          'weatherInfo.temp': '--'
+          weatherInfo,
+          weatherSuggestion: buildWeatherSuggestion({
+            ...weatherInfo,
+            city: '当前城市'
+          })
         })
+        wx.hideNavigationBarLoading()
       }
     })
   },
 
-  // 🌟 调用高德 API 获取真实数据
   fetchWeatherFromAmap(lng, lat) {
-    const that = this
     const key = this.data.amapKey
 
     if (key === '请在这里填入你的高德Web服务Key') {
-      wx.hideNavigationBarLoading()
-      return this.setData({
+      const fallbackWeather = { temp: '25°C', text: '晴', icon: '☀️' }
+      this.setData({
         currentCity: '北京市(未配Key)',
-        weatherInfo: { temp: '25°C', text: '晴', icon: '☀️' }
+        currentDateLabel: buildDateLabel(new Date()),
+        weatherInfo: fallbackWeather,
+        weatherSuggestion: buildWeatherSuggestion({
+          ...fallbackWeather,
+          city: '北京市'
+        })
       })
+      wx.hideNavigationBarLoading()
+      return
     }
 
-    // 1. 经纬度转城市
     wx.request({
       url: `https://restapi.amap.com/v3/geocode/regeo?location=${lng},${lat}&key=${key}`,
-      success(res) {
-        if (res.data.status === '1') {
-          const adcode = res.data.regeocode.addressComponent.adcode
-          let city = res.data.regeocode.addressComponent.city
-          if (!city || city.length === 0) city = res.data.regeocode.addressComponent.province
-          
-          that.setData({ currentCity: city })
+      success: (res) => {
+        try {
+          const adcode = res.data?.regeocode?.addressComponent?.adcode
+          let city = res.data?.regeocode?.addressComponent?.city
+          if (!city || (Array.isArray(city) && city.length === 0)) {
+            city = res.data?.regeocode?.addressComponent?.province || '当前城市'
+            logWarning('daily.weather', 'empty city fallback used', { city })
+          }
+          if (Array.isArray(city)) {
+            city = city[0] || '当前城市'
+          }
 
-          // 2. 查天气
-          wx.request({
-            url: `https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${key}&extensions=base`,
-            success(weatherRes) {
-              if (weatherRes.data.status === '1' && weatherRes.data.lives.length > 0) {
-                const weatherData = weatherRes.data.lives[0]
-                const weatherText = weatherData.weather
-                const temp = weatherData.temperature + '°C'
-                
-                let icon = '☁️'
-                if (weatherText.includes('晴')) icon = '☀️'
-                if (weatherText.includes('雨')) icon = '🌧️'
-                if (weatherText.includes('云') || weatherText.includes('阴')) icon = '⛅'
-                if (weatherText.includes('雪')) icon = '❄️'
+          if (!adcode) {
+            throw new Error('高德逆地理接口未返回 adcode')
+          }
 
-                that.setData({
-                  weatherInfo: { temp, text: weatherText, icon },
-                  currentOotdContent: `今日${city}${weatherText}，气温${temp}，根据天气为您推荐舒适穿搭。`
-                })
-              }
-              wx.hideNavigationBarLoading()
-            }
+          this.setData({
+            currentCity: city,
+            currentDateLabel: buildDateLabel(new Date())
           })
-        }
-      }
-    })
-  },
-
-  // 🌟 手动切换城市查询天气
-  selectCity() {
-    const cities = ['北京市', '上海市', '广州市', '深圳市', '武汉市', '成都市']
-    const that = this
-    wx.showActionSheet({
-      itemList: cities,
-      success: (res) => {
-        const selectedCity = cities[res.tapIndex]
-        that.setData({ currentCity: selectedCity })
-        wx.showNavigationBarLoading()
-        
-        const key = that.data.amapKey
-        if (key === '请在这里填入你的高德Web服务Key') {
+          this.requestWeatherByAdcode(adcode, city)
+        } catch (error) {
+          logError('daily.fetchWeatherFromAmap', error)
           wx.hideNavigationBarLoading()
-          return wx.showToast({ title: '缺少高德Key', icon: 'none' })
         }
-
-        // 按城市名直接查天气
-        wx.request({
-          url: `https://restapi.amap.com/v3/weather/weatherInfo?city=${encodeURIComponent(selectedCity)}&key=${key}&extensions=base`,
-          success(weatherRes) {
-            if (weatherRes.data.status === '1' && weatherRes.data.lives.length > 0) {
-              const weatherData = weatherRes.data.lives[0]
-              const temp = weatherData.temperature + '°C'
-              that.setData({
-                weatherInfo: { temp, text: weatherData.weather, icon: '⛅' },
-                currentOotdContent: `${selectedCity}${weatherData.weather}，气温${temp}，已为您切换穿搭建议。`
-              })
-            }
-            wx.hideNavigationBarLoading()
-          }
-        })
+      },
+      fail: (error) => {
+        logError('daily.fetchWeatherFromAmap.request', error)
+        wx.hideNavigationBarLoading()
       }
     })
   },
 
-  // 🌟 处理页面跳转传参
-  handleOptions(options) {
-    if (options.selectedDate) {
-      const selectedDate = options.selectedDate
-      const dateList = this.data.dateList.map(item => ({
-        ...item,
-        isToday: item.dateNum === selectedDate
-      }))
-      const selectedItem = dateList.find(item => item.dateNum === selectedDate)
-      const newOotdContent = selectedItem ? selectedItem.ootdContent : '默认穿搭内容'
-      const dateKey = `daily_poster_${selectedDate}`
-      const savedPoster = wx.getStorageSync(dateKey)
-      
-      this.setData({
-        dateList: dateList,
-        currentDate: selectedDate,
-        currentOotdContent: newOotdContent,
-        selectedPoster: savedPoster || null
+  requestWeatherByAdcode(adcode, city) {
+    wx.request({
+      url: `https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${this.data.amapKey}&extensions=base`,
+      success: (weatherRes) => {
+        const live = weatherRes.data?.lives?.[0]
+        if (!live) {
+          logWarning('daily.requestWeatherByAdcode', 'empty weather response', { adcode, city })
+          wx.hideNavigationBarLoading()
+          return
+        }
+
+        const weatherInfo = {
+          temp: `${live.temperature}°C`,
+          text: live.weather,
+          icon: this.mapWeatherIcon(live.weather)
+        }
+
+        this.setData({
+          weatherInfo,
+          weatherSuggestion: buildWeatherSuggestion({
+            ...weatherInfo,
+            city
+          })
+        })
+        wx.hideNavigationBarLoading()
+      },
+      fail: (error) => {
+        logError('daily.requestWeatherByAdcode', error, { adcode, city })
+        wx.hideNavigationBarLoading()
+      }
+    })
+  },
+
+  mapWeatherIcon(weatherText = '') {
+    if (weatherText.includes('晴')) return '☀️'
+    if (weatherText.includes('雨')) return '🌧️'
+    if (weatherText.includes('雪')) return '❄️'
+    if (weatherText.includes('云') || weatherText.includes('阴')) return '⛅'
+    return '☁️'
+  },
+
+  buildReminderPayload(userInput) {
+    return buildReminderPayload({
+      userQuery: userInput,
+      weatherInfo: this.data.weatherInfo,
+      city: this.data.currentCity,
+      source: 'daily-page'
+    })
+  },
+
+  async requestReminderWithFallback(payload) {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'smartReminder',
+        data: payload
       })
-    }
-    
-    if (options.posterData) {
-      try {
-        const posterData = JSON.parse(decodeURIComponent(options.posterData))
-        this.setData({ selectedPoster: posterData })
-      } catch (err) {
-        console.error('解析海报数据失败:', err)
+
+      if (res.result?.code !== 200) {
+        throw new Error(res.result?.message || 'smartReminder failed')
       }
-    }
-    
-    if (options.selectedImage) {
-      const selectedImage = decodeURIComponent(options.selectedImage)
-      const todayOotd = {
-        id: new Date().getTime(),
-        image: selectedImage,
-        date: new Date().toLocaleDateString(),
-        title: '每日穿搭',
-        description: '记录美好一天'
-      }
-      this.setData({ selectedPoster: todayOotd })
+
+      return normalizeReminderResult(res.result.data)
+    } catch (error) {
+      logWarning('daily.requestReminderWithFallback', 'use mock reminder result', {
+        message: error.message
+      })
+      return buildMockReminderResult(payload)
     }
   },
 
-  // 🌟 日期点击切换
-  selectDate(e) {
-    if (this.data.isAnimating) return
-    const selectedDate = e.currentTarget.dataset.date
-    this.setData({ isAnimating: true })
-    
-    const dateList = this.data.dateList.map(item => ({
-      ...item,
-      isToday: item.dateNum === selectedDate
-    }))
-    const selectedItem = dateList.find(item => item.dateNum === selectedDate)
-    
-    // 如果切回今天，显示天气；如果是其他日子，显示默认文本
-    const newOotdContent = selectedItem && selectedItem.weekDay === '今天' 
-      ? this.data.currentOotdContent 
-      : '点击下方按钮，记录或生成当天的穿搭海报。'
+  async submitReminderRequest() {
+    const userInput = normalizeInput(this.data.pendingUserInput)
+    if (!userInput) {
+      wx.showToast({ title: '请先输入需求', icon: 'none' })
+      return
+    }
 
-    const dateKey = `daily_poster_${selectedDate}`
-    const savedPoster = wx.getStorageSync(dateKey)
-    
+    this.appendConversationMessage({
+      role: 'user',
+      type: 'text',
+      text: userInput
+    })
+
     this.setData({
-      dateList: dateList,
-      currentDate: selectedDate,
-      selectedPoster: savedPoster || null
+      pendingUserInput: '',
+      isReminderLoading: true,
+      reminderResult: null,
+      reminderRequestId: '',
+      tryonEntryReady: false
     })
-    
-    // 只有非今天时，才替换 OOTD 文本（防止覆盖掉实时天气文本）
-    if (selectedItem && selectedItem.weekDay !== '今天') {
-      this.setData({ currentOotdContent: newOotdContent })
-    }
-    
-    setTimeout(() => {
-      this.setData({ isAnimating: false })
-    }, 500)
-  },
 
-  goBack() {
-    wx.navigateBack()
-  },
+    try {
+      const payload = this.buildReminderPayload(userInput)
+      const reminderResult = await this.requestReminderWithFallback(payload)
+      const normalized = normalizeReminderResult(reminderResult)
 
-  // 🌟 上传与海报选项
-  showUploadOptions() {
-    wx.showActionSheet({
-      itemList: ['访问生成海报', '访问本地图片'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          wx.navigateTo({ url: '/pages/history/history?from=daily' })
-        } else if (res.tapIndex === 1) {
-          this.chooseLocalImage()
-        }
-      }
-    })
-  },
-
-  chooseLocalImage() {
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['original', 'compressed'],
-      sourceType: ['album'],
-      success: (res) => {
-        wx.navigateTo({
-          url: '/pages/daily/daily?selectedImage=' + encodeURIComponent(res.tempFilePaths[0]) + '&selectedDate=' + this.data.currentDate
-        })
-      }
-    })
-  },
-
-  editPoster() {
-    if (this.data.selectedPoster) {
-      wx.navigateTo({ url: `/pages/poster/poster?posterId=${this.data.selectedPoster.id}` })
-    }
-  },
-
-  sharePoster() {
-    if (this.data.selectedPoster) {
-      wx.showActionSheet({
-        itemList: ['分享给好友', '保存到相册'],
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            wx.showToast({ title: '分享功能开发中', icon: 'none' })
-          } else if (res.tapIndex === 1) {
-            this.savePosterToAlbum()
-          }
-        }
+      this.appendConversationMessage({
+        role: 'assistant',
+        type: 'result-card',
+        data: normalized
       })
+
+      this.setData({
+        reminderResult: normalized,
+        reminderRequestId: normalized.requestId,
+        tryonEntryReady: normalized.selectedClothesIds.length > 0
+      })
+    } catch (error) {
+      logError('daily.submitReminderRequest', error)
+      wx.showToast({ title: '生成建议失败', icon: 'none' })
+    } finally {
+      this.setData({ isReminderLoading: false })
     }
   },
 
-  savePosterToAlbum() {
-    if (this.data.selectedPoster) {
-      wx.saveImageToPhotosAlbum({
-        filePath: this.data.selectedPoster.image,
-        success: () => {
-          wx.showToast({ title: '保存成功', icon: 'success' })
-          const dateKey = `daily_poster_${this.data.currentDate}`
-          wx.setStorageSync(dateKey, this.data.selectedPoster)
-        },
-        fail: () => {
-          wx.showToast({ title: '保存失败', icon: 'none' })
-        }
-      })
+  goToTryOnFromReminder() {
+    const reminderResult = this.data.reminderResult
+    if (!reminderResult) {
+      wx.showToast({ title: '暂无可试穿建议', icon: 'none' })
+      return
+    }
+
+    const entry = {
+      source: 'smartReminder',
+      requestId: reminderResult.requestId,
+      title: reminderResult.summary,
+      selectedClothesIds: reminderResult.selectedClothesIds,
+      tips: reminderResult.tips,
+      createdAt: Date.now(),
+      active: true
+    }
+
+    try {
+      wx.setStorageSync('smartReminderTryonEntry', entry)
+      wx.switchTab({ url: '/pages/tryon/tryon' })
+    } catch (error) {
+      logError('daily.goToTryOnFromReminder', error)
+      wx.showToast({ title: '跳转失败，请重试', icon: 'none' })
     }
   }
 })

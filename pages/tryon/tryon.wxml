@@ -35,6 +35,14 @@
   </view>
 
   <view class="canvas-area">
+    <view class="reminder-entry-banner" wx:if="{{smartReminderEntry}}">
+      <text class="banner-title">来自智能推荐</text>
+      <text class="banner-text">{{smartReminderEntry.title}}</text>
+    </view>
+
+    <view class="smart-recommend-fab" bindtap="goToSmartRecommend">
+      <image class="smart-recommend-fab-icon" src="{{smartRecommendIcon}}" mode="aspectFit" />
+    </view>
     
     <view class="bg-layer" bindtap="uploadPersonImage">
       <image wx:if="{{personImage}}" src="{{personImage}}" class="bg-person" mode="aspectFit" />
@@ -50,7 +58,7 @@
       <movable-view 
         class="movable-garment" 
         wx:for="{{selectedClothes}}" 
-        wx:key="id"
+        wx:key="_id"
         direction="all"
         x="{{item.x}}" 
         y="{{item.y}}"

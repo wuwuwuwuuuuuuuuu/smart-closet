@@ -14,38 +14,16 @@ Page({
   },
 
   onLoad(options) {
-    console.log('预览页加载', options)
-    
-    // 检查是否有传递的商品试穿图片
-    if (options.productImage) {
-      const tryonImage = decodeURIComponent(options.productImage)
-      console.log('接收到商品试穿图片:', tryonImage)
-      
+    const normalizedImage = options.aiImage || options.productImage || options.img || ''
+    if (normalizedImage) {
       this.setData({
-        tryonType: 'product',
-        tryonImage: tryonImage
+        tryonType: options.productImage ? 'product' : 'ai',
+        tryonImage: decodeURIComponent(normalizedImage)
       })
-      
-      console.log('商品试穿预览已加载')
-    }
-    
-    // 检查是否有传递的AI试穿图片
-    if (options.aiImage) {
-      const tryonImage = decodeURIComponent(options.aiImage)
-      console.log('接收到AI试穿图片:', tryonImage)
-      
-      this.setData({
-        tryonType: 'ai',
-        tryonImage: tryonImage
-      })
-      
-      console.log('AI试穿预览已加载')
     }
   },
 
-  onShow() {
-    console.log('预览页显示')
-  },
+  onShow() {},
 
   // 返回上一页
   goBack() {
@@ -89,8 +67,7 @@ Page({
           icon: 'success'
         })
       },
-      fail: (err) => {
-        console.error('选择背景失败:', err)
+      fail: () => {
         wx.showToast({
           title: '选择背景失败',
           icon: 'none'

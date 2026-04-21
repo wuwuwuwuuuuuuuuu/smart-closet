@@ -1,6 +1,6 @@
 {
   "libVersion": "3.15.0",
-  "projectname": "%E8%A1%A3%E6%A9%B1",
+  "projectname": "smart-closet",
   "condition": {},
   "setting": {
     "urlCheck": false,

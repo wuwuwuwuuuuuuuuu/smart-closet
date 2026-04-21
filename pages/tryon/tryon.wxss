@@ -80,6 +80,55 @@ page {
   background: #eef2f5; /* 画板背景色 */
 }
 
+.reminder-entry-banner {
+  position: absolute;
+  top: 24rpx;
+  left: 24rpx;
+  right: 24rpx;
+  z-index: 25;
+  background: rgba(255,255,255,0.92);
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  box-shadow: 0 12rpx 24rpx rgba(0,0,0,0.08);
+}
+
+.banner-title {
+  display: block;
+  font-size: 22rpx;
+  color: #64748b;
+  margin-bottom: 8rpx;
+}
+
+.banner-text {
+  display: block;
+  font-size: 26rpx;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.smart-recommend-fab {
+  position: absolute;
+  right: 26rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 12rpx 24rpx rgba(0,0,0,0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  border: 2rpx solid rgba(17,17,17,0.06);
+}
+
+.smart-recommend-fab-icon {
+  width: 68rpx;
+  height: 68rpx;
+  display: block;
+}
+
 /* 1. 底层：背景或提示框 */
 .bg-layer {
   position: absolute;
@@ -113,7 +162,7 @@ page {
 
 .change-person-btn {
   position: absolute;
-  top: 40rpx;
+  top: 110rpx;
   right: 40rpx;
   background: rgba(0,0,0,0.4);
   color: #fff;

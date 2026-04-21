@@ -1,5 +1,11 @@
 const db = wx.cloud.database()
-const app = getApp() // 🌟 获取全局 App 实例，用来拿当前登录的 UserID
+const app = getApp()
+const { logError, logWarning } = require('../../utils/logger')
+const {
+  matchSelectedClothes,
+  buildSuggestedPlacements,
+  isValidSmartReminderEntry
+} = require('./tryon.helpers')
 
 Page({
   data: {
@@ -14,15 +20,25 @@ Page({
     filteredClothes: [], 
     selectedClothes: [], // 可以存多件衣服，用于画板搭配
     
-    personImage: '', // 模特/自己的人物照片
-    isGenerating: false 
+    personImage: '',
+    isGenerating: false,
+    smartReminderEntry: null,
+    smartRecommendIcon: '/images/smart_recommend_robot_icon.png'
   },
 
-  onLoad() {
-    this.loadRealClothes()
+  onLoad(options) {
+    this.pendingReminderSource = options.source || ''
+    this.hasAppliedSmartReminderEntry = false
   },
 
   onShow() {
+    this.hasAppliedSmartReminderEntry = false
+    const entry = this.consumePendingSmartReminderEntry()
+    this.pendingReminderSource = entry ? 'smartReminder' : ''
+    this.pendingSmartReminderEntry = entry
+    if (!entry) {
+      this.setData({ smartReminderEntry: null })
+    }
     this.loadRealClothes()
   },
 
@@ -34,8 +50,7 @@ Page({
       const userId = app.globalData.currentUserId 
       
       if (!userId) {
-        console.warn('未检测到用户ID，可能未登录')
-        // 如果没登录，清空列表
+        logWarning('tryon.loadRealClothes', 'missing current user id')
         this.setData({ clothesList: [], filteredClothes: [] })
         wx.hideLoading()
         return
@@ -49,25 +64,92 @@ Page({
         .orderBy('created_at', 'desc')
         .get()
       
-      const cleanData = res.data.map(item => {
-        if (item.image) item.image = item.image.trim()
-        return item
-      })
+      const cleanData = res.data.map(item => ({
+        ...item,
+        image: item.image ? item.image.trim() : item.image
+      }))
 
       this.setData({
         clothesList: cleanData
       })
-      this.filterClothes() 
+      this.filterClothes()
+      this.applySmartReminderEntryIfNeeded(cleanData)
       wx.hideLoading()
     } catch (err) {
-      console.error('加载私人衣服失败:', err)
+      logError('tryon.loadRealClothes', err)
       wx.hideLoading()
     }
+  },
+
+  applySmartReminderEntryIfNeeded(clothesList) {
+    if (this.pendingReminderSource !== 'smartReminder' || this.hasAppliedSmartReminderEntry) {
+      return
+    }
+
+    try {
+      const entry = this.pendingSmartReminderEntry
+      if (!entry) {
+        logWarning('tryon.applySmartReminderEntryIfNeeded', 'entry missing or expired')
+        return
+      }
+
+      const matched = matchSelectedClothes(entry.selectedClothesIds || [], clothesList)
+      const selectedClothes = buildSuggestedPlacements(matched)
+
+      if ((entry.selectedClothesIds || []).length && !matched.length) {
+        logWarning('tryon.applySmartReminderEntryIfNeeded', 'no matched clothes found', {
+          selectedClothesIds: entry.selectedClothesIds
+        })
+      }
+
+      this.setData({
+        smartReminderEntry: entry,
+        selectedClothes
+      })
+      this.hasAppliedSmartReminderEntry = true
+    } catch (error) {
+      logError('tryon.applySmartReminderEntryIfNeeded', error)
+    }
+  },
+
+  getValidSmartReminderEntry() {
+    const entry = wx.getStorageSync('smartReminderTryonEntry')
+    if (!isValidSmartReminderEntry(entry)) {
+      return null
+    }
+    return entry
+  },
+
+  consumePendingSmartReminderEntry() {
+    const entry = this.getValidSmartReminderEntry()
+    if (!entry || entry.active !== true) {
+      return null
+    }
+
+    const consumedEntry = {
+      ...entry,
+      active: false
+    }
+    wx.setStorageSync('smartReminderTryonEntry', consumedEntry)
+    return consumedEntry
   },
 
   // 🌟 侧边栏收缩/展开切换
   toggleSidebar() {
     this.setData({ sidebarVisible: !this.data.sidebarVisible })
+  },
+
+  addClothes() {
+    wx.showToast({
+      title: '请从左侧衣橱选择衣物',
+      icon: 'none'
+    })
+  },
+
+  goToSmartRecommend() {
+    wx.navigateTo({
+      url: '/pages/daily/daily'
+    })
   },
 
   // 📸 上传人像 (可作为搭配板的背景)
@@ -151,6 +233,7 @@ Page({
       wx.hideLoading()
       this.setData({ isGenerating: false })
       wx.showToast({ title: '换装失败，请重试', icon: 'none' })
+      logError('tryon.startAITryOn', err)
     }
   },
 
