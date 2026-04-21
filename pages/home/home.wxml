@@ -25,10 +25,10 @@
     </swiper>
   </view>
 
-  <!-- 穿搭日记卡片 -->
+  <!-- 智能推荐卡片 -->
   <view class="diary-card" bindtap="goToDaily">
-    <text class="diary-title">穿搭日记</text>
-    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="diary-icon" />
+    <text class="diary-title">智能推荐</text>
+    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="diary-icon" mode="aspectFit" />
   </view>
 
   <!-- 功能按钮区 -->
