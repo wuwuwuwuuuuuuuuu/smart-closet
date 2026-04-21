@@ -3,7 +3,8 @@ const app = getApp()
 
 Page({
   data: {
-    uploadedImage: '', // 云端图片 fileID
+    uploadedImage: '', // 抠图后的透明背景图片 fileID
+    originalImage: '', // 原始图片 fileID
     categoryOptions: ['上衣', '下装', '外套', '连衣裙', '配饰', '鞋包'],
     categoryIndex: -1,
     selectedMaterial: '',
@@ -17,10 +18,18 @@ Page({
   onLoad(options) {
     console.log('衣物信息录入页加载', options)
     
-    // 1. 获取上一页上传成功的云端图片路径 (务必解码)
-    if (options.imagePath) {
+    // 1. 获取上一页上传的图片信息
+    if (options.originalImage && options.transparentImage) {
+      // 使用抠图后的透明背景图片
       this.setData({
-        uploadedImage: decodeURIComponent(options.imagePath)
+        uploadedImage: decodeURIComponent(options.transparentImage),
+        originalImage: decodeURIComponent(options.originalImage)
+      })
+    } else if (options.imagePath) {
+      // 兼容旧版本（没有抠图功能）
+      this.setData({
+        uploadedImage: decodeURIComponent(options.imagePath),
+        originalImage: decodeURIComponent(options.imagePath)
       })
     }
     this.checkSaveStatus()
@@ -120,7 +129,8 @@ Page({
       data: {
         userId: userId, // 🌟 第二处修改：打上专属钢印！告诉云函数这衣服是谁的
         name: defaultName,
-        image: this.data.uploadedImage, // 传递 cloud:// 链接
+        image: this.data.uploadedImage, // 传递抠图后的透明背景图片
+        originalImage: this.data.originalImage, // 原始图片（用于备份）
         category: categoryName,
         material: material,
         season: this.data.selectedSeasons.join('/'), // 比如 "春季/秋季"

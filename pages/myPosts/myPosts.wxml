@@ -24,7 +24,7 @@
           <view class="post-meta">
             <text class="post-time">{{item.time}}</text>
             <view class="like-info">
-              <image 
+             <image 
                 src="{{item.liked ? '/images/icon_heart_filled.png' : '/images/icon_heart.png'}}" 
                 class="like-icon" />
               <text class="like-count">{{item.likes}}</text>
