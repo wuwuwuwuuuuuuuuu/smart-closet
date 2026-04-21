@@ -1,5 +1,9 @@
 <view class="page-container">
-  
+  <view class="recommend-entry-banner" wx:if="{{smartRecommendEntry}}">
+    <text class="banner-title">来自智能推荐</text>
+    <text class="banner-text">{{smartRecommendEntry.title}}</text>
+  </view>
+
   <view class="main-board">
     <movable-area class="canvas-area">
       <block wx:for="{{selectedClothes}}" wx:key="index">
@@ -31,8 +35,12 @@
     </view>
 
     <view class="toggle-open-btn {{!sidebarVisible ? 'show' : ''}}" bindtap="toggleSidebar">
-      ➔ 衣橱
+      ➜ 衣橱
     </view>
+  </view>
+
+  <view class="smart-recommend-fab" bindtap="goToSmartRecommend">
+    <image class="smart-recommend-fab-icon" src="{{smartRecommendIcon}}" mode="aspectFit"></image>
   </view>
 
   <view class="overlay {{sidebarVisible ? 'show' : ''}}" bindtap="toggleSidebar"></view>
@@ -71,5 +79,4 @@
       </view>
     </scroll-view>
   </view>
-
 </view>
