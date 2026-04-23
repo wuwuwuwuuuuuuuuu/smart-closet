@@ -1,14 +1,5 @@
 <!-- 编辑帖子页 -->
 <view class="container">
-  <!-- 顶部导航 -->
-  <view class="nav-bar">
-    <view class="nav-left" bindtap="onBack">
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img26.png" class="nav-icon" />
-    </view>
-    <text class="nav-title">发布穿搭</text>
-    <view class="nav-right"></view>
-  </view>
-
   <!-- 内容区域 -->
   <scroll-view class="content-scroll" scroll-y="true">
     <!-- 图片区域 -->
@@ -43,12 +34,12 @@
         value="{{postContent}}" />
       <text class="char-count">{{postContent.length}}/500</text>
     </view>
-  </scroll-view>
 
-  <!-- 底部发布按钮 -->
-  <view class="publish-section">
-    <view class="publish-btn {{canPublish ? 'active' : ''}}" bindtap="publishPost">
-      <text class="publish-text">发布</text>
+    <!-- 发布按钮 -->
+    <view class="publish-section">
+      <view class="publish-btn {{canPublish ? 'active' : ''}}" bindtap="publishPost">
+        <text class="publish-text">发布</text>
+      </view>
     </view>
-  </view>
+  </scroll-view>
 </view>
