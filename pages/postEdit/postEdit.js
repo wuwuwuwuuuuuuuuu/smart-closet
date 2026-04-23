@@ -111,20 +111,44 @@ Page({
       title: '发布中...'
     })
 
-    // 模拟发布过程
-    setTimeout(() => {
-      wx.hideLoading()
-      wx.showToast({
-        title: '发布成功',
-        icon: 'success'
+    wx.cloud.uploadFile({
+      cloudPath: `posts/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`,
+      filePath: postImage
+    }).then(uploadRes => {
+      return wx.cloud.callFunction({
+        name: 'addForumPost',
+        data: {
+          title: postTitle,
+          content: postContent,
+          image: uploadRes.fileID
+        }
       })
-
-      // 返回社区页面
-      setTimeout(() => {
-        wx.switchTab({
-          url: '/pages/forum/forum'
+    }).then(res => {
+      wx.hideLoading()
+      if (res.result && res.result.code === 200) {
+        wx.showToast({
+          title: '发布成功',
+          icon: 'success'
         })
-      }, 1000)
-    }, 1500)
+
+        setTimeout(() => {
+          wx.switchTab({
+            url: '/pages/forum/forum'
+          })
+        }, 1000)
+      } else {
+        wx.showToast({
+          title: '发布失败',
+          icon: 'none'
+        })
+      }
+    }).catch(err => {
+      wx.hideLoading()
+      console.error('发布帖子失败:', err)
+      wx.showToast({
+        title: '发布失败',
+        icon: 'none'
+      })
+    })
   }
 })
