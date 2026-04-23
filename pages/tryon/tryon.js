@@ -157,18 +157,23 @@ Page({
 
   selectClothes(event) {
     const item = event.currentTarget.dataset.item
+    
+    // 🌟 核心修复：生成一个绝对唯一的画板内 ID
+    const uniqueBoardId = 'board_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+
     const newItem = {
       ...item,
       x: 30 + Math.random() * 30,
       y: 50 + Math.random() * 50,
-      scale: 1
+      scale: 1,
+      boardId: uniqueBoardId // 👈 把这个唯一 ID 存进去
     }
 
     this.setData({
       selectedClothes: [...this.data.selectedClothes, newItem]
     })
   },
-
+  
   onMoveChange(event) {
     if (event.detail.source === 'touch') {
       const index = event.currentTarget.dataset.index
@@ -193,16 +198,9 @@ Page({
 
   async startAITryOn() {
     const { selectedClothes, isGenerating } = this.data
-    if (isGenerating) {
-      return
-    }
-
+    if (isGenerating) return
     if (selectedClothes.length === 0) {
-      wx.showToast({
-        title: '画板上还没有衣服哦',
-        icon: 'none'
-      })
-      return
+      return wx.showToast({ title: '画板上还没有衣服哦', icon: 'none' })
     }
 
     this.setData({ isGenerating: true })
@@ -216,19 +214,32 @@ Page({
       if (!personImageFileID) {
         this.setData({ isGenerating: false })
         wx.hideLoading()
-        wx.showToast({
-          title: '请先点击换模特设置形象',
-          icon: 'none'
-        })
-        return
+        return wx.showToast({ title: '请先点击换模特设置形象', icon: 'none' })
       }
 
-      wx.showLoading({ title: 'AI 试穿中...', mask: true })
-      const garmentImageFileID = selectedClothes[0].image
+      // 🌟 核心升级：遍历画板上的衣服，智能区分上下装
+      let topGarmentFileID = ''
+      let bottomGarmentFileID = ''
 
+      selectedClothes.forEach(item => {
+        if (item.category === '下装') {
+          bottomGarmentFileID = item.image
+        } else {
+          // 上衣、外套、连衣裙，或者没有录入分类的，默认按上装传给模型
+          topGarmentFileID = item.image
+        }
+      })
+
+      wx.showLoading({ title: 'AI 试穿中...', mask: true })
+
+      // 🌟 将区分好的上下装同时发给云函数
       const aiRes = await wx.cloud.callFunction({
-        name: 'aiTryOn',
-        data: { personImageFileID, garmentImageFileID }
+        name: 'aiTryon',
+        data: { 
+          personImageFileID, 
+          topGarmentFileID, 
+          bottomGarmentFileID 
+        }
       })
 
       wx.hideLoading()
@@ -247,10 +258,7 @@ Page({
       wx.hideLoading()
       this.setData({ isGenerating: false })
       logError('tryon.startAITryOn', error)
-      wx.showToast({
-        title: '换装失败，请重试',
-        icon: 'none'
-      })
+      wx.showToast({ title: '换装失败，请重试', icon: 'none' })
     }
   },
 

@@ -1,5 +1,10 @@
 {
+  "name": "aiTryOn",
+  "version": "1.0.0",
+  "description": "阿里云百炼虚拟试穿接口",
+  "main": "index.js",
   "dependencies": {
-    "axios": "^1.15.0"
+    "wx-server-sdk": "~2.6.3",
+    "axios": "^1.6.8"
   }
 }
