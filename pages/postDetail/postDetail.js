@@ -1,84 +1,111 @@
-// 帖子详情页逻辑
+const app = getApp()
+
 Page({
   data: {
     post: {},
     comments: [],
     commentText: '',
-    isAuthor: false
+    isAuthor: false,
+    postId: '',
+    currentOpenid: ''
   },
 
   onLoad(options) {
-    const id = options.id || 1
-    console.log('帖子详情页加载，ID:', id)
-    this.loadPostDetail(id)
-    this.loadComments(id)
+    const postId = options.id
+    console.log('帖子详情页加载，ID:', postId)
+    this.setData({ postId })
+
+    if (options.postData) {
+      try {
+        const post = JSON.parse(decodeURIComponent(options.postData))
+        this.setData({ post })
+      } catch (e) {
+        console.error('解析帖子数据失败:', e)
+      }
+    }
+
+    this.loadPostDetail(postId)
+    this.loadComments(postId)
   },
 
   onShow() {
     console.log('帖子详情页显示')
-  },
-
-  // 加载帖子详情
-  loadPostDetail(id) {
-    // 模拟数据
-    const mockPost = {
-      id: id,
-      image: `https://picsum.photos/750/1000?random=${id}`,
-      title: `时尚穿搭 ${id}`,
-      author: `用户${id}`,
-      time: '2024-03-17 14:30',
-      content: '这套穿搭非常适合春季出游，简约而不失时尚感。上衣选择了浅色系，搭配深色裤子，整体效果非常协调。',
-      likes: Math.floor(Math.random() * 100),
-      liked: Math.random() > 0.5
+    if (this.data.postId) {
+      this.loadPostDetail(this.data.postId)
+      this.loadComments(this.data.postId)
     }
-
-    this.setData({
-      post: mockPost,
-      isAuthor: Math.random() > 0.7 // 模拟是否为作者
-    })
   },
 
-  // 加载评论
-  loadComments(postId) {
-    // 模拟评论数据
-    const mockComments = [
-      {
-        id: 1,
-        author: '用户A',
-        content: '这套穿搭真好看！',
-        time: '2024-03-17 15:00',
-        likes: 5,
-        liked: false
-      },
-      {
-        id: 2,
-        author: '用户B',
-        content: '颜色搭配很协调',
-        time: '2024-03-17 15:30',
-        likes: 3,
-        liked: true
-      },
-      {
-        id: 3,
-        author: '用户C',
-        content: '适合什么场合穿呢？',
-        time: '2024-03-17 16:00',
-        likes: 2,
-        liked: false
+  loadPostDetail(postId) {
+    wx.cloud.callFunction({
+      name: 'getPostDetail',
+      data: { postId }
+    }).then(res => {
+      console.log('获取帖子详情成功:', res)
+      if (res.result && res.result.code === 200) {
+        const postData = res.result.data
+        this.setData({
+          'post.title': postData.title,
+          'post.content': postData.content,
+          'post.image': postData.image,
+          'post.author': postData.author,
+          'post.avatar': postData.avatar,
+          'post.authorOpenid': postData.authorOpenid,
+          'post.time': this.formatTime(postData.createTime),
+          isAuthor: postData.isAuthor
+        })
       }
-    ]
+    }).catch(err => {
+      console.error('获取帖子详情失败:', err)
+    })
 
-    this.setData({
-      comments: mockComments
+    wx.cloud.callFunction({
+      name: 'getLikeStatus',
+      data: { postId }
+    }).then(res => {
+      console.log('获取点赞状态成功:', res)
+      if (res.result && res.result.code === 200) {
+        this.setData({
+          'post.likes': res.result.data.likes,
+          'post.liked': res.result.data.liked
+        })
+      }
+    }).catch(err => {
+      console.error('获取点赞状态失败:', err)
     })
   },
 
-  // 返回上一页
+  formatTime(time) {
+    if (!time) return ''
+    const date = new Date(time)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hour}:${minute}`
+  },
+
+  loadComments(postId) {
+    wx.cloud.callFunction({
+      name: 'getComments',
+      data: { postId }
+    }).then(res => {
+      console.log('获取评论成功:', res)
+      if (res.result && res.result.code === 200) {
+        this.setData({
+          comments: res.result.data
+        })
+      }
+    }).catch(err => {
+      console.error('获取评论失败:', err)
+    })
+  },
+
   goBack() {
     wx.navigateBack()
   },
 
-  // 显示删除确认
   showDeleteConfirm() {
     wx.showModal({
       title: '确认删除',
@@ -91,86 +118,116 @@ Page({
     })
   },
 
-  // 删除帖子
   deletePost() {
-    wx.showLoading({
-      title: '删除中...'
-    })
+    wx.showLoading({ title: '删除中...' })
 
-    setTimeout(() => {
+    wx.cloud.callFunction({
+      name: 'deletePost',
+      data: { postId: this.data.postId }
+    }).then(res => {
       wx.hideLoading()
-      wx.showToast({
-        title: '删除成功',
-        icon: 'success'
-      })
-      
-      setTimeout(() => {
-        wx.navigateBack()
-      }, 1000)
-    }, 800)
-  },
-
-  // 切换点赞
-  toggleLike() {
-    const post = { ...this.data.post }
-    post.liked = !post.liked
-    post.likes += post.liked ? 1 : -1
-
-    this.setData({
-      post: post
+      if (res.result && res.result.code === 200) {
+        wx.showToast({ title: '删除成功', icon: 'success' })
+        setTimeout(() => {
+          wx.navigateBack()
+        }, 1000)
+      } else {
+        wx.showToast({ title: '删除失败', icon: 'none' })
+      }
+    }).catch(err => {
+      wx.hideLoading()
+      console.error('删除帖子失败:', err)
+      wx.showToast({ title: '删除失败', icon: 'none' })
     })
   },
 
-  // 评论输入
+  toggleLike() {
+    const postId = this.data.postId
+    wx.cloud.callFunction({
+      name: 'toggleLike',
+      data: { postId }
+    }).then(res => {
+      console.log('点赞操作结果:', res)
+      if (res.result && res.result.code === 200) {
+        this.setData({
+          'post.likes': res.result.data.likes,
+          'post.liked': res.result.data.liked
+        })
+      }
+    }).catch(err => {
+      console.error('点赞操作失败:', err)
+      wx.showToast({ title: '操作失败', icon: 'none' })
+    })
+  },
+
   onCommentInput(e) {
     this.setData({
       commentText: e.detail.value
     })
   },
 
-  // 发送评论
   sendComment() {
-    const { commentText, comments } = this.data
-    
+    const { commentText, postId } = this.data
+
     if (!commentText.trim()) {
-      wx.showToast({
-        title: '请输入评论内容',
-        icon: 'none'
-      })
+      wx.showToast({ title: '请输入评论内容', icon: 'none' })
       return
     }
 
-    const newComment = {
-      id: comments.length + 1,
-      author: '当前用户',
-      content: commentText,
-      time: new Date().toLocaleString(),
-      likes: 0,
-      liked: false
-    }
+    wx.showLoading({ title: '发送中...' })
 
-    this.setData({
-      comments: [newComment, ...comments],
-      commentText: ''
-    })
-
-    wx.showToast({
-      title: '评论成功',
-      icon: 'success'
+    wx.cloud.callFunction({
+      name: 'addComment',
+      data: { postId, content: commentText.trim() }
+    }).then(res => {
+      wx.hideLoading()
+      if (res.result && res.result.code === 200) {
+        this.setData({ commentText: '' })
+        wx.showToast({ title: '评论成功', icon: 'success' })
+        this.loadComments(postId)
+      } else {
+        wx.showToast({ title: '评论失败', icon: 'none' })
+      }
+    }).catch(err => {
+      wx.hideLoading()
+      console.error('评论失败:', err)
+      wx.showToast({ title: '评论失败', icon: 'none' })
     })
   },
 
-  // 切换评论点赞
   toggleCommentLike(e) {
-    const index = e.currentTarget.dataset.index
-    const comments = [...this.data.comments]
-    const comment = comments[index]
-    
-    comment.liked = !comment.liked
-    comment.likes += comment.liked ? 1 : -1
-    
-    this.setData({
-      comments: comments
+    const commentId = e.currentTarget.dataset.id
+
+    wx.cloud.callFunction({
+      name: 'toggleCommentLike',
+      data: { commentId }
+    }).then(res => {
+      console.log('评论点赞结果:', res)
+      if (res.result && res.result.code === 200) {
+        const comments = this.data.comments.map(item => {
+          if (item.id === commentId) {
+            return {
+              ...item,
+              liked: res.result.data.liked,
+              likes: res.result.data.likes
+            }
+          }
+          return item
+        })
+        this.setData({ comments })
+      }
+    }).catch(err => {
+      console.error('评论点赞失败:', err)
+      wx.showToast({ title: '操作失败', icon: 'none' })
     })
+  },
+
+  previewImage() {
+    if (this.data.post.image) {
+      wx.previewImage({
+        urls: [this.data.post.image],
+        current: this.data.post.image
+      })
+    }
   }
 })

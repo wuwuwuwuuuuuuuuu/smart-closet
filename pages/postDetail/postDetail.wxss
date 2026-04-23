@@ -57,11 +57,28 @@
 .post-meta {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  justify-content: space-between;
   margin-bottom: 20rpx;
 }
 
-.post-author, .post-time {
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.author-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+}
+
+.post-author {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.post-time {
   font-size: 24rpx;
   color: #999999;
 }
@@ -130,6 +147,18 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12rpx;
+}
+
+.comment-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.comment-avatar {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
 }
 
 .comment-author {

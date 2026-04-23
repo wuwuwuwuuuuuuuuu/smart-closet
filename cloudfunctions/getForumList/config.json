@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "openapi": [],
+    "db": {
+      "collections": [
+        {
+          "collection_name": "posts",
+          "description": "论坛帖子集合",
+          "read": true,
+          "write": true
+        }
+      ]
+    }
+  }
+}
