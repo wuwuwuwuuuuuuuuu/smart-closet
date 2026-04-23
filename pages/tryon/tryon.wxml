@@ -6,23 +6,23 @@
 
   <view class="main-board">
     <movable-area class="canvas-area">
-      <block wx:for="{{selectedClothes}}" wx:key="index">
-        <movable-view 
-          class="movable-item" 
-          x="{{item.x}}" 
-          y="{{item.y}}" 
-          direction="all" 
-          bindchange="onMoveChange" 
-          scale="true" 
-          scale-min="0.3" 
-          scale-max="3.0" 
-          bindscale="onScaleChange"
-          data-index="{{index}}"
-        >
-          <image src="{{item.image}}" class="clothes-img" mode="aspectFit"></image>
-          <view class="remove-icon" catchtap="removeClothes" data-index="{{index}}">✕</view>
-        </movable-view>
-      </block>
+      <movable-view 
+        wx:for="{{selectedClothes}}" 
+        wx:key="boardId"
+        class="movable-item" 
+        x="{{item.x}}" 
+        y="{{item.y}}" 
+        direction="all" 
+        bindchange="onMoveChange" 
+        scale="true" 
+        scale-min="0.3" 
+        scale-max="3.0" 
+        bindscale="onScaleChange"
+        data-index="{{index}}"
+      >
+        <image src="{{item.image}}" class="clothes-img" mode="aspectFit"></image>
+        <view class="remove-icon" catchtap="removeClothes" data-index="{{index}}">✕</view>
+      </movable-view>
     </movable-area>
 
     <view class="float-action-bar">

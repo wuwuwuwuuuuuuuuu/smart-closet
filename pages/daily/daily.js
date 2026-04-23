@@ -34,7 +34,7 @@ Page({
     isRebuildingKnowledge: false,
     knowledgeRebuildSummary: '',
     isLocating: false,
-    amapKey: '请在这里填入你的高德Web服务Key'
+    amapKey: ''
   },
 
   onLoad() {
