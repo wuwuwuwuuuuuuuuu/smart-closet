@@ -15,16 +15,74 @@ Page({
     canSave: false
   },
 
+  // 从HTTP URL下载图片到本地
+  downloadImageFromUrl(imageUrl) {
+    return new Promise((resolve) => {
+      wx.downloadFile({
+        url: imageUrl,
+        success: (res) => {
+          if (res.statusCode === 200) {
+            console.log('图片下载成功:', res.tempFilePath)
+            resolve(res.tempFilePath)
+          } else {
+            console.error('图片下载失败:', res.statusCode)
+            resolve(null)
+          }
+        },
+        fail: (err) => {
+          console.error('图片下载失败:', err)
+          resolve(null)
+        }
+      })
+    })
+  },
+
   onLoad(options) {
     console.log('衣物信息录入页加载', options)
     
     // 1. 获取上一页上传的图片信息
     if (options.originalImage && options.transparentImage) {
-      // 使用抠图后的透明背景图片
-      this.setData({
-        uploadedImage: decodeURIComponent(options.transparentImage),
-        originalImage: decodeURIComponent(options.originalImage)
-      })
+      const originalImage = decodeURIComponent(options.originalImage)
+      const transparentImage = decodeURIComponent(options.transparentImage)
+      
+      console.log('原始图片:', originalImage)
+      console.log('透明图片:', transparentImage)
+      
+      // 判断透明图片是HTTP URL还是文件ID
+      let uploadedImage = transparentImage
+      
+      // 如果透明图片为null或空，使用原图
+      if (!transparentImage || transparentImage === 'null') {
+        console.log('透明图片为空，使用原图')
+        this.setData({
+          uploadedImage: originalImage,
+          originalImage: originalImage
+        })
+      }
+      // 如果是HTTP URL（阿里云返回的分割结果），需要下载到本地
+      else if (transparentImage.startsWith('http')) {
+        console.log('检测到HTTP URL，需要下载到本地')
+        this.downloadImageFromUrl(transparentImage).then(localPath => {
+          if (localPath) {
+            this.setData({
+              uploadedImage: localPath,
+              originalImage: originalImage
+            })
+          } else {
+            // 下载失败，使用原图
+            this.setData({
+              uploadedImage: originalImage,
+              originalImage: originalImage
+            })
+          }
+        })
+      } else {
+        // 直接使用文件ID
+        this.setData({
+          uploadedImage: uploadedImage,
+          originalImage: originalImage
+        })
+      }
     } else if (options.imagePath) {
       // 兼容旧版本（没有抠图功能）
       this.setData({
