@@ -1,0 +1,13 @@
+{
+  "name": "rebuilduserknowledgebase",
+  "version": "1.0.0",
+  "description": "批量补同步旧衣物到智谱知识库",
+  "main": "index.js",
+  "dependencies": {
+    "@alicloud/bailian20231229": "^2.9.1",
+    "@alicloud/credentials": "^2.4.4",
+    "@alicloud/openapi-client": "^0.4.15",
+    "axios": "^1.15.2",
+    "wx-server-sdk": "~2.6.3"
+  }
+}

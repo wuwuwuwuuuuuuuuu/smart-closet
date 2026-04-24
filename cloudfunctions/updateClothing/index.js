@@ -1,4 +1,11 @@
 const cloud = require('wx-server-sdk')
+const {
+  normalizeText,
+  normalizeTagList,
+  hasKnowledgeRelevantChanges,
+  buildKnowledgeSyncResetFields,
+  triggerKnowledgeSyncInBackground
+} = require('./utils/knowledge-sync')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -6,64 +13,135 @@ cloud.init({
 
 const db = cloud.database()
 
-exports.main = async (event, context) => {
+function parseRequestBody(event = {}) {
+  if (event.body && typeof event.body === 'object' && !Array.isArray(event.body)) {
+    return event.body
+  }
+
+  if (typeof event.body === 'string' && event.body.trim()) {
+    try {
+      const parsed = JSON.parse(event.body)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed
+      }
+    } catch (error) {
+      console.warn('updateClothing: failed to parse event.body JSON', error.message)
+    }
+  }
+
+  return event
+}
+
+function resolveOpenid(event = {}) {
+  const authorization = event.headers && typeof event.headers.authorization === 'string'
+    ? event.headers.authorization
+    : ''
+  const token = normalizeText(authorization.replace(/^Bearer\s+/i, ''))
+  if (token) {
+    return token
+  }
+
+  const wxContext = typeof cloud.getWXContext === 'function' ? cloud.getWXContext() : {}
+  return normalizeText(wxContext.OPENID)
+    || normalizeText(event.openid)
+    || normalizeText(event.targetOpenid)
+}
+
+exports.main = async (event = {}) => {
   try {
-    // 从请求头获取token（openid）
-    const token = event.headers.authorization?.replace('Bearer ', '')
-    
-    if (!token) {
+    const openid = resolveOpenid(event)
+    if (!openid) {
       return {
         code: 401,
-        message: '未授权'
+        message: 'unauthorized'
       }
     }
-    
-    const { id, name, image, season, category, tags, material, brand } = event.body
-    
-    // 查找用户
-    const userInfo = await db.collection('users').where({ openid: token }).get()
-    
-    if (userInfo.data.length === 0) {
+
+    const body = parseRequestBody(event)
+    const id = normalizeText(body.id)
+    if (!id) {
+      return {
+        code: 400,
+        message: 'missing clothing id'
+      }
+    }
+
+    const userInfoBySystem = await db.collection('users').where({ _openid: openid }).get()
+    const userInfo = Array.isArray(userInfoBySystem.data) && userInfoBySystem.data.length
+      ? userInfoBySystem
+      : await db.collection('users').where({ openid }).get()
+
+    if (!Array.isArray(userInfo.data) || userInfo.data.length === 0) {
       return {
         code: 404,
-        message: '用户不存在'
+        message: 'user not found'
       }
     }
-    
+
     const userId = userInfo.data[0]._id
-    
-    // 查找衣物并验证所有权
     const clothingInfo = await db.collection('clothes').where({ _id: id, user_id: userId }).get()
-    
-    if (clothingInfo.data.length === 0) {
+    if (!Array.isArray(clothingInfo.data) || clothingInfo.data.length === 0) {
       return {
         code: 404,
-        message: '衣物不存在或无权限'
+        message: 'clothing not found'
       }
     }
-    
-    // 更新衣物信息
+
+    const current = clothingInfo.data[0]
+    const nextPayload = {
+      name: normalizeText(body.name) || current.name,
+      image: normalizeText(body.image) || current.image,
+      season: normalizeText(body.season) || current.season,
+      category: normalizeText(body.category) || current.category,
+      tags: Array.isArray(body.tags) ? normalizeTagList(body.tags) : current.tags,
+      material: normalizeText(body.material) || current.material,
+      brand: normalizeText(body.brand) || current.brand,
+      originalImage: normalizeText(body.originalImage) || current.originalImage
+    }
+
+    const knowledgeRelevantChanged = hasKnowledgeRelevantChanges(current, nextPayload)
+    const knowledgeSyncResetFields = knowledgeRelevantChanged
+      ? buildKnowledgeSyncResetFields(nextPayload)
+      : null
+    const updateData = {
+      ...nextPayload,
+      updated_at: db.serverDate()
+    }
+
+    if (knowledgeSyncResetFields) {
+      Object.assign(updateData, knowledgeSyncResetFields)
+    }
+
     await db.collection('clothes').where({ _id: id }).update({
-      data: {
-        name: name || clothingInfo.data[0].name,
-        image: image || clothingInfo.data[0].image,
-        season: season || clothingInfo.data[0].season,
-        category: category || clothingInfo.data[0].category,
-        tags: tags || clothingInfo.data[0].tags,
-        material: material || clothingInfo.data[0].material,
-        brand: brand || clothingInfo.data[0].brand,
-        updated_at: new Date()
-      }
+      data: updateData
     })
-    
+
+    const shouldTriggerKnowledgeSync = Boolean(
+      knowledgeRelevantChanged && normalizeText(nextPayload.image)
+    )
+
+    if (shouldTriggerKnowledgeSync) {
+      triggerKnowledgeSyncInBackground({
+        cloud,
+        openid,
+        limit: 5
+      })
+    }
+
     return {
       code: 200,
-      message: '更新成功'
+      message: 'ok',
+      data: {
+        knowledgeSyncStatus: knowledgeRelevantChanged
+          ? knowledgeSyncResetFields.knowledge_sync_status
+          : normalizeText(current.knowledge_sync_status) || 'pending',
+        knowledgeSyncTriggered: shouldTriggerKnowledgeSync
+      }
     }
   } catch (error) {
     return {
       code: 500,
-      message: '更新衣物失败',
+      message: 'update failed',
       error: error.message
     }
   }

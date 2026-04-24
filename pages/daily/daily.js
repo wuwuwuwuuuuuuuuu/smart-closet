@@ -4,8 +4,15 @@ const {
   buildDateLabel,
   buildWeatherSuggestion,
   normalizeRecommendationResult,
+  hasTryOnSelection,
+  buildRecommendationStatus,
   buildRecommendationPayload,
-  buildMockRecommendationResult
+  buildMockRecommendationResult,
+  isCloudFunctionTimeoutError,
+  buildKnowledgeRebuildFeedback,
+  inferOccasion,
+  inferPreferredStyle,
+  inferPreferredColor
 } = require('./daily.helpers')
 
 Page({
@@ -24,6 +31,8 @@ Page({
     conversationList: [],
     recommendationResult: null,
     isRecommendationLoading: false,
+    isRebuildingKnowledge: false,
+    knowledgeRebuildSummary: '',
     isLocating: false,
     amapKey: '请在这里填入你的高德Web服务Key'
   },
@@ -282,6 +291,116 @@ Page({
     })
   },
 
+  runKnowledgeRebuild(forceResync = false) {
+    if (this.data.isRebuildingKnowledge) {
+      return
+    }
+
+    this.setData({
+      isRebuildingKnowledge: true,
+      knowledgeRebuildSummary: ''
+    })
+
+    wx.showLoading({
+      title: forceResync ? '强制重同步中...' : '补同步检查中...'
+    })
+
+    wx.cloud.callFunction({
+      name: 'rebuildUserKnowledgeBase',
+      data: {
+        limit: 30,
+        forceResync
+      },
+      success: (res) => {
+        const result = res && res.result ? res.result : {}
+        const data = result.data || {}
+        const feedback = buildKnowledgeRebuildFeedback(result)
+
+        this.setData({
+          knowledgeRebuildSummary: feedback.summaryText
+        })
+
+        console.log(forceResync ? '强制重同步结果' : '补同步结果', result)
+        if (Array.isArray(data.sampleFailures) && data.sampleFailures.length) {
+          console.log('知识库同步失败样本', data.sampleFailures)
+        }
+        if (Array.isArray(data.sampleDiagnostics) && data.sampleDiagnostics.length) {
+          console.log('知识库诊断样本', data.sampleDiagnostics.map(item => ({
+            clothingId: normalizeInput(item && item.clothingId),
+            name: normalizeInput(item && item.name),
+            reason: normalizeInput(item && item.reason),
+            syncStatus: normalizeInput(item && item.syncStatus),
+            knowledge_sync_error: normalizeInput(item && item.knowledge_sync_error),
+            hasImage: Boolean(item && item.hasImage),
+            hasKnowledgeDoc: Boolean(item && item.hasKnowledgeDoc),
+            isReadyInKnowledge: Boolean(item && item.isReadyInKnowledge),
+            canSync: Boolean(item && item.canSync)
+          })))
+        }
+
+        if (feedback.status === 'pending' || feedback.status === 'idle') {
+          wx.showToast({
+            title: feedback.status === 'pending' ? '已发起，请稍后查状态' : '当前没有待同步衣物',
+            icon: 'none',
+            duration: 2500
+          })
+          return
+        }
+
+        wx.showModal({
+          title: feedback.title,
+          content: feedback.summaryText,
+          showCancel: false
+        })
+      },
+      fail: (error) => {
+        const timeoutPending = isCloudFunctionTimeoutError(error)
+        const errMsg = timeoutPending
+          ? `${forceResync ? '强制重同步' : '补同步'}已发起，但云函数执行较慢。请等待几秒后再次点击对应按钮查看状态。`
+          : (error && error.errMsg ? error.errMsg : '调用云函数失败')
+
+        this.setData({
+          knowledgeRebuildSummary: errMsg
+        })
+
+        if (timeoutPending) {
+          logWarning('daily.runKnowledgeRebuild', 'rebuild timeout treated as async pending', {
+            errMsg: error && error.errMsg,
+            forceResync
+          })
+          wx.showToast({
+            title: '已发起，请稍后查状态',
+            icon: 'none',
+            duration: 2500
+          })
+          return
+        }
+
+        console.error(forceResync ? '强制重同步失败' : '补同步失败', error)
+        logError('daily.runKnowledgeRebuild', error, { forceResync })
+        wx.showModal({
+          title: forceResync ? '强制重同步失败' : '补同步失败',
+          content: errMsg,
+          showCancel: false
+        })
+      },
+      complete: () => {
+        wx.hideLoading()
+        this.setData({
+          isRebuildingKnowledge: false
+        })
+      }
+    })
+  },
+
+  triggerKnowledgeRebuild() {
+    this.runKnowledgeRebuild(false)
+  },
+
+  triggerKnowledgeForceResync() {
+    this.runKnowledgeRebuild(true)
+  },
+
   onRecommendationInput(event) {
     const value = event && event.detail ? event.detail.value : ''
     if (value !== '' && typeof value !== 'string') {
@@ -329,7 +448,12 @@ Page({
       city: this.data.currentCity,
       currentDateLabel: this.data.currentDateLabel,
       weatherSuggestion: this.data.weatherSuggestion,
-      weatherInfo: this.data.weatherInfo
+      weatherInfo: this.data.weatherInfo,
+      occasion: inferOccasion(userQuery),
+      userPreferences: {
+        preferredStyle: inferPreferredStyle(userQuery),
+        preferredColor: inferPreferredColor(userQuery)
+      }
     })
 
     this.requestRecommendationWithFallback(payload)
@@ -367,12 +491,13 @@ Page({
       }
 
       wx.cloud.callFunction({
-        name: 'smartRecommend',
+        name: 'smartRecommendPhoto',
         data: payload,
         success: res => {
           const result = res && res.result
-          if (result && (result.data || result.replyText || result.summary)) {
-            resolve(result.data || result)
+          const normalizedResult = normalizeRecommendationResult(result && (result.data || result))
+          if (buildRecommendationStatus(normalizedResult) !== 'invalid') {
+            resolve(normalizedResult)
             return
           }
 
@@ -391,9 +516,9 @@ Page({
 
   goToTryOnFromRecommendation() {
     const result = this.data.recommendationResult
-    if (!result) {
+    if (!result || !hasTryOnSelection(result)) {
       wx.showToast({
-        title: '暂无可试穿建议',
+        title: result ? '当前结果没有可试穿衣物' : '暂无可试穿建议',
         icon: 'none'
       })
       return

@@ -1,2 +1,4 @@
 node_modules/
 project.private.config.json
+cloudfunctions/**/config.local.js
+
