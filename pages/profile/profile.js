@@ -148,6 +148,9 @@ Page({
   },
 
   goToFeedback() {
-    wx.showToast({ title: '意见反馈功能', icon: 'none' })
+    wx.navigateTo({
+      url: '/pages/feedback/feedback'
+    })
   }
-})
+}
+)

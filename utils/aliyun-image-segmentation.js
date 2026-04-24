@@ -61,9 +61,30 @@ class AliyunImageSegmentation {
       
       // 解析分割结果
       if (result && (result.output || result.data)) {
+        const output = result.output || result.data
+        
+        // 处理返回的图片URL，确保使用HTTPS
+        if (output.parsing_img_url && Array.isArray(output.parsing_img_url) && output.parsing_img_url.length > 0) {
+          const parsingUrl = output.parsing_img_url[0]
+          if (parsingUrl && parsingUrl !== 'null' && parsingUrl !== 'None') {
+            // 强制将HTTP转为HTTPS，避免微信小程序拦截
+            output.parsing_img_url[0] = parsingUrl.replace("http://", "https://")
+            console.log('更新分割图片URL为HTTPS:', output.parsing_img_url[0])
+          }
+        }
+        
+        if (output.crop_img_url && Array.isArray(output.crop_img_url) && output.crop_img_url.length > 0) {
+          const cropUrl = output.crop_img_url[0]
+          if (cropUrl && cropUrl !== 'null' && cropUrl !== 'None') {
+            // 强制将HTTP转为HTTPS，避免微信小程序拦截
+            output.crop_img_url[0] = cropUrl.replace("http://", "https://")
+            console.log('更新裁剪图片URL为HTTPS:', output.crop_img_url[0])
+          }
+        }
+        
         return {
           success: true,
-          data: result.output || result.data,
+          data: output,
           message: '衣物分割成功'
         }
       } else {
