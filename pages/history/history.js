@@ -1,4 +1,6 @@
-// 生成历史页面逻辑
+const db = wx.cloud.database()
+const app = getApp()
+
 Page({
   data: {
     historyList: [],
@@ -21,75 +23,76 @@ Page({
       console.log('进入选择模式')
     }
     
-    this.loadHistory()
+    this.loadHistory(true) // 页面加载时默认按第一页刷新
   },
 
   onShow() {
     console.log('生成历史页显示')
+    // 如果需要每次显示都刷新，可以取消下方注释
+    // this.loadHistory(true) 
   },
 
-  // 加载历史数据
-  loadHistory(refresh = false) {
+  // === 🌟 核心升级：接入真实云数据库加载历史数据 ===
+  async loadHistory(refresh = false) {
     if (refresh) {
-      this.setData({
-        refreshing: true,
-        page: 1
-      })
+      this.setData({ refreshing: true, page: 1 })
     } else {
-      this.setData({
-        loadingMore: true
-      })
+      this.setData({ loadingMore: true })
     }
 
-    // 模拟历史数据
-    const mockHistory = this.generateMockHistory(this.data.page, this.data.pageSize)
-    
-    setTimeout(() => {
+    try {
+      const userId = app.globalData.currentUserId || 'unknown_user'
+      const { page, pageSize } = this.data
+
+      // 1. 发起数据库查询
+      const res = await db.collection('tryon_history')
+        .where({ userId: userId })           // 只查当前用户的
+        .orderBy('createTime', 'desc')       // 按时间倒序（最新的在最上面）
+        .skip((page - 1) * pageSize)         // 分页跳过前几页的数据
+        .limit(pageSize)                     // 限制每页数量
+        .get()
+
+      // 2. 数据清洗与格式化，适配前端 UI
+      const formattedData = res.data.map(item => {
+        // 格式化服务器时间为 YYYY-MM-DD
+        let dateStr = '未知日期'
+        if (item.createTime) {
+          const dateObj = new Date(item.createTime)
+          const y = dateObj.getFullYear()
+          const m = String(dateObj.getMonth() + 1).padStart(2, '0')
+          const d = String(dateObj.getDate()).padStart(2, '0')
+          dateStr = `${y}-${m}-${d}`
+        }
+
+        return {
+          id: item._id,            // 数据库自动生成的唯一 ID
+          image: item.finalImage,  // 合成图的 FileID
+          date: dateStr,
+          selected: false,         // 初始状态为未选择
+          rawData: item            // 备份完整数据，以后查详情用得着
+        }
+      })
+
+      // 3. 更新到页面
       if (refresh) {
         this.setData({
-          historyList: mockHistory,
+          historyList: formattedData,
           refreshing: false,
-          noMoreData: false
+          noMoreData: formattedData.length < pageSize
         })
       } else {
         this.setData({
-          historyList: [...this.data.historyList, ...mockHistory],
+          historyList: [...this.data.historyList, ...formattedData],
           loadingMore: false,
-          noMoreData: mockHistory.length < this.data.pageSize
+          noMoreData: formattedData.length < pageSize
         })
       }
-    }, 500)
-  },
 
-  // 生成模拟历史数据
-  generateMockHistory(page, pageSize) {
-    const history = []
-    const startIndex = (page - 1) * pageSize + 1
-    
-    const dates = [
-      '2024-03-17',
-      '2024-03-16',
-      '2024-03-15',
-      '2024-03-14',
-      '2024-03-13',
-      '2024-03-12',
-      '2024-03-11',
-      '2024-03-10',
-      '2024-03-09',
-      '2024-03-08'
-    ]
-    
-    for (let i = 0; i < pageSize; i++) {
-      const dateIndex = (startIndex + i - 1) % dates.length
-      history.push({
-        id: startIndex + i,
-        image: `https://picsum.photos/400/600?random=${startIndex + i + 60}`,
-        date: dates[dateIndex],
-        selected: false // 初始状态为未选择
-      })
+    } catch (error) {
+      console.error('❌ 加载历史记录失败:', error)
+      wx.showToast({ title: '加载失败', icon: 'none' })
+      this.setData({ refreshing: false, loadingMore: false })
     }
-    
-    return history
   },
 
   // 返回上一页
@@ -151,16 +154,18 @@ Page({
       
       // 显示选择成功提示
       wx.showToast({
-        title: '海报已选择',
+        title: '穿搭已选择',
         icon: 'success'
       })
     }, 300)
   },
 
-  // 查看海报详情（普通模式）
+  // === 🌟 核心修复：查看海报详情（普通模式） ===
   viewPoster(item) {
-    wx.navigateTo({
-      url: `/pages/poster/poster?image=${encodeURIComponent(item.image)}`
+    // 放弃错误的页面跳转，直接调用微信原生全屏预览大图！
+    wx.previewImage({
+      current: item.image, // 当前显示图片的链接
+      urls: [item.image]   // 需要预览的图片链接列表（这里只有一张）
     })
   }
 })

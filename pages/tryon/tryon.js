@@ -217,7 +217,7 @@ Page({
         return wx.showToast({ title: '请先点击换模特设置形象', icon: 'none' })
       }
 
-      // 🌟 核心升级：遍历画板上的衣服，智能区分上下装
+      // 智能区分上下装
       let topGarmentFileID = ''
       let bottomGarmentFileID = ''
 
@@ -225,14 +225,13 @@ Page({
         if (item.category === '下装') {
           bottomGarmentFileID = item.image
         } else {
-          // 上衣、外套、连衣裙，或者没有录入分类的，默认按上装传给模型
           topGarmentFileID = item.image
         }
       })
 
-      wx.showLoading({ title: 'AI 试穿中...', mask: true })
+      wx.showLoading({ title: 'AI 试穿与抠图中...', mask: true })
 
-      // 🌟 将区分好的上下装同时发给云函数
+      // 呼叫云函数 (阿里试穿 + 百度抠图)
       const aiRes = await wx.cloud.callFunction({
         name: 'aiTryon',
         data: { 
@@ -247,6 +246,17 @@ Page({
 
       if (aiRes.result.code === 200) {
         const finalImageUrl = aiRes.result.data.result_url
+        const transparentBase64 = aiRes.result.data.transparent_base64
+
+        // 🌟 核心新增：接住百度抠图结果，存入本地缓存（避开 URL 长度限制）
+        if (transparentBase64) {
+          wx.setStorageSync('currentTransparentImage', transparentBase64)
+        } else {
+          // 如果这把抠图失败了，清空上次的缓存防止串图
+          wx.removeStorageSync('currentTransparentImage') 
+        }
+
+        // 跳转到预览页（原图还是通过 URL 传，保持兼容）
         wx.navigateTo({
           url: `/pages/preview/preview?img=${encodeURIComponent(finalImageUrl)}`
         })
@@ -258,7 +268,7 @@ Page({
       wx.hideLoading()
       this.setData({ isGenerating: false })
       logError('tryon.startAITryOn', error)
-      wx.showToast({ title: '换装失败，请重试', icon: 'none' })
+      wx.showToast({ title: '换装处理失败，请重试', icon: 'none' })
     }
   },
 
