@@ -64,14 +64,44 @@ exports.main = async (event, context) => {
         }
       }
 
+      // 处理回复数据
+      let replies = []
+      if (item.replies && item.replies.length > 0) {
+        replies = await Promise.all(item.replies.map(async (reply) => {
+          // 获取回复人的点赞状态
+          const replyLikeCount = await db.collection('likes').where({
+            reply_id: reply.id,
+            type: 'reply'
+          }).count()
+          const userReplyLike = await db.collection('likes').where({
+            reply_id: reply.id,
+            userOpenid: openid,
+            type: 'reply'
+          }).get()
+
+          return {
+            id: reply.id,
+            parentId: reply.parentId,
+            author: reply.author,
+            avatar: reply.avatar || '',
+            content: reply.content,
+            replyTo: reply.replyTo || '',
+            time: reply.time,
+            likes: replyLikeCount.total,
+            liked: userReplyLike.data.length > 0
+          }
+        }))
+      }
+
       return {
-        id: item._id,
+        id: item.id || item._id, // 优先使用自定义id，如果没有则使用数据库_id
         author: nickname,
         avatar: avatar,
         content: item.content,
         time: item.created_at ? formatTimeChina(item.created_at) : '',
         likes: likeCount.total,
-        liked: userLike.data.length > 0
+        liked: userLike.data.length > 0,
+        replies: replies // 包含回复数据
       }
     }))
 

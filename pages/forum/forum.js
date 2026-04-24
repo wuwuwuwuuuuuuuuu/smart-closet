@@ -1,3 +1,4 @@
+// pages/community/community.js
 const app = getApp()
 
 Page({
@@ -15,7 +16,10 @@ Page({
 
   onShow() {
     console.log('社区页显示')
-    this.loadPosts()
+    // 仅在数据为空时才重新加载，避免每次返回页面都产生视觉闪烁
+    if (this.data.postList.length === 0) {
+      this.loadPosts()
+    }
   },
 
   loadPosts(refresh = false) {
@@ -33,13 +37,17 @@ Page({
         const posts = res.result.data.map(item => ({
           id: item._id,
           image: item.image || '',
+          images: item.images || (item.image ? [item.image] : []),
           title: item.title || '',
           content: item.content || '',
           author: item.author || '用户',
           avatar: item.avatar || '',
-          likes: item.likes || 0,
+          // 🌟 双保险兼容：同时兼容 likes/likeCount，避免前端拿不到数据变成 0
+          likes: item.likes || item.likeCount || 0,
+          collects: item.collects || item.collectCount || 0,
           liked: item.liked || false,
-          createTime: item.createTime
+          collected: item.collected || false,
+          formattedTime: item.formattedTime || '刚刚'
         }))
 
         this.setData({
@@ -70,6 +78,9 @@ Page({
   goToPostDetail(e) {
     const id = e.currentTarget.dataset.id
     const post = this.data.postList.find(item => item.id === id)
+    if (!post) return
+    
+    // 🌟 将当前列表里的数据打包传递给详情页，实现秒开！
     const postData = encodeURIComponent(JSON.stringify(post))
     wx.navigateTo({
       url: `/pages/postDetail/postDetail?id=${id}&postData=${postData}`

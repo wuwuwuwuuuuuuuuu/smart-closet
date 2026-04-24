@@ -18,7 +18,8 @@
     "pages/clothingInfo/clothingInfo",
     "pages/uploadClothes/uploadClothes",
     "pages/wardrobe/wardrobe",
-    "pages/clothesDetail/clothesDetail"
+    "pages/clothesDetail/clothesDetail",
+    "pages/feedback/feedback"
   ],
   "permission": {
     "scope.userLocation": {

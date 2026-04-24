@@ -179,8 +179,10 @@ Page({
     if (output.parsing_img_url && Array.isArray(output.parsing_img_url) && output.parsing_img_url.length > 0) {
       const parsingUrl = output.parsing_img_url[0]
       if (parsingUrl && parsingUrl !== 'null' && parsingUrl !== 'None') {
-        console.log('使用分割图片（RGBA透明背景）:', parsingUrl)
-        return parsingUrl
+        // 强制将HTTP转为HTTPS，避免微信小程序拦截
+        const httpsUrl = parsingUrl.replace("http://", "https://")
+        console.log('使用分割图片（RGBA透明背景）:', httpsUrl)
+        return httpsUrl
       }
     }
     
@@ -188,8 +190,10 @@ Page({
     if (output.crop_img_url && Array.isArray(output.crop_img_url) && output.crop_img_url.length > 0) {
       const cropUrl = output.crop_img_url[0]
       if (cropUrl && cropUrl !== 'null' && cropUrl !== 'None') {
-        console.log('使用裁剪图片（RGB格式）:', cropUrl)
-        return cropUrl
+        // 强制将HTTP转为HTTPS，避免微信小程序拦截
+        const httpsUrl = cropUrl.replace("http://", "https://")
+        console.log('使用裁剪图片（RGB格式）:', httpsUrl)
+        return httpsUrl
       }
     }
     

@@ -1,0 +1,74 @@
+<view class="container">
+  
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">意见反馈</text>
+    <text class="subtitle">您的建议对我们非常重要</text>
+  </view>
+
+  <!-- 反馈类型选择 -->
+  <view class="section">
+    <text class="section-label">反馈类型</text>
+    <view class="type-selector">
+      <view 
+        class="type-item {{feedbackType === 'bug' ? 'active' : ''}}"
+        bindtap="selectType"
+        data-type="bug">
+        <image src="/images/icons/bug_icon.png" class="type-icon" />
+        <text class="type-text">问题反馈</text>
+      </view>
+      <view 
+        class="type-item {{feedbackType === 'suggestion' ? 'active' : ''}}"
+        bindtap="selectType"
+        data-type="suggestion">
+        <image src="/images/icons/suggestion_icon.png" class="type-icon" />
+        <text class="type-text">功能建议</text>
+      </view>
+      <view 
+        class="type-item {{feedbackType === 'other' ? 'active' : ''}}"
+        bindtap="selectType"
+        data-type="other">
+        <image src="/images/icons/other_icon.png" class="type-icon" />
+        <text class="type-text">其他</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 反馈内容输入 -->
+  <view class="section">
+    <text class="section-label">反馈内容</text>
+    <textarea 
+      class="feedback-textarea"
+      value="{{feedbackContent}}"
+      placeholder="请详细描述您遇到的问题或建议..."
+      placeholder-class="placeholder"
+      maxlength="500"
+      bindinput="onContentInput"
+      show-confirm-bar="{{false}}"
+      auto-height />
+    <text class="word-count">{{feedbackContent.length}}/500</text>
+  </view>
+
+  <!-- 联系方式 -->
+  <view class="section">
+    <text class="section-label">联系方式（选填）</text>
+    <input 
+      class="contact-input"
+      value="{{contactInfo}}"
+      placeholder="邮箱/微信号/手机号"
+      placeholder-class="placeholder"
+      bindinput="onContactInput"
+      maxlength="50" />
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button 
+      class="submit-btn {{canSubmit ? 'active' : ''}}"
+      bindtap="submitFeedback"
+      disabled="{{!canSubmit}}">
+      提交反馈
+    </button>
+  </view>
+
+</view>
