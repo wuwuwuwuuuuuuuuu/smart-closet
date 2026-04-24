@@ -68,7 +68,7 @@ Page({
 
   fetchWeatherFromAmap(longitude, latitude, fallbackCity = '当前位置') {
     const { amapKey } = this.data
-    if (!amapKey || amapKey === '请在这里填入你的高德Web服务Key') {
+    if (!amapKey || amapKey === '你的key') {
       wx.hideNavigationBarLoading()
       this.setData({
         isLocating: false

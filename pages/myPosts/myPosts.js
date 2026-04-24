@@ -1,4 +1,6 @@
-// 我的帖子页面逻辑
+const db = wx.cloud.database()
+const app = getApp()
+
 Page({
   data: {
     myPosts: [],
@@ -14,41 +16,54 @@ Page({
 
   onShow() {
     console.log('我的帖子页显示')
+    // 如果想要每次返回页面都刷新，可以取消下行注释
+    // this.loadMyPosts()
   },
 
-  // 加载我的帖子
-  loadMyPosts() {
-    // 模拟我的帖子数据
-    const mockMyPosts = [
-      {
-        id: 1,
-        image: 'https://picsum.photos/400/600?random=71',
-        title: '春季休闲穿搭',
-        time: '2024-03-17',
-        likes: 15,
-        liked: true
-      },
-      {
-        id: 2,
-        image: 'https://picsum.photos/400/600?random=72',
-        title: '职场通勤搭配',
-        time: '2024-03-16',
-        likes: 8,
-        liked: false
-      },
-      {
-        id: 3,
-        image: 'https://picsum.photos/400/600?random=73',
-        title: '周末出游装扮',
-        time: '2024-03-15',
-        likes: 12,
-        liked: true
-      }
-    ]
+  // === 🌟 核心升级 1：真实加载我的帖子 ===
+  async loadMyPosts() {
+    wx.showLoading({ title: '加载中...' })
+    try {
+      // 假设全局变量里存了用户 ID
+      const userId = app.globalData.currentUserId || 'unknown_user'
+      
+      const res = await db.collection('posts')
+        .where({ 
+          userId: userId // 仅查询当前用户自己发的帖子
+        })
+        .orderBy('createTime', 'desc') // 按发布时间倒序
+        .get()
 
-    this.setData({
-      myPosts: mockMyPosts
-    })
+      // 数据清洗，适配前端展示格式
+      const formattedPosts = res.data.map(item => {
+        let dateStr = '刚刚'
+        if (item.createTime) {
+          const dateObj = new Date(item.createTime)
+          const m = String(dateObj.getMonth() + 1).padStart(2, '0')
+          const d = String(dateObj.getDate()).padStart(2, '0')
+          dateStr = `${dateObj.getFullYear()}-${m}-${d}`
+        }
+
+        return {
+          id: item._id, // 数据库自带的 _id
+          image: item.image || item.coverImage, // 对应你数据库里的图片字段
+          title: item.title || '分享穿搭',
+          time: dateStr,
+          likes: item.likes || 0,
+          liked: item.liked || false
+        }
+      })
+
+      this.setData({
+        myPosts: formattedPosts
+      })
+      wx.hideLoading()
+
+    } catch (error) {
+      console.error('加载帖子失败:', error)
+      wx.hideLoading()
+      wx.showToast({ title: '加载失败', icon: 'none' })
+    }
   },
 
   // 返回上一页
@@ -58,16 +73,11 @@ Page({
 
   // 下拉刷新
   onRefresh() {
-    this.setData({
-      refreshing: true
+    this.setData({ refreshing: true })
+    // 重新拉取数据
+    this.loadMyPosts().then(() => {
+      this.setData({ refreshing: false })
     })
-
-    setTimeout(() => {
-      this.loadMyPosts()
-      this.setData({
-        refreshing: false
-      })
-    }, 800)
   },
 
   // 跳转到帖子详情
@@ -101,9 +111,9 @@ Page({
     if (selectedPostIndex === -1) return
 
     const post = myPosts[selectedPostIndex]
-    wx.showToast({
-      title: '编辑帖子功能',
-      icon: 'none'
+    // 跳转到发布页，并带上帖子 id 进行回显
+    wx.navigateTo({
+      url: `/pages/publish/publish?editId=${post.id}`
     })
     
     this.hideOptionsModal()
@@ -111,12 +121,13 @@ Page({
 
   // 删除帖子
   deletePost() {
-    const { selectedPostIndex, myPosts } = this.data
+    const { selectedPostIndex } = this.data
     if (selectedPostIndex === -1) return
 
     wx.showModal({
       title: '确认删除',
       content: '确定要删除这条帖子吗？',
+      confirmColor: '#e64340', // 红色警告色
       success: (res) => {
         if (res.confirm) {
           this.confirmDelete()
@@ -125,15 +136,18 @@ Page({
     })
   },
 
-  // 确认删除
-  confirmDelete() {
+  // === 🌟 核心升级 2：真实删除云端数据 ===
+  async confirmDelete() {
     const { selectedPostIndex, myPosts } = this.data
+    const postToDelete = myPosts[selectedPostIndex]
     
-    wx.showLoading({
-      title: '删除中...'
-    })
+    wx.showLoading({ title: '删除中...', mask: true })
 
-    setTimeout(() => {
+    try {
+      // 1. 从云数据库中删除记录
+      await db.collection('posts').doc(postToDelete.id).remove()
+
+      // 2. 本地 UI 静默更新 (直接从数组里剔除，不用重新请求数据库，体验更丝滑)
       const newPosts = [...myPosts]
       newPosts.splice(selectedPostIndex, 1)
       
@@ -142,12 +156,13 @@ Page({
       })
       
       wx.hideLoading()
-      wx.showToast({
-        title: '删除成功',
-        icon: 'success'
-      })
-      
+      wx.showToast({ title: '删除成功', icon: 'success' })
       this.hideOptionsModal()
-    }, 800)
+
+    } catch (error) {
+      console.error('删除帖子失败:', error)
+      wx.hideLoading()
+      wx.showToast({ title: '删除失败，请重试', icon: 'none' })
+    }
   }
 })
