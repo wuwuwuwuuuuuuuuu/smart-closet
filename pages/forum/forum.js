@@ -1,4 +1,3 @@
-// pages/community/community.js
 const app = getApp()
 
 Page({
@@ -36,7 +35,8 @@ Page({
       if (res.result && res.result.code === 200) {
         const posts = res.result.data.map(item => ({
           id: item._id,
-          image: item.image || '',
+          // 🌟 修复点：如果 item.image 为空，自动去拿 item.images 数组的第一张图作为封面
+          image: item.image || (item.images && item.images.length > 0 ? item.images[0] : ''),
           images: item.images || (item.image ? [item.image] : []),
           title: item.title || '',
           content: item.content || '',
