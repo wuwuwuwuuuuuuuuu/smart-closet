@@ -28,6 +28,15 @@
       <view class="weather-bottom">
         <text class="section-title">天气提醒</text>
         <text class="weather-suggestion">{{weatherSuggestion}}</text>
+        <view class="debug-actions">
+          <text class="debug-action {{isRebuildingKnowledge ? 'debug-action-disabled' : ''}}" bindtap="triggerKnowledgeRebuild">
+            {{isRebuildingKnowledge ? '补同步处理中...' : '补同步/查状态'}}
+          </text>
+          <text class="debug-action debug-action-secondary {{isRebuildingKnowledge ? 'debug-action-disabled' : ''}}" bindtap="triggerKnowledgeForceResync">
+            {{isRebuildingKnowledge ? '强制重同步处理中...' : '强制全量重同步'}}
+          </text>
+        </view>
+        <text class="debug-summary" wx:if="{{knowledgeRebuildSummary}}">{{knowledgeRebuildSummary}}</text>
       </view>
     </view>
 

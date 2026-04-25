@@ -173,21 +173,26 @@ Page({
 
       // 2. 发布帖子到数据库
       const db = wx.cloud.database()
-      const currentUser = getApp().globalData.currentUserInfo
+      const app = getApp()
+      // 🌟 核心修复1：安全获取全局变量，加了 || {} 兜底，防止报错
+      const currentUser = (app.globalData && app.globalData.currentUserInfo) || {}
+      const currentUserId = (app.globalData && app.globalData.currentUserId) || 'unknown_user'
       
       const result = await db.collection('posts').add({
         data: {
           title: postTitle.trim(),
           content: postContent.trim(),
           images: uploadedImages,
-          author: currentUser.nickName || '匿名用户',
-          avatar: currentUser.avatarUrl || '',
+          // 🌟 核心修复2：同时兼容 nickname 和 nickName 大小写写法
+          author: currentUser.nickname || currentUser.nickName || '匿名用户',
+          // 🌟 核心修复3：同理，兼容 avatar 和 avatarUrl
+          avatar: currentUser.avatar || currentUser.avatarUrl || '',
           likes: 0,
           comments: 0,
           collected: 0,
           createTime: new Date(),
           formattedTime: new Date().toLocaleString('zh-CN'),
-          userId: getApp().globalData.currentUserId
+          userId: currentUserId
         }
       })
 
