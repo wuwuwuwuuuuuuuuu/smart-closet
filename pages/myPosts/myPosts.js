@@ -16,8 +16,6 @@ Page({
 
   onShow() {
     console.log('我的帖子页显示')
-    // 如果想要每次返回页面都刷新，可以取消下行注释
-    // this.loadMyPosts()
   },
 
   // === 🌟 核心升级 1：真实加载我的帖子 ===
@@ -46,10 +44,12 @@ Page({
 
         return {
           id: item._id, // 数据库自带的 _id
-          image: item.image || item.coverImage, // 对应你数据库里的图片字段
+          // 🌟 核心修复：多重兼容。优先取 image/coverImage，如果没有则取 images 数组的第一张图
+          image: item.image || item.coverImage || (item.images && item.images.length > 0 ? item.images[0] : ''),
           title: item.title || '分享穿搭',
           time: dateStr,
-          likes: item.likes || 0,
+          // 🌟 优化：同时兼容不同的点赞字段名
+          likes: item.likes || item.likeCount || 0,
           liked: item.liked || false
         }
       })

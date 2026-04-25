@@ -1,4 +1,4 @@
-const { logWarning } = require('../../utils/logger')
+﻿const { logWarning } = require('../../utils/logger')
 
 function normalizeInput(value) {
   if (typeof value !== 'string') {
@@ -416,3 +416,4 @@ module.exports = {
   buildKnowledgeRebuildFeedback,
   buildInventorySummaryLine
 }
+
