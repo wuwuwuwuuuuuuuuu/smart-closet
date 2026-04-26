@@ -15,26 +15,35 @@ Page({
     canSave: false
   },
 
-  // 从HTTP URL下载图片到本地
-  downloadImageFromUrl(imageUrl) {
-    return new Promise((resolve) => {
-      wx.downloadFile({
-        url: imageUrl,
-        success: (res) => {
-          if (res.statusCode === 200) {
-            console.log('图片下载成功:', res.tempFilePath)
-            resolve(res.tempFilePath)
-          } else {
-            console.error('图片下载失败:', res.statusCode)
-            resolve(null)
-          }
-        },
-        fail: (err) => {
-          console.error('图片下载失败:', err)
-          resolve(null)
-        }
+  // 🌟 核心杀毒补丁：将网络图片下载后，立刻转存到微信云存储！
+  async downloadAndUploadToCloud(imageUrl) {
+    try {
+      // 1. 先下载到本地临时文件
+      const downloadRes = await new Promise((resolve, reject) => {
+        wx.downloadFile({
+          url: imageUrl,
+          success: resolve,
+          fail: reject
+        })
       })
-    })
+
+      if (downloadRes.statusCode !== 200) throw new Error('下载图失败')
+      const tempPath = downloadRes.tempFilePath
+
+      // 2. 🌟 关键的一步：把临时文件上传到微信云存储，换取永久护身符！
+      const cloudPath = `clothes_transparent/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`
+      const uploadRes = await wx.cloud.uploadFile({
+        cloudPath: cloudPath,
+        filePath: tempPath
+      })
+
+      console.log('✅ 成功将抠图转存至云端:', uploadRes.fileID)
+      return uploadRes.fileID // 这才是真正的 cloud://...
+
+    } catch (err) {
+      console.error('❌ 转存云端失败:', err)
+      return null
+    }
   },
 
   onLoad(options) {
@@ -48,10 +57,7 @@ Page({
       console.log('原始图片:', originalImage)
       console.log('透明图片:', transparentImage)
       
-      // 判断透明图片是HTTP URL还是文件ID
-      let uploadedImage = transparentImage
-      
-      // 如果透明图片为null或空，使用原图
+      // 如果透明图片为空，使用原图
       if (!transparentImage || transparentImage === 'null') {
         console.log('透明图片为空，使用原图')
         this.setData({
@@ -59,17 +65,21 @@ Page({
           originalImage: originalImage
         })
       }
-      // 如果是HTTP URL（阿里云返回的分割结果），需要下载到本地
+      // 🌟 修复处：检测到阿里云的 HTTP URL，开始下载并转存
       else if (transparentImage.startsWith('http')) {
-        console.log('检测到HTTP URL，需要下载到本地')
-        this.downloadImageFromUrl(transparentImage).then(localPath => {
-          if (localPath) {
+        console.log('检测到HTTP URL，开始下载并转存到云端...')
+        
+        wx.showLoading({ title: '处理高清抠图中...' })
+        
+        this.downloadAndUploadToCloud(transparentImage).then(permanentFileID => {
+          wx.hideLoading()
+          if (permanentFileID) {
             this.setData({
-              uploadedImage: localPath,
+              uploadedImage: permanentFileID, // 拿到完美的 cloud:// 链接
               originalImage: originalImage
             })
           } else {
-            // 下载失败，使用原图
+            // 如果转存失败，保底使用原图
             this.setData({
               uploadedImage: originalImage,
               originalImage: originalImage
@@ -77,14 +87,14 @@ Page({
           }
         })
       } else {
-        // 直接使用文件ID
+        // 直接使用已有的文件ID (cloud://)
         this.setData({
-          uploadedImage: uploadedImage,
+          uploadedImage: transparentImage,
           originalImage: originalImage
         })
       }
     } else if (options.imagePath) {
-      // 兼容旧版本（没有抠图功能）
+      // 兼容旧版本
       this.setData({
         uploadedImage: decodeURIComponent(options.imagePath),
         originalImage: decodeURIComponent(options.imagePath)
@@ -159,14 +169,12 @@ Page({
     this.setData({ canSave: canSave })
   },
 
-  // 🚀 核心改造：保存衣物信息到云数据库！
   saveClothing() {
     if (!this.data.canSave) {
       wx.showToast({ title: '请填写必填项', icon: 'none' })
       return
     }
 
-    // 🌟 核心防御：获取当前登录用户的 ID
     const userId = app.globalData.currentUserId
     if (!userId) {
       wx.showToast({ title: '尚未登录，无法保存', icon: 'none' })
@@ -176,24 +184,22 @@ Page({
     const categoryName = this.data.categoryOptions[this.data.categoryIndex]
     const material = this.data.customMaterial || this.data.selectedMaterial || ''
     
-    // 给衣服自动起个默认名字，比如 "冬季上衣"
     const defaultName = (this.data.selectedSeasons[0] || '') + categoryName
 
     wx.showLoading({ title: '正在存入私人衣橱...' })
 
-    // 呼叫咱们刚写好的 addClothing 云函数！
     wx.cloud.callFunction({
       name: 'addClothing',
       data: {
-        userId: userId, // 🌟 第二处修改：打上专属钢印！告诉云函数这衣服是谁的
+        userId: userId, 
         name: defaultName,
-        image: this.data.uploadedImage, // 传递抠图后的透明背景图片
-        originalImage: this.data.originalImage, // 原始图片（用于备份）
+        image: this.data.uploadedImage, // 这次传过去的就是绝对安全的 cloud:// 啦！
+        originalImage: this.data.originalImage, 
         category: categoryName,
         material: material,
-        season: this.data.selectedSeasons.join('/'), // 比如 "春季/秋季"
+        season: this.data.selectedSeasons.join('/'), 
         tags: this.data.customTags,
-        brand: '' // 目前UI没有品牌输入框，暂传空字符串
+        brand: '' 
       },
       success: (res) => {
         wx.hideLoading()
@@ -201,12 +207,10 @@ Page({
         
         if (res.result.code === 200) {
           wx.showToast({ title: '添加成功！', icon: 'success' })
-          // 延迟 1.5 秒后，连退两步回到主页面
           setTimeout(() => {
             wx.navigateBack({ delta: 2 })
           }, 1500)
         } else {
-          // 如果没登录（比如直接点进来测的），会提示用户不存在
           wx.showToast({ title: res.result.message, icon: 'none', duration: 3000 })
         }
       },
