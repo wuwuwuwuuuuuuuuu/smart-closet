@@ -27,19 +27,10 @@ Page({
       return
     }
 
-    // 🌟 1. 从口袋里掏出百度的透明人像数据
-    const transparentBase64 = wx.getStorageSync('currentTransparentImage')
-
     this.setData({
       tryonType: options.productImage ? 'product' : 'ai',
-      tryonImage: decodeURIComponent(imageParam),
-      transparentImage: transparentBase64 || null
+      tryonImage: decodeURIComponent(imageParam)
     })
-
-    // 用完即焚，释放手机内存
-    if (transparentBase64) {
-      wx.removeStorageSync('currentTransparentImage')
-    }
   },
 
   onShow() {

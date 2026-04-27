@@ -15,11 +15,11 @@
         class="background-image" 
         mode="aspectFill" />
       
-      <view class="tryon-display" wx:if="{{transparentImage || tryonImage}}">
-        <image src="{{transparentImage || tryonImage}}" class="tryon-image" mode="aspectFit" />
+      <view class="tryon-display" wx:if="{{tryonImage}}">
+        <image src="{{tryonImage}}" class="tryon-image" mode="aspectFit" />
       </view>
       
-      <view class="no-tryon-section" wx:if="{{!transparentImage && !tryonImage}}">
+      <view class="no-tryon-section" wx:if="{{!tryonImage}}">
         <view class="no-tryon-icon">👕</view>
         <text class="no-tryon-text">暂无试穿照片</text>
       </view>
