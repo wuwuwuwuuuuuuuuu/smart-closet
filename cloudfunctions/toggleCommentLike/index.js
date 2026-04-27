@@ -7,31 +7,34 @@ exports.main = async (event, context) => {
   try {
     const wxContext = cloud.getWXContext()
     const openid = wxContext.OPENID
-    const { commentId } = event
+    const { commentId, replyId, type } = event
+    const isReplyLike = type === 'reply'
+    const targetField = isReplyLike ? 'reply_id' : 'comment_id'
+    const targetId = isReplyLike ? replyId : commentId
 
-    if (!commentId) {
+    if (!targetId) {
       return {
         code: 400,
-        msg: '缺少评论ID'
+        msg: isReplyLike ? '缺少回复ID' : '缺少评论ID'
       }
     }
 
     const likeInfo = await db.collection('likes').where({
-      comment_id: commentId,
+      [targetField]: targetId,
       userOpenid: openid,
-      type: 'comment'
+      type: isReplyLike ? 'reply' : 'comment'
     }).get()
 
     if (likeInfo.data.length > 0) {
       await db.collection('likes').where({
-        comment_id: commentId,
+        [targetField]: targetId,
         userOpenid: openid,
-        type: 'comment'
+        type: isReplyLike ? 'reply' : 'comment'
       }).remove()
 
       const countRes = await db.collection('likes').where({
-        comment_id: commentId,
-        type: 'comment'
+        [targetField]: targetId,
+        type: isReplyLike ? 'reply' : 'comment'
       }).count()
 
       return {
@@ -42,16 +45,16 @@ exports.main = async (event, context) => {
     } else {
       await db.collection('likes').add({
         data: {
-          comment_id: commentId,
+          [targetField]: targetId,
           userOpenid: openid,
-          type: 'comment',
+          type: isReplyLike ? 'reply' : 'comment',
           created_at: new Date()
         }
       })
 
       const countRes = await db.collection('likes').where({
-        comment_id: commentId,
-        type: 'comment'
+        [targetField]: targetId,
+        type: isReplyLike ? 'reply' : 'comment'
       }).count()
 
       return {

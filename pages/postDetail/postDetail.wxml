@@ -93,19 +93,19 @@
   </scroll-view>
 
   <view class="bottom-bar">
-    <view class="input-section {{isInputFocused || inputText.length > 0 ? 'expanded' : ''}}">
-      <image wx:if="{{!isInputFocused && inputText.length === 0}}" src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyMGg5Ij48L3BhdGg+PHBhdGggZD0iTTE2LjUgMy41YTIuMTIxIDIuMTIxIDAgMCAxIDMgM0w3IDE5bC00IDFfMS00TDE2LjUgMy41eiI+PC9wYXRoPjwvc3ZnPg==" class="input-icon" />
-      <input class="comment-input" placeholder="{{replyTarget ? '回复 @' + replyTarget.userName : '说点什么...'}}" bindinput="onInputChange" bindfocus="onInputFocus" bindblur="onInputBlur" bindconfirm="sendCommentOrReply" confirm-type="send" focus="{{isInputFocused}}" value="{{inputText}}" />
+    <view class="input-section {{isInputFocused || commentText.length > 0 ? 'expanded' : ''}}">
+      <image wx:if="{{!isInputFocused && commentText.length === 0}}" src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyMGg5Ij48L3BhdGg+PHBhdGggZD0iTTE2LjUgMy41YTIuMTIxIDIuMTIxIDAgMCAxIDMgM0w3IDE5bC00IDFfMS00TDE2LjUgMy41eiI+PC9wYXRoPjwvc3ZnPg==" class="input-icon" />
+      <input class="comment-input" placeholder="{{replyTarget ? '回复 @' + replyTarget.userName : '说点什么...'}}" bindinput="onCommentInput" bindfocus="onInputFocus" bindblur="onInputBlur" bindconfirm="sendCommentOrReply" confirm-type="send" focus="{{isInputFocused}}" value="{{commentText}}" />
     </view>
     
-    <view class="action-section" wx:if="{{!isInputFocused && inputText.length === 0}}">
-      <view class="action-btn" catchtap="handleLikePost">
+    <view class="action-section" wx:if="{{!isInputFocused && commentText.length === 0}}">
+      <view class="action-btn" catchtap="toggleLike">
         <image wx:if="{{post.liked}}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGMjQ0MiI+PHBhdGggZD0iTTEyIDIxLjM1bC0xLjQ1LTEuMzJDNS40IDE1LjM2IDIgMTIuMjggMiA4LjUgMiA1LjQyIDQuNDIgMyA3LjUgM2MyLjA0IDAgNCAxLjA4IDUuMDggMi43NUExMy4wNiAxMy4wNiAwIDAgMSAxNi41IDNjMy4wOCAwIDUuNSAyLjQyIDUuNSA1LjUgMCAzLjc4LTMuNCA2Ljg2LTguNTUgMTEuNTRMMTIgMjEuMzV6Ii8+PC9zdmc+" class="action-icon" />
         <image wx:else src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwLjg0IDQuNjFhNS41IDUuNSAwIDAgMC03Ljc4IDBsLTEuMDYgMS4wNi0xLjA2LTEuMDZhNS41IDUuNSAwIDAgMC03Ljc4IDcuNzhsMS4wNiAxLjA2TDEyIDIxLjIzbDcuNzgtNy43OCAxLjA2LTEuMDZhNS41IDUuNSAwIDAgMCAwLTcuNzh6Ij48L3BhdGg+PC9zdmc+" class="action-icon" />
         <text class="action-text {{post.liked ? 'liked-text' : ''}}">{{post.likes > 0 ? post.likes : 0}}</text>
       </view>
       
-      <view class="action-btn" catchtap="handleCollectPost">
+      <view class="action-btn" catchtap="toggleCollect">
         <image wx:if="{{post.collected}}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGQzEwNyI+PHBhdGggZD0iTTEyIDE3LjI3TDE4LjE4IDIxbC0xLjY0LTcuMDNMMjIgOS4yNGwtNy4xOS0uNjFMMTIgMiA5LjE5IDguNjMgMiA5LjI0bDUuNDYgNC43My0xLjY0IDcuMDNMMTIgMTcuMjd6Ii8+PC9zdmc+" class="action-icon" />
         <image wx:else src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMSAxMiAxNy43NyA1LjgyIDIxIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIj48L3BvbHlnb24+PC9zdmc+" class="action-icon" />
         <text class="action-text {{post.collected ? 'collected-text' : ''}}">{{post.collects > 0 ? post.collects : 0}}</text>
@@ -117,6 +117,6 @@
       </view>
     </view>
 
-    <view class="send-btn" wx:if="{{isInputFocused || inputText.length > 0}}" catchtap="sendCommentOrReply">发送</view>
+    <view class="send-btn" wx:if="{{isInputFocused || commentText.length > 0}}" catchtap="sendCommentOrReply">发送</view>
   </view>
 </view>
