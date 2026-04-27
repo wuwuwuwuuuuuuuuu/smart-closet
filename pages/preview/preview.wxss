@@ -35,14 +35,13 @@ page { background-color: #1a1a1a; }
   font-weight: 800;
   color: #333;
   margin-bottom: 40rpx;
-  text-align: center; /* 标题居中 */
+  text-align: center; 
 }
 
-/* 🌟 全新居中布局 */
 .scene-actions {
   display: flex;
   justify-content: center;
-  gap: 80rpx; /* 两个按钮之间的间距 */
+  gap: 80rpx; 
   margin-bottom: 50rpx;
 }
 
@@ -55,7 +54,7 @@ page { background-color: #1a1a1a; }
 .icon-box {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 30rpx; /* 更圆润的图标 */
+  border-radius: 30rpx; 
   background-color: #f5f5f5;
   display: flex;
   justify-content: center;
@@ -65,9 +64,7 @@ page { background-color: #1a1a1a; }
   transition: all 0.2s;
 }
 
-.icon-box:active {
-  transform: scale(0.95);
-}
+.icon-box:active { transform: scale(0.95); }
 
 .highlight-box {
   background: linear-gradient(135deg, #e0f2fe, #bae6fd);
@@ -79,12 +76,25 @@ page { background-color: #1a1a1a; }
 .highlight-box .icon-text { color: #0369a1; }
 .scene-name { font-size: 26rpx; color: #666; font-weight: 500; }
 
+/* 🌟 新版三个按钮排版 */
 .btn-group {
   display: flex;
   justify-content: space-between;
+  gap: 16rpx;
 }
-.btn-cancel { width: 30%; border-radius: 50rpx; font-size: 28rpx; background: #f0f0f0; color: #666; }
-.btn-primary { width: 65%; border-radius: 50rpx; font-size: 28rpx; background: #2F9C7D; color: #fff; }
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50rpx;
+  font-size: 28rpx;
+  height: 80rpx;
+  font-weight: bold;
+}
+.btn-cancel { flex: 1; background: #f0f0f0; color: #666; }
+.btn-star { flex: 1.2; background: #fffcf8; color: #f59e0b; border: 2rpx solid #f59e0b; box-sizing: border-box; }
+.btn-star.collected { background: #f59e0b; color: #fff; }
+.btn-primary { flex: 1.5; background: #2F9C7D; color: #fff; }
 
 /* 弹窗样式 */
 .modal-mask {

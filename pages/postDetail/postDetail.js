@@ -103,16 +103,57 @@ Page({
     })
   },
 
-  formatTime(time) {
-    if (!time) return ''
-    const date = new Date(time)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hour = String(date.getHours()).padStart(2, '0')
-    const minute = String(date.getMinutes()).padStart(2, '0')
-    return `${year}-${month}-${day} ${hour}:${minute}`
-  },
+// === 🌟 终极时区精准 & iOS 兼容版 ===
+formatTime(time) {
+  if (!time) return ''
+  
+  let date;
+  if (time instanceof Date) {
+    date = time;
+  } else if (typeof time === 'number') {
+    date = new Date(time);
+  } 
+  else if (typeof time === 'string') {
+    if (/[上下]午|AM|PM/i.test(time)) {
+      const isPM = time.includes('下午') || time.toLowerCase().includes('pm');
+      const nums = time.match(/\d+/g);
+      if (nums && nums.length >= 5) {
+        let h = parseInt(nums[3], 10);
+        if (isPM && h < 12) h += 12;
+        if (!isPM && h === 12) h = 0;
+        return `${nums[0]}-${nums[1].padStart(2, '0')}-${nums[2].padStart(2, '0')} ${String(h).padStart(2, '0')}:${nums[4].padStart(2, '0')}`;
+      }
+    }
+
+    // [防御2] 🌟 罪魁祸首修复区 🌟
+    // 如果是带 T 和 Z 的国际标准格式 (ISO 8601)，这是世界上最完美的格式。
+    // 绝对不能动它！直接让 new Date 解析，手机绝对会自动加上 8 小时时差！
+    if (time.includes('T') && (time.includes('Z') || time.includes('+'))) {
+      date = new Date(time);
+    } 
+    // [防御3] 如果是 "YYYY-MM-DD HH:mm:ss" 这种普通字符串
+    // 为了防止 iOS 报黄条警告，我们只把横杠换成斜杠，其他什么都不改！
+    else {
+      let safeTime = time.replace(/-/g, '/');
+      date = new Date(safeTime);
+    }
+  }
+
+  // 3. 终极兜底：如果解析出来是无效时间，返回原字符串的前16位
+  if (!date || isNaN(date.getTime())) {
+    return typeof time === 'string' ? time.substring(0, 16) : '刚刚';
+  }
+
+  // 4. 标准化输出 YYYY-MM-DD HH:mm
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+},
+
 
   loadComments(postId) {
     return wx.cloud.callFunction({
@@ -127,10 +168,30 @@ Page({
             expandedMap[item.id] = true
           }
         })
-        const comments = (res.result.data || []).map(item => ({
-          ...item,
-          isExpanded: !!expandedMap[item.id]
-        }))
+        
+        // 🌟 核心修复：遍历评论列表，给主评论和楼中楼回复都洗一遍时间！
+        const comments = (res.result.data || []).map(item => {
+          
+          // 1. 格式化主评论的时间（兼容 time 和 createTime 字段）
+          const formattedItemTime = this.formatTime(item.createTime || item.time)
+
+          // 2. 格式化楼中楼（回复）的时间
+          const formattedReplies = (item.replies || []).map(reply => ({
+            ...reply,
+            // 同理，把回复的时间也转换成漂亮的 YYYY-MM-DD HH:mm 格式
+            time: this.formatTime(reply.createTime || reply.time),
+            createTime: this.formatTime(reply.createTime || reply.time) 
+          }))
+
+          return {
+            ...item,
+            time: formattedItemTime,             // 覆盖原有的时间字段
+            createTime: formattedItemTime,       // 双保险，防止你的 wxml 里写的是 createTime
+            replies: formattedReplies,           // 替换成洗好时间的楼中楼列表
+            isExpanded: !!expandedMap[item.id]
+          }
+        })
+
         this.setData({
           comments
         })
