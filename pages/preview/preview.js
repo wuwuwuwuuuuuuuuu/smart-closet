@@ -3,7 +3,6 @@ const app = getApp()
 
 Page({
   data: {
-    // 🌟 画布合成尺寸 (9:16，适配衣橱历史保存)
     canvasWidth: 750,
     canvasHeight: 1334,
 
@@ -11,14 +10,16 @@ Page({
     tryonType: null,
     originalTryonImage: null, 
     displayImage: null,       
-    transparentFileID: null,  // 用于AI文字生成
+    transparentFileID: null, 
 
-    localTransparentPath: null, // 🌟 用于本地 Canvas 合成
+    localTransparentPath: null, 
 
     isSaving: false,
     isFusing: false,
     showPromptModal: false,
     promptText: '',
+    
+    isCollected: false // 🌟 新增：追踪是否已收藏
   },
 
   onLoad(options) {
@@ -28,17 +29,15 @@ Page({
     this.setData({
       tryonType: options.productImage ? 'product' : 'ai',
       originalTryonImage: tryonImgUrl,
-      displayImage: tryonImgUrl // 初始展示原图
+      displayImage: tryonImgUrl 
     })
 
     const transparentBase64 = wx.getStorageSync('currentTransparentImage')
     if (transparentBase64) {
       this.prepareTransparentImage(transparentBase64)
-      // wx.removeStorageSync('currentTransparentImage')调试期建议先不清理
     }
   },
 
-  // 🌟 将 Base64 实体化：同时准备云端 ID 和本地路径
   async prepareTransparentImage(base64Data) {
     wx.showLoading({ title: '处理模特数据...' })
     try {
@@ -47,15 +46,11 @@ Page({
       const tempFilePath = `${wx.env.USER_DATA_PATH}/tmp_person_${Date.now()}.png`
       fs.writeFileSync(tempFilePath, base64Raw, 'base64')
       
-      // 🌟 1. 存入 data 供本地 Canvas 使用
       this.setData({ localTransparentPath: tempFilePath })
-      console.log('✅ 本地人像文件就绪:', tempFilePath)
 
-      // 🌟 2. 同时上传云存储，获取 ID (为AI文字生成预热)
       const cloudPath = `transparent_cache/${Date.now()}_${Math.floor(Math.random() * 1000)}.png`
       const uploadRes = await wx.cloud.uploadFile({ cloudPath, filePath: tempFilePath })
       this.setData({ transparentFileID: uploadRes.fileID })
-      console.log('✅ 云端人像 ID 就绪:', uploadRes.fileID)
     } catch (err) {
       console.error('❌ 人像数据处理失败:', err)
     } finally {
@@ -63,7 +58,6 @@ Page({
     }
   },
 
-  // === 🚀 [方案 A] 选择相册图片 -> 本地 Canvas 离屏合成 (Sticker Mode) ===
   chooseLocalBackground() {
     if (!this.data.localTransparentPath) {
       return wx.showToast({ title: '人像数据未就绪，请稍后', icon: 'none' })
@@ -74,18 +68,16 @@ Page({
       sizeType: ['compressed'],
       sourceType: ['album'],
       success: async (res) => {
-        // 直接触发本地合成，不走 AI 云函数！
         this.generateByLocalCanvas(res.tempFilePaths[0])
       }
     })
   },
 
-  // 🌟 精准无拉伸 Canvas 合成核心逻辑
   generateByLocalCanvas(bgLocalPath) {
     const that = this
     const personPath = this.data.localTransparentPath
     
-    this.setData({ isFusing: true })
+    this.setData({ isFusing: true, isCollected: false }) // 换了新图，重置收藏状态
     wx.showLoading({ title: '合成海报中...', mask: true })
 
     const query = wx.createSelectorQuery()
@@ -98,7 +90,6 @@ Page({
         const ctx = canvas.getContext('2d')
         const { canvasWidth: width, canvasHeight: height } = that.data
         
-        // 设置合成的画板尺寸 (9:16)
         canvas.width = width
         canvas.height = height
 
@@ -112,7 +103,6 @@ Page({
             })
           }
 
-          // 1. 🌟 绘制背景 ( aspectFill 铺满，裁剪多余)
           const bgImg = await loadImg(bgLocalPath)
           const bgRatio = bgImg.width / bgImg.height
           const canvasRatio = width / height
@@ -131,16 +121,14 @@ Page({
           }
           ctx.drawImage(bgImg, renderBgX, renderBgY, renderBgW, renderBgH)
 
-          // 2. 🌟 绘制透明人像 ( aspectFit 保持比例，居中到底部)
           const personImg = await loadImg(personPath)
           const pRatio = personImg.width / personImg.height
           
           let renderPW = width
           let renderPH = renderPW / pRatio
           let renderPX = 0
-          let renderPY = height - renderPH // 靠底部对齐
+          let renderPY = height - renderPH 
 
-          // 如果人像过高，则以高度为基准缩放
           if (renderPH > height) {
              renderPH = height
              renderPW = renderPH * pRatio
@@ -150,7 +138,6 @@ Page({
           
           ctx.drawImage(personImg, renderPX, renderPY, renderPW, renderPH)
 
-          // 3. 🌟 导出本地临时图片 (destWidth 设为合成宽度，保证高清)
           wx.canvasToTempFilePath({
             canvas,
             destWidth: width,
@@ -160,16 +147,13 @@ Page({
               wx.hideLoading()
               const localFinalUrl = resExport.tempFilePath
               
-              // 1. 更新前端展示 (显示这个 wxfile:// 链接)
               that.setData({
                 isFusing: false,
                 currentBackground: '相册自定义',
                 displayImage: localFinalUrl 
               })
               
-              // 2. 🌟 核心：触发静默转存到云端 (为了衣橱历史)
               that.autoSaveToCloud(localFinalUrl)
-              
               wx.showToast({ title: '贴合完毕！', icon: 'success' })
             },
             fail: (err) => that.handleFusionError(err)
@@ -187,17 +171,15 @@ Page({
     console.error('❌ Canvas 合成失败:', err)
   },
 
-  // === ☁️ [方案 B] 文字出图 -> 呼叫云端 AI 接口 ( Wanx HighEnd Mode) ===
   async callAiFusion(params) {
     if (!this.data.transparentFileID) {
       return wx.showToast({ title: 'AI 人像未就绪，请等2秒', icon: 'none' })
     }
     
-    this.setData({ isFusing: true })
+    this.setData({ isFusing: true, isCollected: false }) // 换了新图，重置收藏状态
     wx.showLoading({ title: 'AI 场景融合中...', mask: true })
 
     try {
-      // 🌟 核心改变：只传 prompt，做纯文本场景生成！
       const aiRes = await wx.cloud.callFunction({
         name: 'aiSceneFusion',
         data: {
@@ -218,7 +200,6 @@ Page({
         })
         wx.showToast({ title: '大片生成完毕！', icon: 'success' })
 
-        // 🌟 触发静默保存到云端历史
         this.autoSaveToCloud(generatedImgUrl)
 
       } else {
@@ -239,29 +220,20 @@ Page({
     this.callAiFusion({ prompt: this.data.promptText.trim() })
   },
 
-  // === 🤖 通用后台静默保存（修复兼容本地路径） ===
   async autoSaveToCloud(imgUrl) {
     try {
-      console.log('🤖 后台静默保存启动，准备路径:', imgUrl)
-      
       let finalTempPath = imgUrl;
 
-      // 🌟 新增：如果传来的是 HTTPS 链接（大模型生成的），需要先下载；如果是本地链接（Canvas生成的），直接用。
       if (imgUrl.startsWith('http')) {
-          console.log('正在下载网络图片...')
           const downloadRes = await new Promise((resolve, reject) => {
             wx.downloadFile({ url: imgUrl, success: resolve, fail: reject })
           })
           finalTempPath = downloadRes.tempFilePath;
       }
       
-      console.log('正在上传至私人云存储...')
-      // 存入云存储
       const cloudPath = `tryon_history/${Date.now()}_${Math.floor(Math.random() * 1000)}.png`
       const uploadRes = await wx.cloud.uploadFile({ cloudPath, filePath: finalTempPath })
       
-      console.log('正在写入衣橱历史数据库...')
-      // 写入数据库
       const userId = app.globalData.currentUserId || 'unknown_user'
       await db.collection('tryon_history').add({
         data: {
@@ -272,18 +244,58 @@ Page({
           createTime: db.serverDate()
         }
       })
-      console.log('✅ 后台静默保存成功！安全！')
     } catch (error) {
-      console.error('❌ 静默保存失败详情:', error)
+      console.error('❌ 静默保存失败:', error)
     }
   },
 
-  // === 📸 手动保存至相册 ===
+  // === 🌟 新增：一键加入收藏夹 ===
+  async addToCollection() {
+    if (this.data.isCollected) {
+      return wx.showToast({ title: '已经收藏过了', icon: 'none' })
+    }
+
+    wx.showLoading({ title: '收藏中...', mask: true })
+    try {
+      let finalTempPath = this.data.displayImage;
+
+      // 如果当前图是网络图，先下载保底
+      if (finalTempPath.startsWith('http')) {
+          const downloadRes = await new Promise((resolve, reject) => {
+            wx.downloadFile({ url: finalTempPath, success: resolve, fail: reject })
+          })
+          finalTempPath = downloadRes.tempFilePath;
+      }
+      
+      // 独立上传一张到 collections_cache 文件夹
+      const cloudPath = `collections_cache/${Date.now()}_${Math.floor(Math.random() * 1000)}.png`
+      const uploadRes = await wx.cloud.uploadFile({ cloudPath, filePath: finalTempPath })
+      
+      const userId = app.globalData.currentUserId || 'unknown_user'
+      await db.collection('collections').add({
+        data: {
+          userId: userId,
+          finalImage: uploadRes.fileID,      
+          originalTryonImage: this.data.originalTryonImage, 
+          sceneUrl: this.data.currentBackground || '基础试穿', 
+          createTime: db.serverDate()
+        }
+      })
+      
+      this.setData({ isCollected: true })
+      wx.hideLoading()
+      wx.showToast({ title: '已加入收藏夹！', icon: 'success' })
+    } catch (error) {
+      wx.hideLoading()
+      wx.showToast({ title: '收藏失败', icon: 'none' })
+      console.error(error)
+    }
+  },
+
   saveToAlbum() {
     if (this.data.isSaving || !this.data.displayImage) return
     this.setData({ isSaving: true })
     
-    // wx.downloadFile 如果是本地 wxfile:// 也会直接成功返回本地路径
     wx.showLoading({ title: '保存中...', mask: true })
 
     wx.downloadFile({

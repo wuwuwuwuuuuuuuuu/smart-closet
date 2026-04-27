@@ -1,3 +1,4 @@
+// cloudfunctions/addReply/index.js
 const cloud = require('wx-server-sdk')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
@@ -23,16 +24,22 @@ exports.main = async (event, context) => {
     const nickname = userInfo.nickname || '用户'
     const avatar = userInfo.avatar || ''
 
+    const nowTime = new Date().getTime() // 🌟 获取当前 13 位绝对时间戳
+
     // 创建回复数据
     const replyData = {
-      id: new Date().getTime().toString(), // 生成唯一ID
+      id: nowTime.toString(), // 生成唯一ID
       parentId: commentId,
       author: nickname,
       authorOpenid: openid,
       avatar: avatar,
       content: content,
       replyTo: replyTo || '', // 被回复人的昵称
-      time: new Date().toLocaleString('zh-CN'),
+      
+      // 🌟 核心修复：直接存入时间戳，绝不存中文和本地格式化字符串！
+      time: nowTime, 
+      createTime: nowTime, // 增加备用字段，完美适配前端的 (reply.createTime || reply.time)
+      
       likes: 0,
       liked: false
     }
@@ -65,7 +72,7 @@ exports.main = async (event, context) => {
       await db.collection('comments').doc(comment._id).update({
         data: {
           replies: replies,
-          updated_at: new Date()
+          updated_at: db.serverDate() // 更新操作时间
         }
       })
     } else {
@@ -79,7 +86,7 @@ exports.main = async (event, context) => {
       await db.collection('comments').doc(commentId).update({
         data: {
           replies: replies,
-          updated_at: new Date()
+          updated_at: db.serverDate() // 更新操作时间
         }
       })
     }
