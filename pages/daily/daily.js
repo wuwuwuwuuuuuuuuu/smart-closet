@@ -17,7 +17,7 @@ const {
 
 Page({
   data: {
-    heroImage: '/images/smart_recommend_hero_compressed.jpg',
+    heroImage: 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/images/smart_recommend_hero_compressed.jpg',
     arrowIcon: '/images/67134f606087c7f32d75f9d9f47f5af.png',
     currentCity: '定位中...',
     currentDateLabel: '',
