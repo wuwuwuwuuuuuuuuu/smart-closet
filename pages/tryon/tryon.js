@@ -21,7 +21,7 @@ Page({
     selectedClothes: [],
     productTryonItem: null,
     isGenerating: false,
-    smartRecommendIcon: '/images/smart_recommend_robot_icon.png',
+    smartRecommendIcon: 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/images/smart_recommend_robot_icon.png',
     smartRecommendEntry: null
   },
 

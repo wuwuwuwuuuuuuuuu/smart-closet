@@ -142,7 +142,7 @@ Page({
   contactUs() {
     wx.showModal({
       title: '联系我们',
-      content: '客服电话：400-123-4567\n邮箱：service@wardrobe.com',
+      content: '客服电话：18369580086\n邮箱：3236408704@qq.com',
       showCancel: false
     })
   },
