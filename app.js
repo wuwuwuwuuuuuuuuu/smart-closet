@@ -3,7 +3,8 @@ App({
     userInfo: null,
     systemInfo: null,
     currentUserId: null,  // 用来存放云数据库里 users 表的真实 ID
-    currentUserInfo: null // 🌟 存放从数据库拉出来的真实用户档案（包含昵称、头像等）
+    currentUserInfo: null, // 🌟 存放从数据库拉出来的真实用户档案（包含昵称、头像等）
+    productImageForTryon: null // 商品试穿功能使用的商品图片路径
   },
 
   onLaunch() {

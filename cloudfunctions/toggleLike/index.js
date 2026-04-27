@@ -1,63 +1,95 @@
 const cloud = require('wx-server-sdk')
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV }) // 使用当前云环境
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
 exports.main = async (event, context) => {
+
   const wxContext = cloud.getWXContext()
   const openid = wxContext.OPENID
   const { postId } = event
 
-  if (!postId) {
-    return { code: 400, msg: '缺少 postId 参数' }
-  }
-
-  // ⚠️ 极其重要：请把 'forum' 改成你存帖子的真实集合(表)名！
-  const POSTS_COLLECTION = 'posts' 
-  const ACTION_COLLECTION = 'likes' // 假设点赞记录表叫 user_likes
+  const POSTS_COLLECTION = 'posts'
+  const ACTION_COLLECTION = 'likes'
 
   try {
-    // 检查是否已经点赞过
-    const existRecord = await db.collection(ACTION_COLLECTION).where({
-      openid: openid,
-      postId: postId
-    }).get()
+
+    const existRecord =
+      await db.collection(ACTION_COLLECTION)
+        .where({
+          postId: postId,
+          openid: openid
+        })
+        .get()
+
+    let liked
 
     if (existRecord.data.length > 0) {
-      // 场景 A：已经点赞过，执行【取消点赞】
-      await db.collection(ACTION_COLLECTION).doc(existRecord.data[0]._id).remove()
-      
-      // 🌟 让主帖子表的点赞总数 -1 (同时兼容 likes 和 likeCount 字段)
-      await db.collection(POSTS_COLLECTION).doc(postId).update({
-        data: {
-          likes: _.inc(-1),
-          likeCount: _.inc(-1)
-        }
-      })
-      
-      return { code: 200, data: { liked: false }, msg: '取消点赞成功' }
-    } else {
-      // 场景 B：尚未点赞，执行【添加点赞】
-      await db.collection(ACTION_COLLECTION).add({
-        data: {
-          openid: openid,
-          postId: postId,
-          createTime: db.serverDate()
-        }
-      })
-      
-      // 🌟 让主帖子表的点赞总数 +1
-      await db.collection(POSTS_COLLECTION).doc(postId).update({
-        data: {
-          likes: _.inc(1),
-          likeCount: _.inc(1)
-        }
-      })
 
-      return { code: 200, data: { liked: true }, msg: '点赞成功' }
+      await db.collection(ACTION_COLLECTION)
+        .doc(existRecord.data[0]._id)
+        .remove()
+
+      await db.collection(POSTS_COLLECTION)
+        .doc(postId)
+        .update({
+          data: {
+            likes: _.inc(-1)
+          }
+        })
+
+      liked = false
+
+    } else {
+
+      await db.collection(ACTION_COLLECTION)
+        .add({
+          data: {
+            postId: postId,   // ⭐ 关键
+            openid: openid,   // ⭐ 关键
+            createTime: db.serverDate()
+          }
+        })
+
+      await db.collection(POSTS_COLLECTION)
+        .doc(postId)
+        .update({
+          data: {
+            likes: _.inc(1)
+          }
+        })
+
+      liked = true
+
     }
+
+    const postRes =
+      await db.collection(POSTS_COLLECTION)
+        .doc(postId)
+        .get()
+
+    return {
+
+      code: 200,
+
+      data: {
+
+        liked,
+        likes: postRes.data.likes || 0
+
+      }
+
+    }
+
   } catch (err) {
-    console.error('点赞操作数据库异常:', err)
-    return { code: 500, msg: '数据库查询/更新失败', error: err }
+
+    console.error(err)
+
+    return {
+      code: 500,
+      msg: '点赞失败'
+    }
+
   }
+
 }
