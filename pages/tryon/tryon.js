@@ -107,18 +107,15 @@ Page({
     } catch (error) {
       wx.hideLoading()
       console.error('tryon.loadRealClothes错误:', error)
-      // logError('tryon.loadRealClothes', error)
     }
   },
 
   consumePendingSmartRecommendEntry() {
     try {
       const entry = wx.getStorageSync('smartRecommendTryonEntry')
-      // if (!isValidSmartRecommendEntry(entry) || entry.active !== true) {
       if (!entry || entry.active !== true) {
         if (entry && entry.active === true) {
           console.warn('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
-          // logWarning('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
         }
         this.setData({ smartRecommendEntry: null })
         return null
@@ -134,7 +131,6 @@ Page({
       return consumedEntry
     } catch (error) {
       console.error('tryon.consumePendingSmartRecommendEntry错误:', error)
-      // logError('tryon.consumePendingSmartRecommendEntry', error)
       return null
     }
   },
@@ -146,8 +142,6 @@ Page({
       return
     }
 
-    // const matchedClothes = matchSelectedClothes(entry.selectedClothesIds || [], clothesList)
-    // const placedClothes = buildSuggestedPlacements(matchedClothes)
     const matchedClothes = []
     const placedClothes = []
 
@@ -155,9 +149,6 @@ Page({
       console.warn('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
         selectedClothesIds: entry.selectedClothesIds
       })
-      // logWarning('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
-      //   selectedClothesIds: entry.selectedClothesIds
-      // })
     }
 
     this.setData({
@@ -210,7 +201,7 @@ Page({
       x: 30 + Math.random() * 30,
       y: 50 + Math.random() * 50,
       scale: 1,
-      boardId: uniqueBoardId // 👈 把这个唯一 ID 存进去
+      boardId: uniqueBoardId 
     }
 
     this.setData({
@@ -249,7 +240,6 @@ Page({
     this.setData(nextData)
   },
 
-  // 获取提交给试穿接口的衣物列表，商品试穿项异常丢失时给出 warning 并使用备份数据
   getSelectedTryonClothes() {
     if (Array.isArray(this.data.selectedClothes) && this.data.selectedClothes.length > 0) {
       return this.data.selectedClothes
@@ -313,7 +303,6 @@ Page({
       let bottomGarmentFileID = ''
 
       selectedClothes.forEach(item => {
-        // 试穿接口必须使用 cloud:// 文件ID，画板展示图可能是 HTTPS 临时链接
         const garmentFileID = item.tryonImageFileID || item.image
         if (item.category === '下装') {
           bottomGarmentFileID = garmentFileID
@@ -339,6 +328,17 @@ Page({
 
       if (aiRes.result.code === 200) {
         const finalImageUrl = aiRes.result.data.result_url
+        
+        // 🌟 核心防空补丁：兼容不同的云端返回字段名，提取百度的透明人像 Base64
+        const transparentBase64 = aiRes.result.data.transparentBase64 || aiRes.result.data.transparentImage || aiRes.result.data.transparent_image || aiRes.result.data.transparent_base64
+        
+        if (transparentBase64) {
+          // 📦 成功拿到快递！把它放进名叫 'currentTransparentImage' 的缓存柜里，供下一页取用
+          wx.setStorageSync('currentTransparentImage', transparentBase64)
+          console.log('✅ 成功将透明人像存入本地缓存，准备传给预览页！')
+        } else {
+          console.warn('⚠️ 云函数返回结果中没有找到透明人像 Base64！如果你确认在 aiTryon 中做了百度抠图，请检查返回的字段名。')
+        }
 
         // 跳转到预览页
         wx.navigateTo({
@@ -352,7 +352,6 @@ Page({
       wx.hideLoading()
       this.setData({ isGenerating: false })
       console.error('tryon.startAITryOn错误:', error)
-      // logError('tryon.startAITryOn', error)
       wx.showToast({ title: error.message || '换装处理失败，请重试', icon: 'none' })
     }
   },
@@ -397,7 +396,6 @@ Page({
     })
   },
 
-  // 根据缓存内容创建商品试穿画板项，兼容历史字符串格式
   buildProductTryonItem(productPayload) {
     if (!productPayload) {
       return null
@@ -422,7 +420,7 @@ Page({
     return {
       image: displayImage,
       tryonImageFileID,
-      category: '上衣', // 商品试穿默认按上衣处理，后续可扩展商品分类选择
+      category: '上衣', 
       source: 'productTryon',
       x: 260,
       y: 220,
@@ -431,7 +429,6 @@ Page({
     }
   },
 
-  // 自动添加商品图片到画板
   autoAddProductImage() {
     const productPayload = wx.getStorageSync('productImageForTryon')
     console.log('检测商品图片:', productPayload)
@@ -446,7 +443,6 @@ Page({
     this.productTryonItemBackup = productItem
     wx.setStorageSync('activeProductTryonItem', productItem)
     
-    // 添加到画板
     this.setData({
       sidebarVisible: false,
       selectedClothes: [productItem],
@@ -455,7 +451,6 @@ Page({
       console.log('画板数据已更新:', this.data.selectedClothes)
     })
     
-    // 清除本地存储，避免重复添加
     wx.removeStorageSync('productImageForTryon')
     
     wx.showToast({
