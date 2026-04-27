@@ -1,0 +1,10 @@
+{
+  "name": "getWeather",
+  "version": "1.0.0",
+  "description": "获取高德天气",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "wx-server-sdk": "~2.6.3"
+  }
+}

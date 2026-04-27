@@ -1,5 +1,5 @@
 const app = getApp()
-const db = wx.cloud.database() // 🌟 引入云数据库
+const db = wx.cloud.database() 
 
 Page({
   data: {
@@ -8,7 +8,7 @@ Page({
     searchKeyword: '',
     
     clothesList: [],     // 页面展示用的列表
-    allClothes: [],      // 🌟 初始化为空，等待云端数据填充
+    allClothes: [],      // 等待云端数据填充
     isLoading: false     // 加载状态
   },
 
@@ -17,71 +17,120 @@ Page({
   },
 
   onShow() {
-    // 🌟 每次页面显示都重新拉取，确保刚上传的衣服能立刻看到
+    // 🌟 每次显示都重新拉取，确保刚上传的衣服能立刻看到
     this.loadClothesFromCloud()
   },
 
-  // ☁️ 核心改造：从云端数据库抓取属于当前用户的衣服
-  async loadClothesFromCloud() {
-    const userId = app.globalData.currentUserId
-    if (!userId) {
-      console.warn('未获取到用户ID，无法加载衣橱')
-      return
-    }
+// ☁️ 核心改造：完全对齐数据库，并解决电脑端图片空白 Bug
+async loadClothesFromCloud() {
+  const userId = app.globalData.currentUserId
+  if (!userId) {
+    console.warn('未获取到用户ID，无法加载私人衣橱')
+    this.setData({ clothesList: [], allClothes: [] }) // 没登录就清空
+    return
+  }
 
-    this.setData({ isLoading: true })
-    wx.showLoading({ title: '正在整理衣橱...' })
+  this.setData({ isLoading: true })
+  wx.showLoading({ title: '正在打开私人衣橱...' })
 
-    try {
-      // 🌟 关键查询：只查 user_id 等于当前登录用户的数据
-      const res = await db.collection('clothes')
-        .where({ user_id: userId })
-        .orderBy('created_at', 'desc') // 按时间倒序，新上传的在前面
-        .get()
-
-      console.log('✅ 云端拉取成功，共', res.data.length, '件衣物')
-
-      this.setData({
-        allClothes: res.data,
-        isLoading: false
+  try {
+    // 1. 获取基础数据
+    const res = await db.collection('clothes')
+      .where({
+        user_id: userId 
       })
-      wx.hideLoading()
+      .orderBy('_id', 'desc') 
+      .get()
 
-      // 拉取完立刻执行一次筛选（处理当前选中的季节/分类）
-      this.filterClothes()
+    let rawData = res.data || []
 
-    } catch (err) {
-      this.setData({ isLoading: false })
-      wx.hideLoading()
-      console.error('❌ 拉取衣橱失败:', err)
-      wx.showToast({ title: '加载失败', icon: 'error' })
+    // 🌟 2. 第一道防线：数据格式清洗防崩溃
+    rawData = rawData.map(item => {
+      let finalImage = item.image
+      if (Array.isArray(item.image) && item.image.length > 0) {
+        finalImage = item.image[0]
+      } else if (typeof item.image === 'string') {
+        finalImage = item.image.trim()
+      } else if (item.coverImage) {
+        finalImage = Array.isArray(item.coverImage) ? item.coverImage[0] : item.coverImage
+      }
+      return { ...item, image: finalImage }
+    })
+
+    // 🌟 3. 第二道防线：解决电脑端不显示 cloud:// 图片的痛点
+    // 提取所有 cloud:// 开头的图片地址
+    const fileList = rawData
+      .map(item => item.image)
+      .filter(img => img && typeof img === 'string' && img.startsWith('cloud://'))
+
+    if (fileList.length > 0) {
+      // 批量换取真实的 https:// 临时链接
+      const urlRes = await wx.cloud.getTempFileURL({ fileList })
+      const urlMap = {}
+      
+      urlRes.fileList.forEach(file => {
+        if (file.fileID && file.tempFileURL) {
+          urlMap[file.fileID] = file.tempFileURL
+        }
+      })
+
+      // 把 https:// 链接替换回数据里，电脑端就能完美识别了！
+      rawData = rawData.map(item => ({
+        ...item,
+        image: urlMap[item.image] || item.image
+      }))
     }
-  },
 
-  // 🔍 筛选逻辑（适配云端的中文字符）
+    console.log('✅ 云端拉取成功，共', rawData.length, '件私人衣物')
+
+    this.setData({
+      allClothes: rawData,
+      isLoading: false
+    })
+    wx.hideLoading()
+
+    // 拉取完立刻执行一次筛选
+    this.filterClothes()
+
+  } catch (err) {
+    this.setData({ isLoading: false })
+    wx.hideLoading()
+    console.error('❌ 拉取衣橱失败:', err)
+    wx.showToast({ title: '加载失败，请检查网络', icon: 'error' })
+  }
+},
+
+  // 🔍 筛选逻辑（包含容错防御）
   filterClothes() {
     const { currentSeason, currentCategory, searchKeyword, allClothes } = this.data
     
     let filteredClothes = allClothes.filter(item => {
-      // 1. 季节筛选 
-      // ⚠️ 注意：你之前的 mock 数据是 'summer'，但 addClothing 存的是 '夏季'
-      // 这里做了兼容处理
-      const seasonMap = { 'all':'全部', 'spring':'春季', 'summer':'夏季', 'autumn':'秋季', 'winter':'冬季' }
+      // 1. 季节精准对齐
+      const seasonMap = { 'all':'全部', 'spring':'春', 'summer':'夏', 'autumn':'秋', 'winter':'冬' }
       const targetSeason = seasonMap[currentSeason]
-      if (currentSeason !== 'all' && !item.season.includes(targetSeason)) {
+      // 加上 item.season 存在性校验，防止旧脏数据导致程序崩溃
+      if (currentSeason !== 'all' && (!item.season || !item.season.includes(targetSeason))) {
         return false
       }
       
-      // 2. 分类筛选
-      // ⚠️ 同理：'top' 对应 '上衣'
-      const categoryMap = { 'all':'全部', 'top':'上衣', 'pants':'下装', 'skirt':'连衣裙', 'coat':'外套' }
+      // 2. 分类精准对齐
+      const categoryMap = { 
+        'all': '全部', 
+        'top': '上衣', 
+        'pants': '下装', 
+        'skirt': '连衣裙', 
+        'coat': '外套',
+        'hat': '配饰',
+        'shoes': '鞋包',
+        'accessory': '配饰'
+      }
       const targetCategory = categoryMap[currentCategory]
       if (currentCategory !== 'all' && item.category !== targetCategory) {
         return false
       }
       
       // 3. 关键词搜索
-      if (searchKeyword && !item.name.includes(searchKeyword)) {
+      if (searchKeyword && (!item.name || !item.name.includes(searchKeyword))) {
         return false
       }
       
@@ -93,10 +142,37 @@ Page({
     })
   },
 
-  // ... (保留你原来的 selectSeason, selectCategory, showSearch 等 UI 交互函数)
+  // ================= UI 交互相关的函数 =================
+  
+  selectSeason(e) {
+    this.setData({ currentSeason: e.currentTarget.dataset.season })
+    this.filterClothes()
+  },
 
-  // 跳转到上传页面
+  selectCategory(e) {
+    this.setData({ currentCategory: e.currentTarget.dataset.category })
+    this.filterClothes()
+  },
+
+  onClothesTap(e) {
+    const index = e.currentTarget.dataset.index
+    const clothes = this.data.clothesList[index]
+    
+    wx.navigateTo({
+      url: `/pages/clothesDetail/clothesDetail?id=${clothes._id}`
+    })
+  },
+
   goToUpload() {
     wx.navigateTo({ url: '/pages/uploadClothes/uploadClothes' })
+  },
+
+  showSearch() {
+    wx.showToast({ title: '搜索功能开发中', icon: 'none' })
+  },
+
+  clearSearch() {
+    this.setData({ searchKeyword: '' })
+    this.filterClothes()
   }
 })

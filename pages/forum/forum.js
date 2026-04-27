@@ -1,12 +1,11 @@
-// 社区页面逻辑
+const app = getApp()
+
 Page({
   data: {
     postList: [],
     refreshing: false,
     loadingMore: false,
-    noMoreData: false,
-    page: 1,
-    pageSize: 10
+    noMoreData: false
   },
 
   onLoad() {
@@ -16,86 +15,78 @@ Page({
 
   onShow() {
     console.log('社区页显示')
+    // 仅在数据为空时才重新加载，避免每次返回页面都产生视觉闪烁
+    if (this.data.postList.length === 0) {
+      this.loadPosts()
+    }
   },
 
-  // 加载帖子列表
   loadPosts(refresh = false) {
     if (refresh) {
-      this.setData({
-        refreshing: true,
-        page: 1
-      })
+      this.setData({ refreshing: true })
     } else {
-      this.setData({
-        loadingMore: true
-      })
+      this.setData({ loadingMore: true })
     }
 
-    // 模拟数据
-    const mockPosts = this.generateMockPosts(this.data.page, this.data.pageSize)
-    
-    setTimeout(() => {
-      if (refresh) {
+    wx.cloud.callFunction({
+      name: 'getForumList'
+    }).then(res => {
+      console.log('获取帖子列表成功:', res)
+      if (res.result && res.result.code === 200) {
+        const posts = res.result.data.map(item => ({
+          id: item._id,
+          // 🌟 修复点：如果 item.image 为空，自动去拿 item.images 数组的第一张图作为封面
+          image: item.image || (item.images && item.images.length > 0 ? item.images[0] : ''),
+          images: item.images || (item.image ? [item.image] : []),
+          title: item.title || '',
+          content: item.content || '',
+          author: item.author || '用户',
+          avatar: item.avatar || '',
+          // 🌟 双保险兼容：同时兼容 likes/likeCount，避免前端拿不到数据变成 0
+          likes: item.likes || item.likeCount || 0,
+          collects: item.collects || item.collectCount || 0,
+          liked: item.liked || false,
+          collected: item.collected || false,
+          formattedTime: item.formattedTime || '刚刚'
+        }))
+
         this.setData({
-          postList: mockPosts,
+          postList: posts,
           refreshing: false,
-          noMoreData: false
+          loadingMore: false,
+          noMoreData: true
         })
       } else {
-        this.setData({
-          postList: [...this.data.postList, ...mockPosts],
-          loadingMore: false,
-          noMoreData: mockPosts.length < this.data.pageSize
-        })
+        this.setData({ refreshing: false, loadingMore: false })
+        wx.showToast({ title: '加载失败', icon: 'none' })
       }
-    }, 500)
+    }).catch(err => {
+      console.error('获取帖子列表失败:', err)
+      this.setData({ refreshing: false, loadingMore: false })
+      wx.showToast({ title: '加载失败', icon: 'none' })
+    })
   },
 
-  // 生成模拟帖子数据
-  generateMockPosts(page, pageSize) {
-    const posts = []
-    const startIndex = (page - 1) * pageSize + 1
-    
-    for (let i = 0; i < pageSize; i++) {
-      posts.push({
-        id: startIndex + i,
-        image: `https://picsum.photos/400/600?random=${startIndex + i}`,
-        title: `时尚穿搭 ${startIndex + i}`,
-        author: `用户${startIndex + i}`,
-        likes: Math.floor(Math.random() * 100),
-        liked: Math.random() > 0.5
-      })
-    }
-    
-    return posts
-  },
-
-  // 下拉刷新
   onRefresh() {
     this.loadPosts(true)
   },
 
-  // 上拉加载更多
   onLoadMore() {
-    if (this.data.loadingMore || this.data.noMoreData) {
-      return
-    }
-    
-    this.setData({
-      page: this.data.page + 1
-    })
-    this.loadPosts()
+    // 暂无分页，数据已全部加载
   },
 
-  // 跳转到帖子详情
   goToPostDetail(e) {
     const id = e.currentTarget.dataset.id
+    const post = this.data.postList.find(item => item.id === id)
+    if (!post) return
+    
+    // 🌟 将当前列表里的数据打包传递给详情页，实现秒开！
+    const postData = encodeURIComponent(JSON.stringify(post))
     wx.navigateTo({
-      url: `/pages/postDetail/postDetail?id=${id}`
+      url: `/pages/postDetail/postDetail?id=${id}&postData=${postData}`
     })
   },
 
-  // 跳转到编辑帖子页
   goToPostEdit() {
     wx.navigateTo({
       url: '/pages/postEdit/postEdit'

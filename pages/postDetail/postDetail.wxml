@@ -1,75 +1,122 @@
-<!-- 帖子详情页 -->
 <view class="container">
-  <!-- 顶部导航 -->
   <view class="nav-bar">
     <view class="nav-right" wx:if="{{isAuthor}}" bindtap="showDeleteConfirm">
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img25.png" class="nav-icon" />
+      <image src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMSI+PC9jaXJjbGU+PGNpcmNsZSBjeD0iMTkiIGN5PSIxMiIgcj0iMSI+PC9jaXJjbGU+PGNpcmNsZSBjeD0iNSIgY3k9IjEyIiByPSIxIj48L2NpcmNsZT48L3N2Zz4=" class="nav-icon" />
     </view>
   </view>
 
-  <!-- 帖子内容 -->
   <scroll-view class="content-scroll" scroll-y="true">
-    <!-- 帖子大图 -->
-    <image src="{{post.image}}" class="post-image" mode="widthFix" />
-    
-    <!-- 帖子信息 -->
-    <view class="post-info">
-      <text class="post-title">{{post.title}}</text>
-      <view class="post-meta">
-        <text class="post-author">{{post.author}}</text>
-        <text class="post-time">{{post.time}}</text>
+    <view class="image-swiper-section">
+      <swiper class="post-swiper" indicator-dots="{{false}}" autoplay="{{false}}" circular="{{false}}" duration="300" bindchange="onSwiperChange">
+        <swiper-item wx:for="{{post.images || [post.image]}}" wx:key="*this">
+          <image src="{{item}}" class="swiper-image" mode="aspectFill" bindtap="previewImage" data-images="{{post.images || [post.image]}}" data-index="{{index}}" />
+        </swiper-item>
+      </swiper>
+      <view class="swiper-indicator" wx:if="{{post.images && post.images.length > 1}}">
+        <text class="indicator-text">{{currentImageIndex + 1}}/{{post.images.length}}</text>
       </view>
-      <text class="post-content">{{post.content}}</text>
-      
-      <!-- 点赞区域 -->
-      <view class="like-section">
-        <view class="like-btn {{post.liked ? 'liked' : ''}}" bindtap="toggleLike">
-          <image 
-            src="{{post.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
-            class="like-icon" />
-          <text class="like-count">{{post.likes}}</text>
-        </view>
+    </view>
+    
+    <view class="post-info">
+      <text class="post-title" wx:if="{{post.title}}">{{post.title}}</text>
+      <text class="post-content" wx:if="{{post.content}}">{{post.content}}</text>
+      <view class="post-meta-bottom">
+        <text class="post-time">{{post.time}}</text>
       </view>
     </view>
 
-    <!-- 评论区 -->
-    <view class="comment-section">
-      <text class="section-title">评论 ({{comments.length}})</text>
+    <view class="comment-section" id="comment-section">
+      <text class="section-title">共 {{comments.length > 0 ? comments.length : 0}} 条评论</text>
       
       <view class="comment-list">
-        <view class="comment-item" wx:for="{{comments}}" wx:key="id">
-          <view class="comment-header">
-            <text class="comment-author">{{item.author}}</text>
-            <view class="comment-like" bindtap="toggleCommentLike" data-index="{{index}}">
-              <image 
-                src="{{item.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
-                class="comment-like-icon" />
-              <text class="comment-like-count">{{item.likes}}</text>
+        <view class="comment-item" wx:for="{{comments}}" wx:key="id" wx:for-index="index" wx:for-item="item">
+          <view class="comment-main">
+            <image wx:if="{{item.avatar}}" src="{{item.avatar}}" class="comment-avatar" mode="aspectFill" />
+            <view class="comment-body">
+              <text class="comment-author">{{item.author}}</text>
+              <text class="comment-content" catchtap="handleReply" data-comment="{{item}}">{{item.content}}</text>
+              
+              <view class="comment-footer">
+                <view class="time-reply">
+                  <text class="comment-time">{{item.time}}</text>
+                  <text class="reply-text" catchtap="handleReply" data-comment="{{item}}">回复</text>
+                </view>
+                <view class="comment-like" bindtap="toggleCommentLike" data-id="{{item.id}}">
+                  <image wx:if="{{item.liked}}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGMjQ0MiI+PHBhdGggZD0iTTEyIDIxLjM1bC0xLjQ1LTEuMzJDNS40IDE1LjM2IDIgMTIuMjggMiA4LjUgMiA1LjQyIDQuNDIgMyA3LjUgM2MyLjA0IDAgNCAxLjA4IDUuMDggMi43NUExMy4wNiAxMy4wNiAwIDAgMSAxNi41IDNjMy4wOCAwIDUuNSAyLjQyIDUuNSA1LjUgMCAzLjc4LTMuNCA2Ljg2LTguNTUgMTEuNTRMMTIgMjEuMzV6Ii8+PC9zdmc+" class="comment-like-icon" />
+                  <image wx:else src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwLjg0IDQuNjFhNS41IDUuNSAwIDAgMC03Ljc4IDBsLTEuMDYgMS4wNi0xLjA2LTEuMDZhNS41IDUuNSAwIDAgMC03Ljc4IDcuNzhsMS4wNiAxLjA2TDEyIDIxLjIzbDcuNzgtNy43OCAxLjA2LTEuMDZhNS41IDUuNSAwIDAgMCAwLTcuNzh6Ij48L3BhdGg+PC9zdmc+" class="comment-like-icon" />
+                  <text class="comment-like-count {{item.liked ? 'liked-text' : ''}}">{{item.likes > 0 ? item.likes : 0}}</text>
+                </view>
+              </view>
+
+              <view class="expand-btn" wx:if="{{item.replies && item.replies.length > 0 && !item.isExpanded}}" catchtap="toggleExpand" data-index="{{index}}">
+                <text class="expand-text">—— 展开 {{item.replies.length}} 条回复 <text class="arrow">∨</text></text>
+              </view>
+
+              <view class="reply-list" wx:if="{{item.replies && item.replies.length > 0 && item.isExpanded}}">
+                <view class="reply-item" wx:for="{{item.replies}}" wx:key="id" wx:for-item="reply">
+                  <image wx:if="{{reply.avatar}}" src="{{reply.avatar}}" class="reply-avatar" mode="aspectFill" />
+                  <view class="reply-body">
+                    <view class="reply-header">
+                      <text class="reply-author">{{reply.author}}</text>
+                      <block wx:if="{{reply.replyTo}}">
+                        <text class="reply-to">回复</text>
+                        <text class="reply-target">{{reply.replyTo}}</text>
+                      </block>
+                    </view>
+                    <text class="reply-content" catchtap="handleReply" data-comment="{{reply}}" data-rootid="{{item.id}}">{{reply.content}}</text>
+                    
+                    <view class="comment-footer">
+                      <view class="time-reply">
+                        <text class="reply-time">{{reply.time}}</text>
+                        <text class="reply-text" catchtap="handleReply" data-comment="{{reply}}" data-rootid="{{item.id}}">回复</text>
+                      </view>
+                      <view class="reply-like" bindtap="toggleReplyLike" data-comment-id="{{item.id}}" data-reply-id="{{reply.id}}">
+                        <image wx:if="{{reply.liked}}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGMjQ0MiI+PHBhdGggZD0iTTEyIDIxLjM1bC0xLjQ1LTEuMzJDNS40IDE1LjM2IDIgMTIuMjggMiA4LjUgMiA1LjQyIDQuNDIgMyA3LjUgM2MyLjA0IDAgNCAxLjA4IDUuMDggMi43NUExMy4wNiAxMy4wNiAwIDAgMSAxNi41IDNjMy4wOCAwIDUuNSAyLjQyIDUuNSA1LjUgMCAzLjc4LTMuNCA2Ljg2LTguNTUgMTEuNTRMMTIgMjEuMzV6Ii8+PC9zdmc+" class="reply-like-icon" />
+                        <image wx:else src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwLjg0IDQuNjFhNS41IDUuNSAwIDAgMC03Ljc4IDBsLTEuMDYgMS4wNi0xLjA2LTEuMDZhNS41IDUuNSAwIDAgMC03Ljc4IDcuNzhsMS4wNiAxLjA2TDEyIDIxLjIzbDcuNzgtNy43OCAxLjA2LTEuMDZhNS41IDUuNSAwIDAgMCAwLTcuNzh6Ij48L3BhdGg+PC9zdmc+" class="reply-like-icon" />
+                        <text class="reply-like-count {{reply.liked ? 'liked-text' : ''}}">{{reply.likes > 0 ? reply.likes : 0}}</text>
+                      </view>
+                    </view>
+                  </view>
+                </view>
+
+                <view class="collapse-btn" catchtap="toggleExpand" data-index="{{index}}">
+                  <text class="expand-text">—— 收起 <text class="arrow">∧</text></text>
+                </view>
+              </view>
+
             </view>
           </view>
-          <text class="comment-content">{{item.content}}</text>
-          <text class="comment-time">{{item.time}}</text>
         </view>
       </view>
+      <view style="height: 140rpx;"></view>
     </view>
   </scroll-view>
 
-  <!-- 底部输入栏 -->
-  <view class="input-bar">
-    <input 
-      class="comment-input" 
-      placeholder="说点什么…" 
-      bindinput="onCommentInput"
-      value="{{commentText}}" />
-    <view class="action-buttons">
-      <view class="like-btn-small" bindtap="toggleLike">
-        <image 
-          src="{{post.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
-          class="like-icon-small" />
+  <view class="bottom-bar">
+    <view class="input-section {{isInputFocused || inputText.length > 0 ? 'expanded' : ''}}">
+      <image wx:if="{{!isInputFocused && inputText.length === 0}}" src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyMGg5Ij48L3BhdGg+PHBhdGggZD0iTTE2LjUgMy41YTIuMTIxIDIuMTIxIDAgMCAxIDMgM0w3IDE5bC00IDFfMS00TDE2LjUgMy41eiI+PC9wYXRoPjwvc3ZnPg==" class="input-icon" />
+      <input class="comment-input" placeholder="{{replyTarget ? '回复 @' + replyTarget.userName : '说点什么...'}}" bindinput="onInputChange" bindfocus="onInputFocus" bindblur="onInputBlur" bindconfirm="sendCommentOrReply" confirm-type="send" focus="{{isInputFocused}}" value="{{inputText}}" />
+    </view>
+    
+    <view class="action-section" wx:if="{{!isInputFocused && inputText.length === 0}}">
+      <view class="action-btn" catchtap="handleLikePost">
+        <image wx:if="{{post.liked}}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGMjQ0MiI+PHBhdGggZD0iTTEyIDIxLjM1bC0xLjQ1LTEuMzJDNS40IDE1LjM2IDIgMTIuMjggMiA4LjUgMiA1LjQyIDQuNDIgMyA3LjUgM2MyLjA0IDAgNCAxLjA4IDUuMDggMi43NUExMy4wNiAxMy4wNiAwIDAgMSAxNi41IDNjMy4wOCAwIDUuNSAyLjQyIDUuNSA1LjUgMCAzLjc4LTMuNCA2Ljg2LTguNTUgMTEuNTRMMTIgMjEuMzV6Ii8+PC9zdmc+" class="action-icon" />
+        <image wx:else src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwLjg0IDQuNjFhNS41IDUuNSAwIDAgMC03Ljc4IDBsLTEuMDYgMS4wNi0xLjA2LTEuMDZhNS41IDUuNSAwIDAgMC03Ljc4IDcuNzhsMS4wNiAxLjA2TDEyIDIxLjIzbDcuNzgtNy43OCAxLjA2LTEuMDZhNS41IDUuNSAwIDAgMCAwLTcuNzh6Ij48L3BhdGg+PC9zdmc+" class="action-icon" />
+        <text class="action-text {{post.liked ? 'liked-text' : ''}}">{{post.likes > 0 ? post.likes : 0}}</text>
       </view>
-      <view class="send-btn" bindtap="sendComment">
-        <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img29.png" class="send-icon" />
+      
+      <view class="action-btn" catchtap="handleCollectPost">
+        <image wx:if="{{post.collected}}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGQzEwNyI+PHBhdGggZD0iTTEyIDE3LjI3TDE4LjE4IDIxbC0xLjY0LTcuMDNMMjIgOS4yNGwtNy4xOS0uNjFMMTIgMiA5LjE5IDguNjMgMiA5LjI0bDUuNDYgNC43My0xLjY0IDcuMDNMMTIgMTcuMjd6Ii8+PC9zdmc+" class="action-icon" />
+        <image wx:else src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMSAxMiAxNy43NyA1LjgyIDIxIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIj48L3BvbHlnb24+PC9zdmc+" class="action-icon" />
+        <text class="action-text {{post.collected ? 'collected-text' : ''}}">{{post.collects > 0 ? post.collects : 0}}</text>
+      </view>
+      
+      <view class="action-btn" catchtap="scrollToComments">
+        <image src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIxIDE1YTIgMiAwIDAgMS0yIDJIN2wtNCA0VjVhMiAyIDAgMCAxIDItMmgxNGEyIDIgMCAwIDEgMiAyeiI+PC9wYXRoPjwvc3ZnPg==" class="action-icon" />
+        <text class="action-text">{{comments.length > 0 ? comments.length : 0}}</text>
       </view>
     </view>
+
+    <view class="send-btn" wx:if="{{isInputFocused || inputText.length > 0}}" catchtap="sendCommentOrReply">发送</view>
   </view>
 </view>

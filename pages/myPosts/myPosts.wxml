@@ -1,6 +1,4 @@
-<!-- 我的帖子页面 -->
 <view class="container">
-  <!-- 帖子列表 -->
   <scroll-view 
     class="post-list" 
     scroll-y="true" 
@@ -25,7 +23,7 @@
             <text class="post-time">{{item.time}}</text>
             <view class="like-info">
               <image 
-                src="{{item.liked ? '/images/icon_heart_filled.png' : '/images/icon_heart.png'}}" 
+                src="{{item.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
                 class="like-icon" />
               <text class="like-count">{{item.likes}}</text>
             </view>
@@ -34,14 +32,12 @@
       </view>
     </view>
     
-    <!-- 空状态 -->
     <view class="empty-state" wx:if="{{myPosts.length === 0}}">
       <text class="empty-text">暂无发布的帖子</text>
       <text class="empty-hint">快去发布你的穿搭吧！</text>
     </view>
   </scroll-view>
 
-  <!-- 帖子操作弹窗 -->
   <view class="modal {{showOptionsModal ? 'show' : ''}}" bindtap="hideOptionsModal">
     <view class="modal-content options-modal" catchtap="">
       <view class="option-item" bindtap="editPost">

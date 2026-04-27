@@ -1,0 +1,81 @@
+<view class="container" wx:if="{{info}}">
+  
+  <view class="detail-card">
+    <image 
+      wx:if="{{info.image}}" 
+      src="{{info.image}}" 
+      class="main-image" 
+      mode="widthFix" 
+    />
+    <view class="image-error" wx:else>
+      <text>图片路径无效或已过期</text>
+    </view>
+  </view>
+
+  <view class="info-section">
+    <view class="title-row">
+      <view class="name-box">
+        <text class="clothes-name">{{info.name}}</text>
+        <text class="category-tag">{{info.category}}</text>
+      </view>
+    </view>
+
+    <view class="detail-list">
+      <view class="detail-item">
+        <text class="label">适用季节</text>
+        <text class="value">{{info.season}}</text>
+      </view>
+      <view class="detail-item">
+        <text class="label">材质成分</text>
+        <text class="value">{{info.material || '未填写'}}</text>
+      </view>
+      <view class="detail-item" wx:if="{{info.brand}}">
+        <text class="label">所属品牌</text>
+        <text class="value">{{info.brand}}</text>
+      </view>
+    </view>
+
+    <view class="tags-header-wrap">
+      <view class="tags-header">衣物标签</view>
+      <view class="edit-btn" bindtap="toggleEditTags">
+        {{isEditingTags ? '取消编辑' : '✎ 修改标签'}}
+      </view>
+    </view>
+
+    <view class="tags-container" wx:if="{{!isEditingTags}}">
+      <block wx:if="{{info.tags && info.tags.length > 0}}">
+        <view class="tag" wx:for="{{info.tags}}" wx:key="*this"># {{item}}</view>
+      </block>
+      <view class="no-tags" wx:else>暂无标签</view>
+    </view>
+
+    <view class="tags-editor" wx:if="{{isEditingTags}}">
+      <view class="tags-container">
+        <view class="tag edit-mode" wx:for="{{editedTags}}" wx:key="*this">
+          # {{item}}
+          <text class="delete-icon" catchtap="removeEditedTag" data-index="{{index}}">×</text>
+        </view>
+      </view>
+      
+      <view class="add-tag-box">
+        <input class="tag-input" placeholder="输入新标签 (如: 甜美)" value="{{newTagInput}}" bindinput="onTagInput" confirm-type="done" bindconfirm="addTag"/>
+        <view class="add-btn" bindtap="addTag">添加</view>
+      </view>
+
+      <button class="save-tags-btn" bindtap="saveTags">保存修改</button>
+    </view>
+
+  </view>
+
+  <view class="bottom-bar">
+    <view class="delete-btn" bindtap="confirmDelete">
+      <image src="/images/icons/delete.png" class="btn-icon" />
+      <text>从我的衣橱移除</text>
+    </view>
+  </view>
+
+</view> 
+
+<view class="loading-state" wx:if="{{!info}}">
+  <text>正在召唤衣物详情...</text>
+</view>

@@ -10,28 +10,48 @@
 </view>
 
 <view class="form-section">
-  <view class="form-item" bindtap="editNickname">
+  <view class="form-item">
     <text class="item-label">昵称</text>
     <view class="item-content">
-      <text class="item-value">{{nickname || '衣橱新主人'}}</text>
-      <image src="/images/icons/arrow_right.png" class="arrow-icon" />
+      <input 
+        class="nickname-input-direct" 
+        value="{{nickname}}" 
+        placeholder="衣橱新主人"
+        placeholder-class="placeholder"
+        bindinput="onNicknameInput"
+        bindfocus="onNicknameFocus"
+        bindblur="onNicknameBlur"
+        maxlength="20" />
     </view>
   </view>
 
-  <view class="form-item" bindtap="showDatePicker">
+  <view class="form-item">
     <text class="item-label">生日</text>
-    <view class="item-content">
-      <text class="item-value {{birthday ? '' : 'placeholder'}}">{{birthday || '去选择'}}</text>
-      <image src="/images/icons/arrow_right.png" class="arrow-icon" />
-    </view>
+    <picker mode="date" 
+            value="{{birthday}}" 
+            start="1900-01-01" 
+            end="{{currentDate}}"
+            bindchange="onBirthdayChange"
+            class="picker-item">
+      <view class="item-content">
+        <text class="item-value {{birthday ? '' : 'placeholder'}}">{{birthday || '去选择'}}</text>
+        <image src="/images/icons/arrow_right.png" class="arrow-icon" />
+      </view>
+    </picker>
   </view>
 
-  <view class="form-item" bindtap="selectGender">
+  <view class="form-item">
     <text class="item-label">性别</text>
-    <view class="item-content">
-      <text class="item-value {{gender ? '' : 'placeholder'}}">{{gender || '去选择'}}</text>
-      <image src="/images/icons/arrow_right.png" class="arrow-icon" />
-    </view>
+    <picker mode="selector" 
+            value="{{genderIndex}}" 
+            range="{{genderRange}}"
+            bindchange="onGenderChange"
+            class="picker-item">
+      <view class="item-content">
+        <text class="item-value {{gender ? '' : 'placeholder'}}">{{gender || '去选择'}}</text>
+        <image src="/images/icons/arrow_right.png" class="arrow-icon" />
+      </view>
+    </picker>
   </view>
 </view>
 
@@ -40,5 +60,28 @@
     <text class="save-text">保存</text>
   </view>
 </view>
+
+<!-- 昵称编辑模态框 -->
+<view class="modal-container {{showNicknameModal ? 'show' : ''}}">
+  <view class="modal-mask" bindtap="cancelEditNickname"></view>
+  <view class="modal-content">
+    <view class="modal-header">
+      <text class="modal-title">编辑昵称</text>
+    </view>
+    <view class="modal-body">
+      <input class="nickname-input" 
+             value="{{tempNickname}}" 
+             placeholder="请输入昵称"
+             bindinput="onNicknameInput"
+             maxlength="20" />
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="cancelEditNickname">取消</view>
+      <view class="modal-btn confirm" bindtap="confirmEditNickname">确定</view>
+    </view>
+  </view>
+</view>
+
+
 
 </view>

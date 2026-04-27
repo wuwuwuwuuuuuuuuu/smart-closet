@@ -1,413 +1,349 @@
-/* 每日穿搭页样式 - 优化版 */
-.container {
-  padding: 0 20rpx;
-  box-sizing: border-box;
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 50%, #F0F8FF 100%);
-  min-height: 100vh;
+page {
+  height: 100vh;
+  background: linear-gradient(180deg, #fff6f2 0%, #f4f8ff 100%);
 }
 
-/* 顶部导航栏（无图标版） */
-.nav-bar {
-  padding: 30rpx 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, #FFB6C1 0%, #87CEEB 100%);
-  margin-bottom: 24rpx;
-  border-radius: 12rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
-}
-
-.nav-left {
-  width: 32rpx;
-  height: 32rpx;
-}
-
-.nav-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #FFFFFF;
-  font-family: PingFang SC;
-  text-align: center;
-  flex: 1;
-  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.2);
-}
-
-.nav-right {
-  width: 32rpx;
-  height: 32rpx;
-}
-
-/* 横向日期滚动栏 */
-.date-scroll-container {
-  margin-bottom: 24rpx;
-}
-
-.date-scroll {
-  width: 100%;
-  height: 120rpx;
-}
-
-.date-list {
-  display: flex;
-  white-space: nowrap;
-  padding: 0 10rpx;
-}
-
-.date-tag {
+.page-container {
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
-  border-radius: 12rpx;
-  padding: 20rpx 24rpx;
-  margin-right: 16rpx;
-  min-width: 80rpx;
-  transition: all 0.3s ease;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
 }
 
-.date-tag.active {
-  background: linear-gradient(135deg, #FF9EBD 0%, #FF6B9D 100%);
-  transform: scale(1.05);
-  box-shadow: 0 4rpx 16rpx rgba(255,158,189,0.3);
+.hero-section {
+  flex-shrink: 0;
+  padding: 24rpx 24rpx 0;
 }
 
-.week-day {
-  font-size: 24rpx;
-  color: #495057;
-  margin-bottom: 8rpx;
-  transition: color 0.3s ease;
+.hero-frame {
+  overflow: hidden;
+  border-radius: 32rpx;
+  box-shadow: 0 16rpx 40rpx rgba(34, 41, 69, 0.08);
+  background: #ffffff;
 }
 
-.date-tag.active .week-day {
-  color: #FFFFFF;
+.hero-image {
+  width: 100%;
+  display: block;
 }
 
-.date-num {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #212529;
-  transition: color 0.3s ease;
+.content-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 24rpx;
+  box-sizing: border-box;
 }
 
-.date-tag.active .date-num {
-  color: #FFFFFF;
+.weather-card,
+.chat-section {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 32rpx rgba(31, 46, 74, 0.08);
 }
 
-/* 天气信息卡片 */
 .weather-card {
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
-  backdrop-filter: blur(15rpx);
-  border-radius: 12rpx;
-  padding: 32rpx;
+  padding: 28rpx;
   margin-bottom: 24rpx;
-  transition: all 0.4s ease;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.1);
-  border: 1rpx solid rgba(255,255,255,0.3);
 }
 
-.weather-info {
+.weather-top {
   display: flex;
-  align-items: baseline;
-  margin-bottom: 16rpx;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24rpx;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.weather-icon {
+  font-size: 56rpx;
+  line-height: 1;
+}
+
+.weather-values {
+  display: flex;
+  flex-direction: column;
 }
 
 .temperature {
-  font-size: 48rpx;
-  font-weight: 600;
-  color: #2C3E50;
-  margin-right: 16rpx;
-  text-shadow: 0 2rpx 4rpx rgba(255,255,255,0.5);
+  font-size: 50rpx;
+  font-weight: 700;
+  color: #1f2e4a;
+  line-height: 1.1;
 }
 
-.weather-type {
-  font-size: 28rpx;
-  color: #34495E;
-  text-shadow: 0 1rpx 2rpx rgba(255,255,255,0.5);
-}
-
-.location-info {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 24rpx;
-}
-
-.city-name {
+.weather-text,
+.city-name,
+.date-label {
+  color: #5d6b85;
   font-size: 24rpx;
-  color: #7F8C8D;
-  margin-right: 16rpx;
 }
 
-.chinese-date {
-  font-size: 24rpx;
-  color: #7F8C8D;
-}
-
-/* 分隔线 */
-.divider {
-  height: 1rpx;
-  background: linear-gradient(to right, transparent 0%, #40B4E5 50%, transparent 100%);
-  margin: 24rpx 0;
-  border: none;
-}
-
-/* 穿搭建议 */
-.suggestion-section {
-  margin-bottom: 24rpx;
-}
-
-.suggestion-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #2980B9;
-  display: block;
-  margin-bottom: 8rpx;
-  text-shadow: 0 1rpx 2rpx rgba(255,255,255,0.5);
-}
-
-.suggestion-text {
-  font-size: 28rpx;
-  color: #2C3E50;
-  line-height: 1.5;
-  text-shadow: 0 1rpx 2rpx rgba(255,255,255,0.5);
-}
-
-/* 幸运色标签 */
-.lucky-colors {
-  display: flex;
-  justify-content: space-between;
-}
-
-.lucky-item {
+.weather-meta {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+  gap: 8rpx;
 }
 
-.color-dot {
-  width: 32rpx;
-  height: 32rpx;
-  border-radius: 50%;
-  margin-bottom: 8rpx;
-  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.2);
-}
-
-.color-dot.brown {
-  background-color: #8B4513;
-}
-
-.color-dot.yellow {
-  background-color: #FFD700;
-}
-
-.color-dot.gray {
-  background-color: #C0C0C0;
-}
-
-.color-dot.green {
-  background-color: #008000;
-}
-
-.lucky-text {
-  font-size: 24rpx;
-  color: #5D6D7E;
-  text-shadow: 0 1rpx 2rpx rgba(255,255,255,0.5);
-}
-
-/* 已选择的海报展示区域 */
-.selected-poster-section {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-  border-radius: 12rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
-  border: 1rpx solid rgba(255,255,255,0.8);
-}
-
-.poster-header {
+.location-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24rpx;
+  gap: 12rpx;
+  margin-top: 8rpx;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.poster-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #2C3E50;
+.location-action {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  line-height: 1;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff9f8f 0%, #7ca8ff 100%);
 }
 
-.poster-date {
-  font-size: 24rpx;
-  color: #7F8C8D;
+.location-action.secondary {
+  color: #5d6b85;
+  background: #eef3ff;
 }
 
-.poster-preview {
-  margin-bottom: 24rpx;
-  border-radius: 8rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
-}
-
-.poster-image {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.poster-actions {
-  display: flex;
-  justify-content: space-around;
-}
-
-.action-btn {
-  background: linear-gradient(135deg, #FF9EBD 0%, #FF6B9D 100%);
-  border-radius: 8rpx;
-  padding: 16rpx 32rpx;
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-.action-btn:active {
-  transform: scale(0.95);
-}
-
-.action-text {
-  font-size: 24rpx;
-  color: #FFFFFF;
-  font-weight: 500;
-}
-
-/* 记录今日 OOTD 区域（偏白色） */
-.ootd-section {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-  border-radius: 12rpx;
-  padding: 32rpx;
-  text-align: center;
-  transition: all 0.4s ease;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
-  border: 1rpx solid rgba(255,255,255,0.8);
-}
-
-.ootd-text {
-  margin-bottom: 24rpx;
-}
-
-.main-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #2C3E50;
-  display: block;
-  margin-bottom: 8rpx;
-}
-
-.sub-text {
-  font-size: 24rpx;
-  color: #7F8C8D;
-  display: block;
-}
-
-/* 上传按钮（偏白色） */
-.upload-btn {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F1F3F4 100%);
-  border: 1rpx solid #E0E0E0;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: center;
-  margin-bottom: 16rpx;
-  transition: all 0.3s ease;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
-}
-
-.upload-btn:active {
-  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
-  transform: scale(0.98);
-}
-
-.upload-text {
-  font-size: 28rpx;
-  color: #2C3E50;
-  font-weight: 400;
-}
-
-/* 底部提示文字 */
-.bottom-hint {
-  font-size: 24rpx;
-  color: #BDC3C7;
-  text-align: center;
-}
-
-/* 当前日期穿搭内容展示区域 */
-.ootd-content-section {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-  border-radius: 12rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
-  border: 1rpx solid rgba(255,255,255,0.8);
-}
-
-.section-header {
-  margin-bottom: 20rpx;
+.weather-divider {
+  height: 1rpx;
+  background: rgba(31, 46, 74, 0.08);
+  margin: 24rpx 0;
 }
 
 .section-title {
-  font-size: 32rpx;
+  font-size: 28rpx;
   font-weight: 600;
-  color: #2C3E50;
+  color: #1f2e4a;
 }
 
-/* 没有上传图片的提示区域 */
-.no-upload-section {
-  text-align: center;
-  padding: 60rpx 0;
+.weather-suggestion {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: #44516b;
 }
 
-.no-upload-icon {
-  font-size: 80rpx;
+.debug-actions {
+  margin-top: 18rpx;
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.debug-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: #eef3ff;
+  color: #4a5fc1;
+  font-size: 22rpx;
+  line-height: 1.2;
+}
+
+.debug-action-disabled {
+  opacity: 0.7;
+}
+
+.debug-action-secondary {
+  background: #fff3ef;
+  color: #d16445;
+}
+
+.debug-summary {
+  display: block;
+  margin-top: 12rpx;
+  color: #5c6983;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.chat-section {
+  padding: 28rpx;
+}
+
+.chat-header {
   margin-bottom: 20rpx;
 }
 
-.no-upload-text {
-  font-size: 28rpx;
-  color: #7F8C8D;
+.chat-title {
   display: block;
-  margin-bottom: 12rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2e4a;
 }
 
-.no-upload-hint {
+.chat-subtitle {
+  display: block;
+  margin-top: 10rpx;
+  color: #6c7892;
   font-size: 24rpx;
-  color: #BDC3C7;
+  line-height: 1.6;
+}
+
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+  padding-bottom: 8rpx;
+}
+
+.message-row {
+  display: flex;
+}
+
+.user-row {
+  justify-content: flex-end;
+}
+
+.assistant-row {
+  justify-content: flex-start;
+}
+
+.message-bubble,
+.assistant-result-card,
+.loading-card,
+.empty-state {
+  max-width: 100%;
+}
+
+.user-bubble {
+  max-width: 84%;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #ff9f8f 0%, #ffb48c 100%);
+  border-radius: 24rpx 24rpx 8rpx 24rpx;
+  box-shadow: 0 10rpx 20rpx rgba(255, 159, 143, 0.22);
+}
+
+.message-text {
+  color: #fff;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.assistant-result-card,
+.loading-card,
+.empty-state {
+  width: 100%;
+  padding: 24rpx;
+  background: #f7f9ff;
+  border-radius: 24rpx;
+  box-sizing: border-box;
+}
+
+.result-summary,
+.empty-title {
   display: block;
+  color: #1f2e4a;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.6;
 }
 
-/* 上传按钮区域 */
-.upload-section {
+.result-lines,
+.result-tips {
+  margin-top: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.result-line,
+.tip-line,
+.empty-text,
+.loading-text {
+  color: #5c6983;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.cta-row {
+  margin-top: 20rpx;
+  height: 84rpx;
+  padding: 0 24rpx;
+  border-radius: 22rpx;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cta-text {
+  color: #1f2e4a;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.cta-arrow-circle {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9f8f 0%, #7ca8ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cta-arrow-text {
+  color: #ffffff;
+  font-size: 34rpx;
+  line-height: 1;
+  margin: 0;
   text-align: center;
-  margin-top: 40rpx;
+  transform: translateY(-2rpx);
 }
 
-/* 平滑动画效果 */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20rpx); }
-  to { opacity: 1; transform: translateY(0); }
+.composer-bar {
+  flex-shrink: 0;
+  padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
 }
 
-.weather-card, .ootd-content-section, .upload-section {
-  animation: fadeIn 0.5s ease;
+.composer-panel {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  box-shadow: 0 8rpx 20rpx rgba(31, 46, 74, 0.08);
 }
 
-/* 整体渐变效果增强 */
-.container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 30%, #F0F8FF 70%, #FFFFFF 100%);
-  z-index: -1;
+.composer-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: #1f2e4a;
+}
+
+.send-btn {
+  flex-shrink: 0;
+  min-width: 120rpx;
+  height: 76rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #ff9f8f 0%, #7ca8ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-btn-disabled {
+  opacity: 0.7;
+}
+
+.send-text {
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 600;
 }

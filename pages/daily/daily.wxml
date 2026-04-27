@@ -1,99 +1,106 @@
-<!-- 每日穿搭页 - 优化版 -->
-<view class="container">
-  <!-- 顶部导航栏（无图标版） -->
-  <view class="nav-bar">
-    <view class="nav-left"></view>
-    <text class="nav-title">每日穿搭</text>
-    <view class="nav-right"></view>
+<view class="page-container">
+  <view class="hero-section">
+    <view class="hero-frame">
+      <image class="hero-image" src="{{heroImage}}" mode="widthFix" />
+    </view>
   </view>
 
-  <!-- 横向日期滚动栏 -->
-  <view class="date-scroll-container">
-    <scroll-view class="date-scroll" scroll-x="true">
-      <view class="date-list">
-        <view 
-          class="date-tag {{item.isToday ? 'active' : ''}}" 
-          wx:for="{{dateList}}" 
-          wx:key="date"
-          bindtap="selectDate"
-          data-date="{{item.dateNum}}">
-          <text class="week-day">{{item.weekDay}}</text>
-          <text class="date-num">{{item.dateNum}}</text>
+  <scroll-view class="content-scroll" scroll-y="true" enable-flex="true">
+    <view class="weather-card">
+      <view class="weather-top">
+        <view class="weather-main">
+          <text class="weather-icon">{{weatherInfo.icon}}</text>
+          <view class="weather-values">
+            <text class="temperature">{{weatherInfo.temp}}</text>
+            <text class="weather-text">{{weatherInfo.text}}</text>
+          </view>
+        </view>
+        <view class="weather-meta">
+          <text class="city-name">{{currentCity}}</text>
+          <text class="date-label">{{currentDateLabel}}</text>
+          <view class="location-actions">
+            <text class="location-action" bindtap="refreshLocation">重新定位</text>
+            <text class="location-action secondary" bindtap="selectCity">切换城市</text>
+          </view>
         </view>
       </view>
-    </scroll-view>
-  </view>
-
-  <!-- 天气信息卡片 -->
-  <view class="weather-card">
-    <!-- 温度与天气信息 -->
-    <view class="weather-info">
-      <text class="temperature">9/11℃</text>
-      <text class="weather-type">小雨</text>
-    </view>
-    
-    <!-- 城市与日期 -->
-    <view class="location-info">
-      <text class="city-name">武汉市</text>
-      <text class="chinese-date">丙午年 辛卯月 庚寅日</text>
-    </view>
-
-    <!-- 分隔线 -->
-    <view class="divider"></view>
-
-    <!-- 穿搭建议 -->
-    <view class="suggestion-section">
-      <text class="suggestion-title">今日穿搭建议</text>
-      <text class="suggestion-text">建议穿厚卫衣、风衣、毛衣、长裤等，搭配防水鞋子，携带雨具。</text>
-    </view>
-
-    <!-- 幸运色标签 -->
-    <view class="lucky-colors">
-      <view class="lucky-item">
-        <view class="color-dot brown"></view>
-        <text class="lucky-text">招财</text>
-      </view>
-      <view class="lucky-item">
-        <view class="color-dot yellow"></view>
-        <text class="lucky-text">招桃花</text>
-      </view>
-      <view class="lucky-item">
-        <view class="color-dot gray"></view>
-        <text class="lucky-text">旺事业</text>
-      </view>
-      <view class="lucky-item">
-        <view class="color-dot green"></view>
-        <text class="lucky-text">旺学业</text>
+      <view class="weather-divider"></view>
+      <view class="weather-bottom">
+        <text class="section-title">天气提醒</text>
+        <text class="weather-suggestion">{{weatherSuggestion}}</text>
+        <view class="debug-actions">
+          <text class="debug-action {{isRebuildingKnowledge ? 'debug-action-disabled' : ''}}" bindtap="triggerKnowledgeRebuild">
+            {{isRebuildingKnowledge ? '补同步处理中...' : '补同步/查状态'}}
+          </text>
+          <text class="debug-action debug-action-secondary {{isRebuildingKnowledge ? 'debug-action-disabled' : ''}}" bindtap="triggerKnowledgeForceResync">
+            {{isRebuildingKnowledge ? '强制重同步处理中...' : '强制全量重同步'}}
+          </text>
+        </view>
+        <text class="debug-summary" wx:if="{{knowledgeRebuildSummary}}">{{knowledgeRebuildSummary}}</text>
       </view>
     </view>
-  </view>
 
-  <!-- 当前日期穿搭内容展示区域 -->
-  <view class="ootd-content-section">
-    <view class="section-header">
-      <text class="section-title">{{currentDate}}日穿搭内容</text>
-    </view>
-    
-    <!-- 如果有上传的图片，显示图片 -->
-    <view class="poster-preview" wx:if="{{selectedPoster}}">
-      <image src="{{selectedPoster.image}}" class="poster-image" mode="widthFix" />
-    </view>
-    
-    <!-- 如果没有上传图片，显示文字提示 -->
-    <view class="no-upload-section" wx:if="{{!selectedPoster}}">
-      <view class="no-upload-icon">📸</view>
-      <text class="no-upload-text">该日期暂无上传的穿搭图片</text>
-      <text class="no-upload-hint">点击下方按钮上传今日穿搭</text>
-    </view>
-  </view>
+    <view class="chat-section">
+      <view class="chat-header">
+        <text class="chat-title">智能推荐对话</text>
+        <text class="chat-subtitle">告诉我场景、风格或颜色偏好，我来帮你整理搭配建议。</text>
+      </view>
 
-  <!-- 上传按钮区域 -->
-  <view class="upload-section">
-    <view class="upload-btn" bindtap="showUploadOptions">
-      <text class="upload-text">上传今日穿搭</text>
-    </view>
+      <view class="conversation-list">
+        <block wx:for="{{conversationList}}" wx:key="id">
+          <view class="message-row {{item.role === 'user' ? 'user-row' : 'assistant-row'}}">
+            <view class="message-bubble user-bubble" wx:if="{{item.role === 'user'}}">
+              <text class="message-text">{{item.text}}</text>
+            </view>
 
-    <!-- 底部提示文字 -->
-    <text class="bottom-hint">选择我的搭配 选择我的衣橱</text>
+            <view class="assistant-result-card" wx:if="{{item.role === 'assistant' && item.type === 'result-card'}}">
+              <text class="result-summary">{{item.data.replyText}}</text>
+
+              <view class="result-lines" wx:if="{{item.data.outfitLines.length}}">
+                <text class="result-line" wx:for="{{item.data.outfitLines}}" wx:key="*this">{{item}}</text>
+              </view>
+
+              <view class="result-tips" wx:if="{{item.data.tips.length}}">
+                <text class="tip-line" wx:for="{{item.data.tips}}" wx:key="*this">{{item}}</text>
+              </view>
+
+              <view class="cta-row" bindtap="goToTryOnFromRecommendation">
+                <text class="cta-text">{{item.data.ctaLabel}}</text>
+                <view class="cta-arrow-circle">
+                  <text class="cta-arrow-text">›</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+
+        <view class="empty-state" wx:if="{{!conversationList.length}}">
+          <text class="empty-title">还没有开始对话</text>
+          <text class="empty-text">例如：今天 25 度要上班、想要温柔一点；或者：周末逛街想穿得清爽一点。</text>
+        </view>
+
+        <view class="loading-row" wx:if="{{isRecommendationLoading}}">
+          <view class="loading-card">
+            <text class="loading-text">正在生成推荐，请稍等...</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="composer-bar">
+    <view class="composer-panel">
+      <input
+        class="composer-input"
+        placeholder="输入今天的穿搭需求，例如：通勤、约会、下雨天"
+        confirm-type="send"
+        value="{{pendingUserInput}}"
+        bindinput="onRecommendationInput"
+        bindconfirm="submitRecommendationRequest"
+      />
+      <view class="send-btn {{isRecommendationLoading ? 'send-btn-disabled' : ''}}" bindtap="submitRecommendationRequest">
+        <text class="send-text">{{isRecommendationLoading ? '生成中' : '发送'}}</text>
+      </view>
+    </view>
   </view>
 </view>

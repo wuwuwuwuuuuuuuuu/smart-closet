@@ -6,8 +6,6 @@
   background: #FFFFFF;
 }
 
-
-
 /* 头像编辑区 */
 .avatar-section {
   padding: 80rpx 0 40rpx;
@@ -56,7 +54,6 @@
   height: 88rpx;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   border-bottom: 1rpx solid #E0E0E0;
   padding: 0;
 }
@@ -64,11 +61,14 @@
 .item-label {
   font-size: 28rpx;
   color: #333333;
+  min-width: 120rpx;
 }
 
 .item-content {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 16rpx;
 }
 
@@ -86,6 +86,38 @@
   height: 24rpx;
 }
 
+/* 昵称直接输入框 */
+.nickname-input-direct {
+  width: 100%;
+  height: 100%;
+  font-size: 28rpx;
+  color: #333333;
+  text-align: right;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.nickname-input-direct.placeholder {
+  color: #999999;
+}
+
+/* 选择器样式 */
+.picker-item {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.picker-item .item-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16rpx;
+}
+
 /* 底部保存按钮 */
 .save-section {
   padding: 60rpx 20rpx 40rpx;
@@ -99,7 +131,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
 }
 
 .save-btn.active {
@@ -109,79 +140,95 @@
 .save-text {
   font-size: 32rpx;
   color: #999999;
-  font-weight: 600;
 }
 
 .save-btn.active .save-text {
-  color: #FFFFFF;
+  color: #333333;
+  font-weight: 500;
 }
 
-/* 弹窗样式 */
-.modal {
+/* 模态框样式 */
+.modal-container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
   z-index: 999;
+  display: none;
 }
 
-.modal.show {
-  opacity: 1;
-  visibility: visible;
+.modal-container.show {
+  display: block;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   background: #FFFFFF;
-  border-radius: 12rpx;
-  padding: 40rpx;
-  width: 600rpx;
-  max-width: 80%;
-  margin: 0 auto;
+  border-radius: 24rpx 24rpx 0 0;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 40rpx 32rpx 20rpx;
+  text-align: center;
+  border-bottom: 1rpx solid #E0E0E0;
 }
 
 .modal-title {
   font-size: 32rpx;
   color: #333333;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 32rpx;
+  font-weight: 500;
+}
+
+.modal-body {
+  padding: 32rpx;
 }
 
 .nickname-input {
   width: 100%;
   height: 80rpx;
-  background: #EDEDED;
+  border: 1rpx solid #E0E0E0;
   border-radius: 12rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
-  color: #333333;
-  margin-bottom: 32rpx;
 }
 
 .gender-options {
-  margin-bottom: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
 }
 
 .gender-option {
   height: 80rpx;
+  border: 1rpx solid #E0E0E0;
+  border-radius: 12rpx;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24rpx;
-  border-radius: 12rpx;
-  margin-bottom: 16rpx;
-  background: #EDEDED;
-  transition: all 0.3s ease;
 }
 
 .gender-option.selected {
+  border-color: #FF6B9D;
   background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
 }
 
@@ -190,115 +237,94 @@
   color: #333333;
 }
 
-.gender-option.selected .gender-text {
-  color: #FFFFFF;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 20rpx;
-}
-
-/* 日期选择器样式 */
-.date-picker-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  z-index: 999;
-}
-
-.date-picker-modal.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-.date-picker-content {
-  background: #FFFFFF;
-  border-radius: 12rpx;
-  padding: 40rpx;
-  width: 600rpx;
-  max-width: 80%;
-  margin: 0 auto;
-}
-
-.date-picker-title {
-  font-size: 32rpx;
-  color: #333333;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 32rpx;
-}
-
-.date-picker {
-  margin-bottom: 32rpx;
-}
-
-.date-picker-display {
-  height: 80rpx;
-  background: #EDEDED;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: center;
-  padding: 0 24rpx;
-}
-
-.date-value {
+.gender-check {
+  color: #FF6B9D;
   font-size: 28rpx;
-  color: #333333;
+  display: none;
 }
 
-.date-picker-buttons {
+.gender-check.show {
+  display: block;
+}
+
+.modal-footer {
   display: flex;
+  padding: 20rpx 32rpx 40rpx;
   gap: 20rpx;
-}
-
-.date-picker-btn {
-  flex: 1;
-  height: 80rpx;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.date-picker-btn.cancel {
-  background: #EDEDED;
-  color: #666666;
-}
-
-.date-picker-btn.confirm {
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
-  color: #FFFFFF;
 }
 
 .modal-btn {
   flex: 1;
   height: 80rpx;
+  border-radius: 12rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12rpx;
   font-size: 28rpx;
-  font-weight: 600;
 }
 
 .modal-btn.cancel {
-  background: #EDEDED;
+  background: #F5F5F5;
   color: #666666;
 }
 
 .modal-btn.confirm {
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
+  background: #007AFF;
   color: #FFFFFF;
+}
+
+/* 日期选择器样式 */
+.date-picker-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+
+.date-picker-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.date-picker-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+.date-picker-header {
+  padding: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #E0E0E0;
+}
+
+.date-picker-title {
+  font-size: 32rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+.date-picker-actions {
+  display: flex;
+  gap: 32rpx;
+}
+
+.date-picker-btn {
+  font-size: 28rpx;
+  color: #007AFF;
+}
+
+.date-picker-btn.cancel {
+  color: #666666;
 }

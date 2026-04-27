@@ -1,6 +1,4 @@
-<!-- 试穿预览/换背景页 -->
 <view class="container">
-  <!-- 顶部导航 -->
   <view class="nav-bar">
     <view class="nav-left" bindtap="goBack">
       <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img10.png" class="nav-icon" />
@@ -10,21 +8,17 @@
     </view>
   </view>
 
-  <!-- 中央预览区域 -->
   <view class="preview-area">
     <view class="preview-container">
-      <!-- 背景图片 -->
       <image 
         src="{{currentBackground}}" 
         class="background-image" 
         mode="aspectFill" />
       
-      <!-- 试穿照片显示 -->
       <view class="tryon-display" wx:if="{{tryonImage}}">
         <image src="{{tryonImage}}" class="tryon-image" mode="aspectFit" />
       </view>
       
-      <!-- 无试穿照片提示 -->
       <view class="no-tryon-section" wx:if="{{!tryonImage}}">
         <view class="no-tryon-icon">👕</view>
         <text class="no-tryon-text">暂无试穿照片</text>
@@ -32,13 +26,18 @@
     </view>
   </view>
 
-  <!-- 右下角生成海报按钮 -->
-  <view class="generate-btn" bindtap="generatePoster">
-    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img12.png" class="generate-icon" />
-    <text class="generate-text">生成海报</text>
+  <view class="action-btn-group" style="position: fixed; right: 30rpx; bottom: 60rpx; display: flex; flex-direction: column; gap: 30rpx; z-index: 100;">
+    <view class="generate-btn" bindtap="saveToHistory" style="position: relative; right: 0; bottom: 0;">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img12.png" class="generate-icon" />
+      <text class="generate-text">保存穿搭</text>
+    </view>
+    
+    <view class="generate-btn" bindtap="generatePoster" style="position: relative; right: 0; bottom: 0;">
+      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img12.png" class="generate-icon" />
+      <text class="generate-text">生成海报</text>
+    </view>
   </view>
 
-  <!-- 背景选择弹窗 -->
   <view class="modal {{showBackgroundModal ? 'show' : ''}}" bindtap="hideBackgroundModal">
     <view class="modal-content" catchtap="">
       <view class="modal-header">
@@ -64,4 +63,7 @@
       </view>
     </view>
   </view>
+
+  <canvas type="2d" id="compCanvas" style="position: absolute; left: -9999px; width: 750px; height: 1334px;"></canvas>
+
 </view>
