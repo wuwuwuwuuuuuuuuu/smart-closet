@@ -1,4 +1,16 @@
 <view class="container">
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{activeTab === item.key ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="key"
+      bindtap="switchTab"
+      data-tab="{{item.key}}">
+      <text class="tab-text">{{item.label}}</text>
+      <view class="tab-line"></view>
+    </view>
+  </view>
+
   <scroll-view 
     class="post-list" 
     scroll-y="true" 
@@ -9,7 +21,7 @@
     <view class="grid-container">
       <view 
         class="post-card" 
-        wx:for="{{myPosts}}" 
+        wx:for="{{currentPosts}}" 
         wx:key="id"
         bindtap="goToPostDetail"
         bindlongpress="showPostOptions"
@@ -32,9 +44,9 @@
       </view>
     </view>
     
-    <view class="empty-state" wx:if="{{myPosts.length === 0}}">
-      <text class="empty-text">暂无发布的帖子</text>
-      <text class="empty-hint">快去发布你的穿搭吧！</text>
+    <view class="empty-state" wx:if="{{currentPosts.length === 0}}">
+      <text class="empty-text">{{emptyText}}</text>
+      <text class="empty-hint">{{emptyHint}}</text>
     </view>
   </scroll-view>
 
