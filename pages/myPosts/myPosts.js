@@ -1,9 +1,19 @@
 const db = wx.cloud.database()
-const app = getApp()
 
 Page({
   data: {
+    activeTab: 'posts',
+    tabs: [
+      { key: 'posts', label: '帖子' },
+      { key: 'collections', label: '收藏' },
+      { key: 'liked', label: '赞过' }
+    ],
     myPosts: [],
+    collectedPosts: [],
+    likedPosts: [],
+    currentPosts: [],
+    emptyText: '暂无发布的帖子',
+    emptyHint: '快去发布你的穿搭吧！',
     refreshing: false,
     showOptionsModal: false,
     selectedPostIndex: -1
@@ -11,51 +21,78 @@ Page({
 
   onLoad() {
     console.log('我的帖子页加载')
-    this.loadMyPosts()
+    this.loadAllPostTabs()
   },
 
   onShow() {
     console.log('我的帖子页显示')
   },
 
-  // === 🌟 核心升级 1：真实加载我的帖子 ===
-  async loadMyPosts() {
+  // 根据当前分栏刷新页面展示列表
+  updateCurrentPosts() {
+    const tabMap = {
+      posts: {
+        list: this.data.myPosts,
+        emptyText: '暂无发布的帖子',
+        emptyHint: '快去发布你的穿搭吧！'
+      },
+      collections: {
+        list: this.data.collectedPosts,
+        emptyText: '暂无收藏的帖子',
+        emptyHint: '看到喜欢的穿搭可以先收藏起来'
+      },
+      liked: {
+        list: this.data.likedPosts,
+        emptyText: '暂无赞过的帖子',
+        emptyHint: '给喜欢的内容点个赞吧'
+      }
+    }
+
+    const current = tabMap[this.data.activeTab] || tabMap.posts
+    this.setData({
+      currentPosts: current.list,
+      emptyText: current.emptyText,
+      emptyHint: current.emptyHint
+    })
+  },
+
+  // 切换帖子、收藏、赞过三个内容分栏
+  switchTab(e) {
+    const tab = e.currentTarget.dataset.tab
+    if (!tab || tab === this.data.activeTab) return
+
+    this.setData({
+      activeTab: tab,
+      showOptionsModal: false,
+      selectedPostIndex: -1
+    }, () => {
+      this.updateCurrentPosts()
+    })
+  },
+
+  // 加载当前用户发布、收藏、赞过的全部帖子分栏数据
+  async loadAllPostTabs() {
     wx.showLoading({ title: '加载中...' })
     try {
-      // 假设全局变量里存了用户 ID
-      const userId = app.globalData.currentUserId || 'unknown_user'
-      
-      const res = await db.collection('posts')
-        .where({ 
-          userId: userId // 仅查询当前用户自己发的帖子
-        })
-        .orderBy('createTime', 'desc') // 按发布时间倒序
-        .get()
+      const res = await wx.cloud.callFunction({
+        name: 'getMyPostTabs'
+      })
 
-      // 数据清洗，适配前端展示格式
-      const formattedPosts = res.data.map(item => {
-        let dateStr = '刚刚'
-        if (item.createTime) {
-          const dateObj = new Date(item.createTime)
-          const m = String(dateObj.getMonth() + 1).padStart(2, '0')
-          const d = String(dateObj.getDate()).padStart(2, '0')
-          dateStr = `${dateObj.getFullYear()}-${m}-${d}`
-        }
+      if (!res.result || res.result.code !== 200) {
+        throw new Error((res.result && res.result.message) || '获取我的帖子分栏失败')
+      }
 
-        return {
-          id: item._id, // 数据库自带的 _id
-          // 🌟 核心修复：多重兼容。优先取 image/coverImage，如果没有则取 images 数组的第一张图
-          image: item.image || item.coverImage || (item.images && item.images.length > 0 ? item.images[0] : ''),
-          title: item.title || '分享穿搭',
-          time: dateStr,
-          // 🌟 优化：同时兼容不同的点赞字段名
-          likes: item.likes || item.likeCount || 0,
-          liked: item.liked || false
-        }
+      const data = res.result.data || {}
+      ;(data.warnings || []).forEach(warning => {
+        console.warn('myPosts.loadAllPostTabs', warning.type || 'warning', warning)
       })
 
       this.setData({
-        myPosts: formattedPosts
+        myPosts: data.myPosts || [],
+        collectedPosts: data.collectedPosts || [],
+        likedPosts: data.likedPosts || []
+      }, () => {
+        this.updateCurrentPosts()
       })
       wx.hideLoading()
 
@@ -75,7 +112,7 @@ Page({
   onRefresh() {
     this.setData({ refreshing: true })
     // 重新拉取数据
-    this.loadMyPosts().then(() => {
+    this.loadAllPostTabs().then(() => {
       this.setData({ refreshing: false })
     })
   },
@@ -90,6 +127,10 @@ Page({
 
   // 显示帖子操作选项
   showPostOptions(e) {
+    if (this.data.activeTab !== 'posts') {
+      return
+    }
+
     const index = e.currentTarget.dataset.index
     this.setData({
       showOptionsModal: true,

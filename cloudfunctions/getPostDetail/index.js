@@ -2,6 +2,22 @@ const cloud = require('wx-server-sdk')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
+// 判断指定集合是否存在任一匹配记录，避免用复杂组合查询触发不必要索引要求
+async function hasAnyRecord(collectionName, queryList = []) {
+  for (const query of queryList) {
+    const res =
+      await db.collection(collectionName)
+        .where(query)
+        .limit(1)
+        .get()
+
+    if (res.data.length > 0) {
+      return true
+    }
+  }
+
+  return false
+}
 
 exports.main = async (event, context) => {
 
@@ -33,23 +49,31 @@ exports.main = async (event, context) => {
 
     const postData = postRes.data
 
-    // ⭐ 查询当前用户是否点赞
-    const likedRes =
-      await db.collection('likes')
+    const userRes =
+      await db.collection('users')
         .where({
-          postId,
-          openid
+          _openid: openid
         })
+        .limit(1)
         .get()
 
-    // ⭐ 查询当前用户是否收藏
-    const collectedRes =
-      await db.collection('user_collections')
-        .where({
-          postId,
-          openid
-        })
-        .get()
+    const currentUserId = userRes.data[0] && userRes.data[0]._id
+
+    // ⭐ 查询当前用户是否点赞，兼容新旧点赞字段
+    const liked = await hasAnyRecord('likes', [
+      { postId, openid },
+      { post_id: postId, userOpenid: openid },
+      { postId, _openid: openid },
+      ...(currentUserId ? [{ post_id: postId, user_id: currentUserId }] : [])
+    ])
+
+    // ⭐ 查询当前用户是否收藏，兼容新旧收藏字段
+    const collected = await hasAnyRecord('user_collections', [
+      { postId, openid },
+      { post_id: postId, userOpenid: openid },
+      { postId, _openid: openid },
+      ...(currentUserId ? [{ post_id: postId, user_id: currentUserId }] : [])
+    ])
 
     return {
 
@@ -65,11 +89,9 @@ exports.main = async (event, context) => {
         collects: postData.collects || 0,
 
         // ⭐ 用户状态
-        liked:
-          likedRes.data.length > 0,
+        liked,
 
-        collected:
-          collectedRes.data.length > 0,
+        collected,
 
         isAuthor:
           postData.authorOpenid === openid
