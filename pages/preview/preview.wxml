@@ -19,8 +19,11 @@
     </view>
 
     <view class="btn-group">
-      <button class="btn-cancel" bindtap="goBack">返回重选</button>
-      <button class="btn-primary" bindtap="saveToAlbum" loading="{{isSaving}}" disabled="{{isFusing || isSaving}}">保存到相册</button>
+      <view class="btn btn-cancel" bindtap="goBack">返回</view>
+      <view class="btn btn-star {{isCollected ? 'collected' : ''}}" bindtap="addToCollection">
+        {{isCollected ? '已收藏' : '⭐ 收藏'}}
+      </view>
+      <view class="btn btn-primary" bindtap="saveToAlbum">保存相册</view>
     </view>
   </view>
 
