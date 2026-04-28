@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "rebuilduserknowledgebase",
   "version": "1.0.0",
-  "description": "批量补同步旧衣物到智谱知识库",
+  "description": "图片向量知识库重建云函数，兼容旧百炼依赖",
   "main": "index.js",
   "dependencies": {
     "@alicloud/bailian20231229": "^2.9.1",

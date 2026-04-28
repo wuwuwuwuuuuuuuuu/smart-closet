@@ -1,4 +1,4 @@
-const cloud = require('wx-server-sdk')
+﻿const cloud = require('wx-server-sdk')
 const {
   normalizeText,
   normalizeTagList,
@@ -6,6 +6,7 @@ const {
   buildKnowledgeSyncResetFields,
   triggerKnowledgeSyncInBackground
 } = require('./utils/knowledge-sync')
+const { buildImageKnowledgeFields } = require('./common/clothing-image-fields')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -88,15 +89,20 @@ exports.main = async (event = {}) => {
     }
 
     const current = clothingInfo.data[0]
+    const imageFields = buildImageKnowledgeFields({
+      image: normalizeText(body.image) || current.image,
+      originalImage: normalizeText(body.originalImage) || current.originalImage,
+      previousImage: current.image
+    })
     const nextPayload = {
       name: normalizeText(body.name) || current.name,
-      image: normalizeText(body.image) || current.image,
+      image: imageFields.primaryImage || current.image,
       season: normalizeText(body.season) || current.season,
       category: normalizeText(body.category) || current.category,
       tags: Array.isArray(body.tags) ? normalizeTagList(body.tags) : current.tags,
       material: normalizeText(body.material) || current.material,
       brand: normalizeText(body.brand) || current.brand,
-      originalImage: normalizeText(body.originalImage) || current.originalImage
+      originalImage: imageFields.originalImage || current.originalImage || current.image
     }
 
     const knowledgeRelevantChanged = hasKnowledgeRelevantChanges(current, nextPayload)
@@ -110,6 +116,13 @@ exports.main = async (event = {}) => {
 
     if (knowledgeSyncResetFields) {
       Object.assign(updateData, knowledgeSyncResetFields)
+    }
+
+    if (imageFields.imageChanged) {
+      updateData.image_knowledge_status = imageFields.status
+      updateData.image_embedding_status = imageFields.status
+      updateData.image_embedding_error = ''
+      updateData.image_embedding_updated_at = null
     }
 
     await db.collection('clothes').where({ _id: id }).update({
@@ -135,6 +148,9 @@ exports.main = async (event = {}) => {
         knowledgeSyncStatus: knowledgeRelevantChanged
           ? knowledgeSyncResetFields.knowledge_sync_status
           : normalizeText(current.knowledge_sync_status) || 'pending',
+        imageEmbeddingStatus: imageFields.imageChanged
+          ? imageFields.status
+          : normalizeText(current.image_embedding_status) || 'pending',
         knowledgeSyncTriggered: shouldTriggerKnowledgeSync
       }
     }

@@ -64,6 +64,10 @@
                 <text class="tip-line" wx:for="{{item.data.tips}}" wx:key="*this">{{item}}</text>
               </view>
 
+              <text class="retrieval-source" wx:if="{{item.data.retrievalSource}}">
+                来源：{{item.data.retrievalSource}} · 命中 {{item.data.retrievalHitCount}} 件
+              </text>
+
               <view class="cta-row" bindtap="goToTryOnFromRecommendation">
                 <text class="cta-text">{{item.data.ctaLabel}}</text>
                 <view class="cta-arrow-circle">

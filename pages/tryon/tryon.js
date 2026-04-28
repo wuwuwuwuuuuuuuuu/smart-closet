@@ -1,12 +1,11 @@
 const db = wx.cloud.database()
 const app = getApp()
-// 简化依赖，避免模块加载问题
-// const { logError, logWarning } = require('../../utils/logger')
-// const {
-//   matchSelectedClothes,
-//   buildSuggestedPlacements,
-//   isValidSmartRecommendEntry
-// } = require('./tryon.helpers')
+const { logError, logWarning } = require('../../utils/logger')
+const {
+  matchSelectedClothes,
+  buildSuggestedPlacements,
+  isValidSmartRecommendEntry
+} = require('./tryon.helpers')
 
 Page({
   data: {
@@ -113,24 +112,23 @@ Page({
   consumePendingSmartRecommendEntry() {
     try {
       const entry = wx.getStorageSync('smartRecommendTryonEntry')
-      if (!entry || entry.active !== true) {
+      if (!isValidSmartRecommendEntry(entry) || entry.active !== true) {
         if (entry && entry.active === true) {
-          console.warn('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
+          logWarning('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
         }
         this.setData({ smartRecommendEntry: null })
         return null
       }
 
-      const consumedEntry = {
+      wx.setStorageSync('smartRecommendTryonEntry', {
         ...entry,
         active: false
-      }
-      wx.setStorageSync('smartRecommendTryonEntry', consumedEntry)
-      this.setData({ smartRecommendEntry: consumedEntry })
+      })
+      this.setData({ smartRecommendEntry: entry })
 
-      return consumedEntry
+      return entry
     } catch (error) {
-      console.error('tryon.consumePendingSmartRecommendEntry错误:', error)
+      logError('tryon.consumePendingSmartRecommendEntry', error)
       return null
     }
   },
@@ -142,14 +140,21 @@ Page({
       return
     }
 
-    const matchedClothes = []
-    const placedClothes = []
+    const matchedClothes = matchSelectedClothes(entry.selectedClothesIds, clothesList)
 
-    if ((entry.selectedClothesIds || []).length > 0 && matchedClothes.length === 0) {
-      console.warn('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
+    if (!matchedClothes.length) {
+      logWarning('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
         selectedClothesIds: entry.selectedClothesIds
       })
+      this.pendingSmartRecommendEntry = null
+      return
     }
+
+    const timestamp = Date.now()
+    const placedClothes = buildSuggestedPlacements(matchedClothes).map(item => ({
+      ...item,
+      boardId: `recommend_${item._id}_${timestamp}`
+    }))
 
     this.setData({
       smartRecommendEntry: entry,

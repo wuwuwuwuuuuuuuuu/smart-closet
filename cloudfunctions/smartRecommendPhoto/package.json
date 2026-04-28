@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "smartrecommendphoto",
   "version": "1.0.0",
-  "description": "智能推荐多模态云函数入口",
+  "description": "智能推荐图片向量检索云函数入口",
   "main": "index.js",
   "dependencies": {
     "@alicloud/bailian20231229": "^2.9.1",

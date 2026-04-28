@@ -179,9 +179,10 @@ function normalizeRecommendationResult(raw = {}) {
     wardrobeAnalysisSummary: normalizeInput(raw.wardrobeAnalysisSummary),
     ctaLabel: normalizeInput(raw.ctaLabel) || '\u53bb\u8bd5\u7a7f\u9875\u7ee7\u7eed\u642d\u914d',
     source: normalizeInput(raw.source),
-    retrievalSource: normalizeInput(raw.retrievalSource),
+    retrievalSource: normalizeInput(raw.retrievalSource) || 'unknown',
     knowledgeId: normalizeInput(raw.knowledgeId),
-    retrievalHitCount: normalizeHitCount(raw.retrievalHitCount)
+    retrievalHitCount: normalizeHitCount(raw.retrievalHitCount),
+    fallbackReason: normalizeInput(raw.fallbackReason)
   }
 }
 

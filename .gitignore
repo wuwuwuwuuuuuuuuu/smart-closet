@@ -1,4 +1,8 @@
-node_modules/
+﻿node_modules/
 project.private.config.json
 cloudfunctions/**/config.local.js
 
+# Local secret/config files. Keep real API keys in cloud env vars or local-only copies.
+**/config.local.js
+.env
+.env.*

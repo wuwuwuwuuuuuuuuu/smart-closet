@@ -1,18 +1,15 @@
-const cloud = require('wx-server-sdk')
-const {
-  buildLegacyKnowledgePatch,
-  normalizeText,
-  shouldSyncClothing,
-  summarizeRebuildResults,
-  buildRebuildDiagnostics
-} = require('./utils/rebuild-helpers')
-const {
-  ensureKnowledgeBinding,
-  uploadClothingToKnowledge,
-  checkDocumentSyncStatus,
-  serializeProviderError,
-  probeKnowledgeAccess
-} = require('./utils/bailian-provider')
+﻿const cloud = require('wx-server-sdk')
+const { createImageEmbedding } = require('./common/dashscope-multimodal-provider')
+const { isValidVector } = require('./common/image-vector-utils')
+const { normalizeLimit, buildRebuildStatsSummary } = require('./rebuild.helpers')
+
+let localConfig = {}
+try {
+  localConfig = require('./config.local')
+} catch (error) {
+  localConfig = {}
+}
+
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -20,387 +17,261 @@ cloud.init({
 
 const db = cloud.database()
 
-async function findUserByOpenid(openid) {
-  const userRes = await db.collection('users')
+
+function logError(scope, error, extra = {}) {
+  console.error(`[ImageKnowledge][${scope}]`, {
+    message: error && error.message ? error.message : String(error),
+    ...extra
+  })
+}
+
+function logWarning(scope, message, extra = {}) {
+  console.warn(`[ImageKnowledge][${scope}] ${message}`, extra)
+}
+
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function getDashScopeApiKey() {
+  return normalizeText(process.env.DASHSCOPE_API_KEY || localConfig.DASHSCOPE_API_KEY)
+}
+
+async function getCurrentUser(openid) {
+  const res = await db.collection('users')
     .where({ _openid: openid })
     .orderBy('createdAt', 'desc')
+    .limit(1)
+    .get()
+  return res.data && res.data[0]
+}
+
+function shouldSyncClothing(clothing, forceResync) {
+  const imageFileId = normalizeText(clothing.image) || normalizeText(clothing.originalImage)
+  if (!imageFileId) return false
+  if (forceResync) return true
+  const status = normalizeText(clothing.image_embedding_status)
+  return !status || status === 'pending' || status === 'failed'
+}
+
+async function loadSyncableClothes({ userId, limit, forceResync }) {
+  const res = await db.collection('clothes')
+    .where({ user_id: userId })
+    .orderBy('created_at', 'desc')
+    .limit(Math.min(100, Math.max(limit * 2, limit)))
     .get()
 
-  return Array.isArray(userRes.data) && userRes.data.length ? userRes.data[0] : null
-}
-
-async function patchLegacyClothes(clothesList = []) {
-  for (const clothing of clothesList) {
-    const patch = buildLegacyKnowledgePatch(clothing)
-    const updateData = {
-      user_tags: patch.user_tags,
-      inferred_profile: patch.inferred_profile,
-      merged_tags: patch.merged_tags,
-      retrieval_tags: patch.retrieval_tags,
-      retrieval_text: patch.retrieval_text,
-      updated_at: db.serverDate()
-    }
-
-    if (!normalizeText(clothing.originalImage) && patch.originalImage) {
-      updateData.originalImage = patch.originalImage
-    }
-    if (!normalizeText(clothing.bailian_file_id) && patch.bailian_file_id) {
-      updateData.bailian_file_id = patch.bailian_file_id
-    }
-    if (!normalizeText(clothing.bailian_doc_id) && patch.bailian_doc_id) {
-      updateData.bailian_doc_id = patch.bailian_doc_id
-    }
-    if (!normalizeText(clothing.knowledge_doc_id) && patch.knowledge_doc_id) {
-      updateData.knowledge_doc_id = patch.knowledge_doc_id
-    }
-    if (!normalizeText(clothing.knowledge_sync_provider)) {
-      updateData.knowledge_sync_provider = patch.knowledge_sync_provider
-    }
-    if (!normalizeText(clothing.knowledge_sync_status)) {
-      updateData.knowledge_sync_status = patch.knowledge_sync_status
-    }
-    if (clothing.knowledge_sync_error === undefined) {
-      updateData.knowledge_sync_error = patch.knowledge_sync_error
-    }
-    if (clothing.knowledge_last_sync_at === undefined) {
-      updateData.knowledge_last_sync_at = patch.knowledge_last_sync_at
-    }
-    if (!normalizeText(clothing.knowledge_sync_job_id) && patch.knowledge_sync_job_id) {
-      updateData.knowledge_sync_job_id = patch.knowledge_sync_job_id
-    }
-    if (!normalizeText(clothing.knowledge_sync_file_name) && patch.knowledge_sync_file_name) {
-      updateData.knowledge_sync_file_name = patch.knowledge_sync_file_name
-    }
-
-    Object.assign(clothing, updateData)
-    await db.collection('clothes').doc(clothing._id).update({ data: updateData })
-  }
-}
-
-function pickSyncingClothes(clothesList = [], limit = 3) {
-  return clothesList
-    .filter(item => normalizeText(item && item.knowledge_sync_status) === 'syncing' && normalizeText(item && item.knowledge_sync_job_id))
+  return (res.data || [])
+    .filter(item => shouldSyncClothing(item, forceResync))
     .slice(0, limit)
 }
 
-function buildResponseData({
-  knowledgeId,
-  mode,
-  requestMode,
-  summary,
-  diagnostics,
-  results,
-  maxDiagnostics = 5
-}) {
-  const sampleFailures = results
-    .filter(item => item.status === 'failed')
-    .slice(0, 5)
-  const sampleQueued = results
-    .filter(item => item.status === 'queued' || item.status === 'syncing')
-    .slice(0, 5)
-  const sampleDiagnostics = diagnostics.diagnostics
-    .filter(item => item.reason !== 'already_synced')
-    .slice(0, maxDiagnostics)
-
-  return {
-    knowledgeId,
-    mode,
-    requestMode,
-    ...summary,
-    skippedCount: diagnostics.skippedCount,
-    inventorySummary: diagnostics.inventorySummary,
-    skipReasonStats: diagnostics.skipReasonStats,
-    sampleFailures,
-    sampleQueued,
-    sampleDiagnostics
+async function getTempUrl(fileId) {
+  const normalizedFileId = normalizeText(fileId)
+  if (!normalizedFileId) {
+    throw new Error('image file id is required')
   }
+  if (/^https?:\/\//i.test(normalizedFileId)) {
+    return normalizedFileId
+  }
+  if (!normalizedFileId.startsWith('cloud://')) {
+    throw new Error('unsupported image file id')
+  }
+
+  const res = await cloud.getTempFileURL({ fileList: [normalizedFileId] })
+  const item = res.fileList && res.fileList[0]
+  const tempUrl = normalizeText(item && item.tempFileURL)
+  if (!tempUrl) {
+    throw new Error(item && item.errMsg ? item.errMsg : 'getTempFileURL returned empty url')
+  }
+  return tempUrl
 }
 
-async function markClothingSyncFailed({ clothing, providerError }) {
-  const failedData = {
-    bailian_file_id: '',
-    bailian_doc_id: '',
-    knowledge_doc_id: '',
-    knowledge_sync_provider: 'bailian',
-    knowledge_sync_status: 'failed',
-    knowledge_sync_error: providerError.message,
-    knowledge_sync_job_id: '',
-    knowledge_sync_file_name: '',
-    updated_at: db.serverDate()
-  }
-
-  await db.collection('clothes').doc(clothing._id).update({
-    data: failedData
-  })
-
-  Object.assign(clothing, failedData)
-}
-
-async function updateSyncingClothing({ clothing, knowledgeId }) {
-  const statusResult = await checkDocumentSyncStatus({
-    knowledgeId,
-    jobId: clothing.knowledge_sync_job_id,
-    fileName: clothing.knowledge_sync_file_name
-  })
-
-  if (!statusResult.ready) {
-    return {
-      clothingId: clothing._id,
-      status: 'syncing',
-      jobId: clothing.knowledge_sync_job_id
-    }
-  }
-
-  await db.collection('clothes').doc(clothing._id).update({
+async function markClothingSkipped(clothingId, reason) {
+  await db.collection('clothes').doc(clothingId).update({
     data: {
-      bailian_file_id: statusResult.fileId || clothing.bailian_file_id || '',
-      bailian_doc_id: statusResult.documentId,
-      knowledge_doc_id: statusResult.documentId,
-      knowledge_sync_provider: 'bailian',
-      knowledge_sync_status: 'ready',
-      knowledge_sync_error: '',
-      knowledge_sync_job_id: '',
-      knowledge_sync_file_name: '',
-      knowledge_last_sync_at: db.serverDate(),
+      image_knowledge_status: 'skipped_no_image',
+      image_embedding_status: 'skipped_no_image',
+      image_embedding_error: reason || '',
+      image_embedding_updated_at: db.serverDate(),
       updated_at: db.serverDate()
     }
   })
-  Object.assign(clothing, {
-    bailian_file_id: statusResult.fileId || clothing.bailian_file_id || '',
-    bailian_doc_id: statusResult.documentId,
-    knowledge_doc_id: statusResult.documentId,
-    knowledge_sync_provider: 'bailian',
-    knowledge_sync_status: 'ready',
-    knowledge_sync_error: '',
-    knowledge_sync_job_id: '',
-    knowledge_sync_file_name: ''
-  })
+}
 
-  return {
-    clothingId: clothing._id,
-    status: 'ready',
-    documentId: statusResult.documentId,
-    fileId: statusResult.fileId || ''
+async function markClothingReady(clothingId, vectorDim) {
+  await db.collection('clothes').doc(clothingId).update({
+    data: {
+      image_knowledge_status: 'ready',
+      image_embedding_status: 'ready',
+      image_embedding_error: '',
+      image_embedding_dim: vectorDim,
+      image_embedding_updated_at: db.serverDate(),
+      updated_at: db.serverDate()
+    }
+  })
+}
+
+async function markClothingFailed(clothingId, error) {
+  await db.collection('clothes').doc(clothingId).update({
+    data: {
+      image_knowledge_status: 'failed',
+      image_embedding_status: 'failed',
+      image_embedding_error: error && error.message ? error.message : String(error),
+      image_embedding_updated_at: db.serverDate(),
+      updated_at: db.serverDate()
+    }
+  })
+}
+
+async function removeExistingVector({ clothingId, userId }) {
+  try {
+    await db.collection('clothes_image_vectors').where({
+      clothing_id: clothingId,
+      user_id: userId
+    }).remove()
+  } catch (error) {
+    logWarning('rebuild.removeExistingVector', 'remove old vector failed or empty', {
+      clothingId,
+      errMsg: error && error.message
+    })
   }
 }
 
-async function queueClothingSync({ clothing, knowledgeId, waitForReady }) {
-  const uploadResult = await uploadClothingToKnowledge({
-    clothing,
-    knowledgeId,
-    waitForReady
-  })
+async function ensureCollectionExists(collectionName) {
+  try {
+    await db.collection(collectionName).limit(1).get()
+  } catch (error) {
+    const message = error && error.message ? error.message : String(error)
+    if (!/collection not exists|Db or Table not exist|DATABASE_COLLECTION_NOT_EXIST|ResourceNotFound/i.test(message)) {
+      throw error
+    }
 
-  if (uploadResult.documentId) {
-    await db.collection('clothes').doc(clothing._id).update({
-      data: {
-        bailian_file_id: uploadResult.fileId,
-        bailian_doc_id: uploadResult.documentId,
-        knowledge_doc_id: uploadResult.documentId,
-        knowledge_sync_provider: 'bailian',
-        knowledge_sync_status: 'ready',
-        knowledge_sync_error: '',
-        knowledge_sync_job_id: '',
-        knowledge_sync_file_name: '',
-        knowledge_last_sync_at: db.serverDate(),
-        updated_at: db.serverDate()
+    try {
+      await db.createCollection(collectionName)
+    } catch (createError) {
+      const createMessage = createError && createError.message ? createError.message : String(createError)
+      if (!/already exists|DATABASE_COLLECTION_ALREADY_EXISTS/i.test(createMessage)) {
+        throw createError
       }
-    })
-    Object.assign(clothing, {
-      bailian_file_id: uploadResult.fileId,
-      bailian_doc_id: uploadResult.documentId,
-      knowledge_doc_id: uploadResult.documentId,
-      knowledge_sync_provider: 'bailian',
-      knowledge_sync_status: 'ready',
-      knowledge_sync_error: '',
-      knowledge_sync_job_id: '',
-      knowledge_sync_file_name: ''
-    })
-
-    return {
-      clothingId: clothing._id,
-      status: 'synced',
-      documentId: uploadResult.documentId,
-      fileId: uploadResult.fileId
     }
-  }
-
-  await db.collection('clothes').doc(clothing._id).update({
-    data: {
-      bailian_file_id: uploadResult.fileId,
-      knowledge_sync_provider: 'bailian',
-      knowledge_sync_status: 'syncing',
-      knowledge_sync_error: '',
-      knowledge_sync_job_id: uploadResult.jobId,
-      knowledge_sync_file_name: uploadResult.fileName,
-      updated_at: db.serverDate()
-    }
-  })
-  Object.assign(clothing, {
-    bailian_file_id: uploadResult.fileId,
-    knowledge_sync_provider: 'bailian',
-    knowledge_sync_status: 'syncing',
-    knowledge_sync_error: '',
-    knowledge_sync_job_id: uploadResult.jobId,
-    knowledge_sync_file_name: uploadResult.fileName
-  })
-
-  return {
-    clothingId: clothing._id,
-    status: 'queued',
-    fileId: uploadResult.fileId,
-    jobId: uploadResult.jobId
   }
 }
 
 exports.main = async (event = {}) => {
+  const wxContext = cloud.getWXContext()
+  const openid = wxContext.OPENID
+  const limit = normalizeLimit(event.limit, 30)
+  const forceResync = event.forceResync === true
+
   try {
-    if (event.debugAuth) {
-      return {
-        code: 200,
-        message: 'auth debug',
-        data: await probeKnowledgeAccess()
-      }
-    }
-
-    const wxContext = cloud.getWXContext()
-    const openid = normalizeText(wxContext.OPENID) || normalizeText(event.targetOpenid)
-    const user = await findUserByOpenid(openid)
-
+    const user = await getCurrentUser(openid)
     if (!user) {
-      return {
-        code: 404,
-        message: 'user not found'
+      return { code: 404, message: '用户不存在' }
+    }
+
+    await ensureCollectionExists('clothes_image_vectors')
+
+    const clothes = await loadSyncableClothes({
+      userId: user._id,
+      limit,
+      forceResync
+    })
+
+    const stats = {
+      total: clothes.length,
+      readyCount: 0,
+      failedCount: 0,
+      skippedCount: 0,
+      sampleFailures: [],
+      requestMode: forceResync ? 'forceResync' : 'normal',
+      inventorySummary: {
+        totalWardrobeCount: clothes.length,
+        syncableCount: clothes.length,
+        readyInKnowledgeCount: 0,
+        missingKnowledgeCount: 0,
+        missingImageCount: 0
       }
     }
 
-    const knowledgeId = await ensureKnowledgeBinding({ db, user })
-
-    const clothesRes = await db.collection('clothes')
-      .where({ user_id: user._id })
-      .orderBy('created_at', 'desc')
-      .get()
-
-    const clothesList = Array.isArray(clothesRes.data) ? clothesRes.data : []
-    if (!clothesList.length) {
-      return {
-        code: 422,
-        message: 'wardrobe empty'
-      }
-    }
-
-    await patchLegacyClothes(clothesList)
-
-    const forceResync = Boolean(event.forceResync)
-    const limit = typeof event.limit === 'number' && event.limit > 0 ? event.limit : 30
-    const waitForReady = event.waitForReady === true
-    const diagnoseOnly = event.diagnose === true || event.diagnosticOnly === true
-
-    const diagnostics = buildRebuildDiagnostics(clothesList, { forceResync })
-    if (diagnoseOnly) {
-      return {
-        code: 200,
-        message: 'diagnose finished',
-        data: buildResponseData({
-          knowledgeId,
-          mode: 'diagnose',
-          requestMode: forceResync ? 'forceResync' : 'normal',
-          summary: summarizeRebuildResults([]),
-          diagnostics,
-          results: [],
-          maxDiagnostics: 10
-        })
-      }
-    }
-
-    const syncingItems = pickSyncingClothes(clothesList, limit)
-    const syncingIdSet = new Set(syncingItems.map(item => item._id))
-    const candidates = clothesList
-      .filter(item => !syncingIdSet.has(item._id) && shouldSyncClothing(item, { forceResync }))
-      .slice(0, limit)
-
-    if (!syncingItems.length && !candidates.length) {
-      return {
-        code: 200,
-        message: 'nothing to sync',
-        data: buildResponseData({
-          knowledgeId,
-          mode: waitForReady ? 'waitForReady' : 'asyncQueue',
-          requestMode: forceResync ? 'forceResync' : 'normal',
-          summary: summarizeRebuildResults([]),
-          diagnostics,
-          results: []
-        })
-      }
-    }
-
-    const results = []
-
-    for (const clothing of syncingItems) {
+    for (const clothing of clothes) {
       try {
-        results.push(await updateSyncingClothing({ clothing, knowledgeId }))
-      } catch (error) {
-        const providerError = serializeProviderError(error)
-        await markClothingSyncFailed({ clothing, providerError })
+        const imageFileId = normalizeText(clothing.image) || normalizeText(clothing.originalImage)
+        if (!imageFileId) {
+          stats.skippedCount += 1
+          stats.inventorySummary.missingImageCount += 1
+          await markClothingSkipped(clothing._id, 'missing_image')
+          continue
+        }
 
-        results.push({
-          clothingId: clothing._id,
-          status: 'failed',
-          error: providerError.message,
-          errorCode: providerError.code,
-          statusCode: providerError.statusCode,
-          requestId: providerError.requestId
+        const imageUrl = await getTempUrl(imageFileId)
+        const vector = await createImageEmbedding({
+          imageUrl,
+          apiKey: getDashScopeApiKey(),
+          model: normalizeText(localConfig.DASHSCOPE_EMBEDDING_MODEL) || undefined,
+          timeoutMs: Number(localConfig.BAILIAN_RESPONSE_TIMEOUT_MS) || 60000
         })
+
+        if (!isValidVector(vector)) {
+          throw new Error('invalid image embedding vector')
+        }
+
+        await removeExistingVector({ clothingId: clothing._id, userId: user._id })
+        await db.collection('clothes_image_vectors').add({
+          data: {
+            _openid: openid,
+            user_id: user._id,
+            clothing_id: clothing._id,
+            image_file_id: imageFileId,
+            image_temp_url_sample: imageUrl,
+            vector,
+            vector_dim: vector.length,
+            category: normalizeText(clothing.category),
+            season: normalizeText(clothing.season),
+            tags: Array.isArray(clothing.tags) ? clothing.tags : [],
+            name: normalizeText(clothing.name),
+            updated_at: db.serverDate()
+          }
+        })
+
+        await markClothingReady(clothing._id, vector.length)
+        stats.readyCount += 1
+        stats.inventorySummary.readyInKnowledgeCount += 1
+      } catch (error) {
+        stats.failedCount += 1
+        stats.inventorySummary.missingKnowledgeCount += 1
+        if (stats.sampleFailures.length < 5) {
+          stats.sampleFailures.push({
+            clothingId: clothing._id,
+            name: normalizeText(clothing.name),
+            error: error && error.message ? error.message : String(error)
+          })
+        }
+        logWarning('rebuild.imageEmbedding.itemFailed', 'image embedding failed', {
+          clothingId: clothing._id,
+          errMsg: error && error.message
+        })
+        await markClothingFailed(clothing._id, error)
       }
     }
 
-    for (const clothing of candidates) {
-      try {
-        results.push(await queueClothingSync({
-          clothing,
-          knowledgeId,
-          waitForReady
-        }))
-      } catch (error) {
-        const providerError = serializeProviderError(error)
-        await markClothingSyncFailed({ clothing, providerError })
-
-        results.push({
-          clothingId: clothing._id,
-          status: 'failed',
-          error: providerError.message,
-          errorCode: providerError.code,
-          statusCode: providerError.statusCode,
-          requestId: providerError.requestId
-        })
-      }
-    }
-
-    const summary = summarizeRebuildResults(results)
-    const refreshedClothesRes = await db.collection('clothes')
-      .where({ user_id: user._id })
-      .orderBy('created_at', 'desc')
-      .get()
-    const freshClothesList = Array.isArray(refreshedClothesRes.data) ? refreshedClothesRes.data : clothesList
-    const freshDiagnostics = buildRebuildDiagnostics(freshClothesList, { forceResync })
-
+    const summary = buildRebuildStatsSummary(stats)
     return {
       code: 200,
-      message: 'rebuild finished',
-      data: buildResponseData({
-        knowledgeId,
-        mode: waitForReady ? 'waitForReady' : 'asyncQueue',
-        requestMode: forceResync ? 'forceResync' : 'normal',
-        summary,
-        diagnostics: freshDiagnostics,
-        results
-      })
+      message: '图片知识库重建完成',
+      data: {
+        ...stats,
+        summary
+      }
     }
   } catch (error) {
+    logError('rebuild.imageEmbedding.main', error, { limit, forceResync })
     return {
       code: 500,
-      message: 'rebuild failed',
-      error: error.message
+      message: '图片知识库重建失败',
+      error: error && error.message ? error.message : String(error)
+
     }
   }
 }
+

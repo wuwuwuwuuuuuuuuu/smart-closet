@@ -266,6 +266,14 @@ page {
   line-height: 1.6;
 }
 
+.retrieval-source {
+  display: block;
+  margin-top: 12rpx;
+  color: #8a8a8a;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
 .cta-row {
   margin-top: 20rpx;
   height: 84rpx;
