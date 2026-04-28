@@ -1,11 +1,8 @@
-<!-- 海报操作页 -->
 <view class="container">
-  <!-- 海报预览 -->
   <view class="poster-preview">
     <image src="{{posterImage}}" class="poster-image" mode="widthFix" />
   </view>
 
-  <!-- 底部操作栏 -->
   <view class="action-bar">
     <view class="action-item" bindtap="downloadPoster">
       <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img30.png" class="action-icon" />
@@ -15,48 +12,6 @@
     <view class="action-item" bindtap="sharePoster">
       <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img31.png" class="action-icon" />
       <text class="action-text">分享</text>
-    </view>
-    
-    <view class="action-item" bindtap="showCollectionModal">
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img20.png" class="action-icon" />
-      <text class="action-text">收藏</text>
-    </view>
-  </view>
-
-  <!-- 标签选择弹窗 -->
-  <view class="modal {{showCollectionModal ? 'show' : ''}}" bindtap="hideCollectionModal">
-    <view class="modal-content" catchtap="">
-      <view class="modal-header">
-        <text class="modal-title">添加标签</text>
-        <view class="modal-close" bindtap="hideCollectionModal">×</view>
-      </view>
-      
-      <view class="tag-section">
-        <text class="section-title">选择标签</text>
-        <view class="tag-list">
-          <view 
-            class="tag-item {{selectedTags.includes(tag) ? 'active' : ''}}" 
-            wx:for="{{presetTags}}" 
-            wx:key="*this"
-            bindtap="toggleTag"
-            data-tag="{{tag}}">
-            {{tag}}
-          </view>
-        </view>
-      </view>
-      
-      <view class="custom-tag">
-        <input 
-          class="tag-input" 
-          placeholder="请输入标签" 
-          bindinput="onTagInput"
-          value="{{customTag}}" />
-        <view class="add-tag-btn" bindtap="addCustomTag">添加</view>
-      </view>
-      
-      <view class="modal-actions">
-        <view class="btn btn-primary" bindtap="confirmCollection">确定收藏</view>
-      </view>
     </view>
   </view>
 </view>

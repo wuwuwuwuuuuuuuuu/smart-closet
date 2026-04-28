@@ -223,24 +223,52 @@ Page({
     }
   },
 
-  // 上传图片到云存储
-  uploadImageToCloud(tempFilePath) {
-    return new Promise((resolve, reject) => {
+  // === 🌟 终极增强版：支持本地图、云端图、网络图混合上传 ===
+  async uploadImageToCloud(filePath) {
+    try {
+      // 1. 如果已经是云存储 ID，直接返回，无需重复上传！(秒传)
+      if (filePath.startsWith('cloud://')) {
+        console.log('✅ 检测到云文件，直接跳过上传:', filePath)
+        return filePath
+      }
+
+      let finalLocalPath = filePath
+
+      // 2. 如果是外部 HTTPS 网络图片，必须先下载到本地变成临时文件
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        console.log('🔄 检测到网络图片，正在下载到本地临时目录...')
+        const downloadRes = await new Promise((resolve, reject) => {
+          wx.downloadFile({
+            url: filePath,
+            success: resolve,
+            fail: reject
+          })
+        })
+        finalLocalPath = downloadRes.tempFilePath
+        console.log('✅ 网络图片下载成功，临时路径:', finalLocalPath)
+      }
+
+      // 3. 执行真正的上传动作（此时 finalLocalPath 绝对是合法的本地临时路径）
       const cloudPath = `post-images/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
       
-      wx.cloud.uploadFile({
-        cloudPath: cloudPath,
-        filePath: tempFilePath,
-        success: (res) => {
-          console.log('图片上传成功:', res)
-          resolve(res.fileID)
-        },
-        fail: (err) => {
-          console.error('图片上传失败:', err)
-          reject(err)
-        }
+      return new Promise((resolve, reject) => {
+        wx.cloud.uploadFile({
+          cloudPath: cloudPath,
+          filePath: finalLocalPath,
+          success: res => {
+            console.log('✅ 图片上传云端成功:', res.fileID)
+            resolve(res.fileID)
+          },
+          fail: err => {
+            console.error('❌ wx.cloud.uploadFile 失败:', err)
+            reject(err)
+          }
+        })
       })
-    })
+    } catch (error) {
+      console.error('❌ 上传流程发生异常:', error)
+      throw error
+    }
   },
 
   // 返回上一页

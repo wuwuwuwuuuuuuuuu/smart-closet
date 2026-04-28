@@ -4,21 +4,21 @@ const {
 } = require('../../pages/daily/daily.helpers')
 
 assert.ok(buildWeatherSuggestion({
-  temp: '9°C',
-  text: '小雨',
-  city: '武汉市'
-}).includes('雨具'))
+  temp: '9\u00b0C',
+  text: '\u5c0f\u96e8',
+  city: '\u6b66\u6c49\u5e02'
+}).includes('\u96e8\u5177'))
 
 assert.ok(buildWeatherSuggestion({
-  temp: '30°C',
-  text: '晴',
-  city: '深圳市'
-}).includes('轻薄透气'))
+  temp: '30\u00b0C',
+  text: '\u6674',
+  city: '\u6df1\u5733\u5e02'
+}).includes('\u8f7b\u8584\u900f\u6c14'))
 
 assert.ok(buildWeatherSuggestion({
-  temp: '5°C',
-  text: '阴',
-  city: '北京市'
-}).includes('保暖'))
+  temp: '5\u00b0C',
+  text: '\u9634',
+  city: '\u5317\u4eac\u5e02'
+}).includes('\u4fdd\u6696'))
 
 console.log('weather-suggestion.test.js passed')
