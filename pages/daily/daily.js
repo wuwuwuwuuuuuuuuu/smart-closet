@@ -1,4 +1,4 @@
-﻿const { logError, logWarning } = require('../../utils/logger')
+const { logError, logWarning } = require('../../utils/logger')
 const {
   normalizeInput,
   buildDateLabel,
@@ -17,7 +17,7 @@ const {
 
 Page({
   data: {
-    heroImage: 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/images/smart_recommend_hero_compressed.jpg',
+    heroImage: '/images/smart_recommend_hero_compressed.jpg',
     arrowIcon: '/images/67134f606087c7f32d75f9d9f47f5af.png',
     currentCity: '定位中...',
     currentDateLabel: '',
@@ -31,8 +31,6 @@ Page({
     conversationList: [],
     recommendationResult: null,
     isRecommendationLoading: false,
-    isRebuildingKnowledge: false,
-    knowledgeRebuildSummary: '',
     isLocating: false,
     amapKey: ''
   },
@@ -41,7 +39,7 @@ Page({
     if (!this.data.heroImage) {
       logWarning('daily.hero', 'hero image missing')
     }
-
+    // 先用本地时间兜底显示，等高德接口回来后会覆盖它
     this.setData({
       currentDateLabel: buildDateLabel(new Date())
     })
@@ -49,26 +47,18 @@ Page({
   },
 
   getRealTimeWeather() {
-    this.setData({
-      isLocating: true,
-      currentCity: '定位中...'
-    })
+    this.setData({ isLocating: true, currentCity: '定位中...' })
     wx.showNavigationBarLoading()
 
     wx.getLocation({
       type: 'wgs84',
       success: ({ longitude, latitude }) => {
-        // 调用云函数获取定位天气
-        this.fetchWeatherFromCloud({ longitude, latitude })
+        this.callWeatherCloudFunction({ longitude, latitude })
       },
       fail: error => {
+        this.setData({ isLocating: false })
         wx.hideNavigationBarLoading()
-        this.setData({
-          isLocating: false
-        })
-        logWarning('daily.getRealTimeWeather', 'getLocation failed, using fallback weather', {
-          errMsg: error && error.errMsg
-        })
+        logWarning('daily.getRealTimeWeather', '定位失败，使用默认天气')
         this.applyFallbackWeather('未获取定位', {
           customSuggestion: '定位失败，请检查定位权限后点击“重新定位”，也可以手动切换城市。'
         })
@@ -78,60 +68,56 @@ Page({
 
   requestWeatherByCity(city) {
     const safeCity = normalizeInput(city)
-    if (!safeCity) {
-      logWarning('daily.requestWeatherByCity', 'empty city received')
-      return
-    }
+    if (!safeCity) return
 
-    this.setData({
-      isLocating: true,
-      currentCity: safeCity
-    })
+    this.setData({ isLocating: true, currentCity: safeCity })
     wx.showNavigationBarLoading()
 
-    // 调用云函数获取指定城市天气
-    this.fetchWeatherFromCloud({ city: safeCity })
+    this.callWeatherCloudFunction({ city: safeCity })
   },
 
-  // 统一通过云函数获取天气
-  fetchWeatherFromCloud(params) {
-    wx.cloud.callFunction({
-      name: 'getWeather',
-      data: params,
-      success: res => {
-        const result = res.result || {}
+  // 🌟 核心升级：一键直达云端，获取天气 + 精准日期
+  async callWeatherCloudFunction(payload) {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getWeather',
+        data: payload
+      })
+
+      if (res.result && res.result.code === 200) {
+        // 多解构出一个 reportTime
+        const { city, temp, text, reportTime } = res.result.data
         
-        if (result.code === 200 && result.data) {
-          const { city, temp, text } = result.data
-          this.applyWeatherInfo({
-            city: city || (params.city ? params.city : '当前位置'),
-            temp: temp ? `${temp}°C` : '--',
-            text: text || '未知',
-            icon: this.mapWeatherIcon(text)
-          })
-        } else {
-          logWarning('daily.fetchWeatherFromCloud', 'cloud API returned error', result)
-          this.applyFallbackWeather(params.city || '当前位置', {
-            customSuggestion: result.message || '获取天气数据失败，当前展示默认天气。你可以稍后重试。'
-          })
+        // 解析高德的时间并格式化（把 - 替换为 / 是为了兼容 iOS）
+        let dateLabel = this.data.currentDateLabel
+        if (reportTime) {
+          const dateObj = new Date(reportTime.replace(/-/g, '/'))
+          dateLabel = buildDateLabel(dateObj)
         }
-      },
-      fail: error => {
-        logError('daily.fetchWeatherFromCloud', error, params)
-        this.applyFallbackWeather(params.city || '当前位置', {
-          customSuggestion: '调用天气云服务失败，当前展示默认天气。你可以稍后重试。'
+
+        this.applyWeatherInfo({
+          city: normalizeInput(city),
+          temp: `${temp}°C`,
+          text: normalizeInput(text) || '未知',
+          icon: this.mapWeatherIcon(text),
+          dateLabel: dateLabel // 👈 把日期一并传下去
         })
-      },
-      complete: () => {
-        this.setData({
-          isLocating: false
-        })
-        wx.hideNavigationBarLoading()
+      } else {
+        throw new Error(res.result ? res.result.message : '云函数返回异常')
       }
-    })
+    } catch (error) {
+      logError('daily.callWeatherCloudFunction', error)
+      this.applyFallbackWeather(payload.city || '当前位置', {
+        customSuggestion: '云端天气获取失败，当前展示默认天气，可稍后重试。'
+      })
+    } finally {
+      this.setData({ isLocating: false })
+      wx.hideNavigationBarLoading()
+    }
   },
 
-  applyWeatherInfo({ city, temp, text, icon, suggestion }) {
+  // 应用天气与日期信息到 UI
+  applyWeatherInfo({ city, temp, text, icon, suggestion, dateLabel }) {
     const weatherInfo = {
       temp: temp || '--',
       text: text || '未知',
@@ -139,7 +125,8 @@ Page({
     }
     const currentCity = city || '当前城市'
 
-    this.setData({
+    // 准备要更新的 data 对象
+    const updateData = {
       currentCity,
       weatherInfo,
       weatherSuggestion: suggestion || buildWeatherSuggestion({
@@ -148,7 +135,14 @@ Page({
         city: currentCity
       }),
       isLocating: false
-    })
+    }
+
+    // 如果接口传回了日期，一并更新到页面的 currentDateLabel
+    if (dateLabel) {
+      updateData.currentDateLabel = dateLabel
+    }
+
+    this.setData(updateData)
   },
 
   applyFallbackWeather(city = '当前位置', options = {}) {
@@ -207,9 +201,6 @@ Page({
         forceResync
       },
       success: (res) => {
-        // 🌟 修复关键点 1：拿到结果的第一时间先关掉 loading
-        wx.hideLoading()
-
         const result = res && res.result ? res.result : {}
         const data = result.data || {}
         const feedback = buildKnowledgeRebuildFeedback(result)
@@ -236,7 +227,6 @@ Page({
           })))
         }
 
-        // 现在再去弹 Toast 或 Modal 就绝对安全了
         if (feedback.status === 'pending' || feedback.status === 'idle') {
           wx.showToast({
             title: feedback.status === 'pending' ? '已发起，请稍后查状态' : '当前没有待同步衣物',
@@ -253,9 +243,6 @@ Page({
         })
       },
       fail: (error) => {
-        // 🌟 修复关键点 2：失败时也是第一时间关掉 loading
-        wx.hideLoading()
-
         const timeoutPending = isCloudFunctionTimeoutError(error)
         const errMsg = timeoutPending
           ? `${forceResync ? '强制重同步' : '补同步'}已发起，但云函数执行较慢。请等待几秒后再次点击对应按钮查看状态。`
@@ -287,14 +274,13 @@ Page({
         })
       },
       complete: () => {
-        // 🌟 修复关键点 3：这里不再调用 wx.hideLoading()
+        wx.hideLoading()
         this.setData({
           isRebuildingKnowledge: false
         })
       }
     })
   },
-
 
   triggerKnowledgeRebuild() {
     this.runKnowledgeRebuild(false)
@@ -307,13 +293,7 @@ Page({
   // ========= 以下为大模型推荐聊天逻辑 =========
   onRecommendationInput(event) {
     const value = event && event.detail ? event.detail.value : ''
-    if (value !== '' && typeof value !== 'string') {
-      logWarning('daily.input', 'invalid input value', { valueType: typeof value })
-    }
-
-    this.setData({
-      pendingUserInput: typeof value === 'string' ? value : ''
-    })
+    this.setData({ pendingUserInput: typeof value === 'string' ? value : '' })
   },
 
   appendConversationMessage(message) {
@@ -321,7 +301,6 @@ Page({
       id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
       ...message
     }
-
     this.setData({
       conversationList: this.data.conversationList.concat(conversationItem)
     })
@@ -330,23 +309,11 @@ Page({
   submitRecommendationRequest() {
     const userQuery = normalizeInput(this.data.pendingUserInput)
     if (!userQuery) {
-      wx.showToast({
-        title: '请先输入需求',
-        icon: 'none'
-      })
-      return
+      return wx.showToast({ title: '请先输入需求', icon: 'none' })
     }
 
-    this.appendConversationMessage({
-      role: 'user',
-      type: 'text',
-      text: userQuery
-    })
-
-    this.setData({
-      pendingUserInput: '',
-      isRecommendationLoading: true
-    })
+    this.appendConversationMessage({ role: 'user', type: 'text', text: userQuery })
+    this.setData({ pendingUserInput: '', isRecommendationLoading: true })
 
     const payload = buildRecommendationPayload(userQuery, {
       city: this.data.currentCity,
@@ -368,32 +335,23 @@ Page({
           type: 'result-card',
           data: normalizedResult
         })
-        this.setData({
-          recommendationResult: normalizedResult
-        })
+        this.setData({ recommendationResult: normalizedResult })
       })
       .catch(error => {
         logError('daily.submitRecommendationRequest', error)
-        wx.showToast({
-          title: '生成建议失败',
-          icon: 'none'
-        })
+        wx.showToast({ title: '生成建议失败', icon: 'none' })
       })
       .finally(() => {
-        this.setData({
-          isRecommendationLoading: false
-        })
+        this.setData({ isRecommendationLoading: false })
       })
   },
 
   requestRecommendationWithFallback(payload) {
     return new Promise(resolve => {
-      if (!wx.cloud || typeof wx.cloud.callFunction !== 'function') {
-        logWarning('daily.requestRecommendation', 'cloud unavailable, using mock fallback')
+      if (!wx.cloud) {
         resolve(buildMockRecommendationResult(payload))
         return
       }
-
       wx.cloud.callFunction({
         name: 'smartRecommendPhoto',
         data: payload,
@@ -404,14 +362,9 @@ Page({
             resolve(normalizedResult)
             return
           }
-
-          logWarning('daily.requestRecommendation', 'cloud function returned empty result, using fallback')
           resolve(buildMockRecommendationResult(payload))
         },
         fail: error => {
-          logWarning('daily.requestRecommendation', 'cloud function failed, using fallback', {
-            errMsg: error && error.errMsg
-          })
           resolve(buildMockRecommendationResult(payload))
         }
       })
@@ -420,9 +373,9 @@ Page({
 
   goToTryOnFromRecommendation() {
     const result = this.data.recommendationResult
-    if (!result || !hasTryOnSelection(result)) {
+    if (!result) {
       wx.showToast({
-        title: result ? '当前结果没有可试穿衣物' : '暂无可试穿建议',
+        title: '暂无可试穿建议',
         icon: 'none'
       })
       return
@@ -437,17 +390,10 @@ Page({
         createdAt: Date.now(),
         active: true
       })
-
-      wx.switchTab({
-        url: '/pages/tryon/tryon'
-      })
+      wx.switchTab({ url: '/pages/tryon/tryon' })
     } catch (error) {
       logError('daily.goToTryOnFromRecommendation', error)
-      wx.showToast({
-        title: '跳转失败，请重试',
-        icon: 'none'
-      })
+      wx.showToast({ title: '跳转失败', icon: 'none' })
     }
   }
 })
-
