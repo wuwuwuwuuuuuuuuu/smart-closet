@@ -1,12 +1,13 @@
 const db = wx.cloud.database()
 const app = getApp()
-// 简化依赖，避免模块加载问题
-// const { logError, logWarning } = require('../../utils/logger')
-// const {
-//   matchSelectedClothes,
-//   buildSuggestedPlacements,
-//   isValidSmartRecommendEntry
-// } = require('./tryon.helpers')
+
+// 🌟 恢复规范的模块加载
+const { logWarning } = require('../../utils/logger')
+const {
+  matchSelectedClothes,
+  buildSuggestedPlacements,
+  isValidSmartRecommendEntry
+} = require('./tryon.helpers')
 
 Page({
   data: {
@@ -113,22 +114,24 @@ Page({
   consumePendingSmartRecommendEntry() {
     try {
       const entry = wx.getStorageSync('smartRecommendTryonEntry')
-      if (!entry || entry.active !== true) {
+      
+      // 🌟 结合 helpers 中的 isValidSmartRecommendEntry 进行有效期等合法性校验
+      if (!entry || entry.active !== true || !isValidSmartRecommendEntry(entry)) {
         if (entry && entry.active === true) {
-          console.warn('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
+          logWarning('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
         }
         this.setData({ smartRecommendEntry: null })
         return null
       }
 
-      const consumedEntry = {
+      // 消费后标记为非活跃状态
+      wx.setStorageSync('smartRecommendTryonEntry', {
         ...entry,
         active: false
-      }
-      wx.setStorageSync('smartRecommendTryonEntry', consumedEntry)
-      this.setData({ smartRecommendEntry: consumedEntry })
+      })
+      this.setData({ smartRecommendEntry: entry })
 
-      return consumedEntry
+      return entry
     } catch (error) {
       console.error('tryon.consumePendingSmartRecommendEntry错误:', error)
       return null
@@ -142,14 +145,23 @@ Page({
       return
     }
 
-    const matchedClothes = []
-    const placedClothes = []
+    // 🌟 调用 helpers 中的 matchSelectedClothes 匹配衣物
+    const matchedClothes = matchSelectedClothes(entry.selectedClothesIds, clothesList)
 
-    if ((entry.selectedClothesIds || []).length > 0 && matchedClothes.length === 0) {
-      console.warn('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
+    if (!matchedClothes.length) {
+      logWarning('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
         selectedClothesIds: entry.selectedClothesIds
       })
+      this.pendingSmartRecommendEntry = null
+      return
     }
+
+    const timestamp = Date.now()
+    // 🌟 调用 helpers 中的 buildSuggestedPlacements 进行排版
+    const placedClothes = buildSuggestedPlacements(matchedClothes).map(item => ({
+      ...item,
+      boardId: `recommend_${item._id}_${timestamp}`
+    }))
 
     this.setData({
       smartRecommendEntry: entry,
@@ -193,7 +205,7 @@ Page({
   selectClothes(event) {
     const item = event.currentTarget.dataset.item
     
-    // 🌟 核心修复：生成一个绝对唯一的画板内 ID
+    // 生成一个绝对唯一的画板内 ID
     const uniqueBoardId = 'board_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
 
     const newItem = {
@@ -329,11 +341,10 @@ Page({
       if (aiRes.result.code === 200) {
         const finalImageUrl = aiRes.result.data.result_url
         
-        // 🌟 核心防空补丁：兼容不同的云端返回字段名，提取百度的透明人像 Base64
+        // 兼容不同的云端返回字段名，提取百度的透明人像 Base64
         const transparentBase64 = aiRes.result.data.transparentBase64 || aiRes.result.data.transparentImage || aiRes.result.data.transparent_image || aiRes.result.data.transparent_base64
         
         if (transparentBase64) {
-          // 📦 成功拿到快递！把它放进名叫 'currentTransparentImage' 的缓存柜里，供下一页取用
           wx.setStorageSync('currentTransparentImage', transparentBase64)
           console.log('✅ 成功将透明人像存入本地缓存，准备传给预览页！')
         } else {
