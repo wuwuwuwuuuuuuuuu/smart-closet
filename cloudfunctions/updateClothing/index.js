@@ -2,10 +2,10 @@
 const {
   normalizeText,
   normalizeTagList,
-  hasKnowledgeRelevantChanges,
-  buildKnowledgeSyncResetFields,
-  triggerKnowledgeSyncInBackground
-} = require('./utils/knowledge-sync')
+  hasVectorRelevantChanges,
+  buildImageEmbeddingResetFields,
+  triggerImageVectorSyncInBackground
+} = require('./utils/image-vector-sync')
 const { buildImageKnowledgeFields } = require('./common/clothing-image-fields')
 
 cloud.init({
@@ -105,39 +105,29 @@ exports.main = async (event = {}) => {
       originalImage: imageFields.originalImage || current.originalImage || current.image
     }
 
-    const knowledgeRelevantChanged = hasKnowledgeRelevantChanges(current, nextPayload)
-    const knowledgeSyncResetFields = knowledgeRelevantChanged
-      ? buildKnowledgeSyncResetFields(nextPayload)
-      : null
+    const vectorRelevantChanged = hasVectorRelevantChanges(current, nextPayload)
+    const resetFields = vectorRelevantChanged ? buildImageEmbeddingResetFields(nextPayload) : null
     const updateData = {
       ...nextPayload,
       updated_at: db.serverDate()
     }
 
-    if (knowledgeSyncResetFields) {
-      Object.assign(updateData, knowledgeSyncResetFields)
-    }
-
-    if (imageFields.imageChanged) {
-      updateData.image_knowledge_status = imageFields.status
-      updateData.image_embedding_status = imageFields.status
-      updateData.image_embedding_error = ''
-      updateData.image_embedding_updated_at = null
+    if (resetFields) {
+      Object.assign(updateData, resetFields)
     }
 
     await db.collection('clothes').where({ _id: id }).update({
       data: updateData
     })
 
-    const shouldTriggerKnowledgeSync = Boolean(
-      knowledgeRelevantChanged && normalizeText(nextPayload.image)
-    )
+    const shouldTriggerImageVectorSync = Boolean(vectorRelevantChanged && normalizeText(nextPayload.image))
 
-    if (shouldTriggerKnowledgeSync) {
-      triggerKnowledgeSyncInBackground({
+    if (shouldTriggerImageVectorSync) {
+      triggerImageVectorSyncInBackground({
         cloud,
         openid,
-        limit: 5
+        clothingId: id,
+        forceResync: true
       })
     }
 
@@ -145,13 +135,10 @@ exports.main = async (event = {}) => {
       code: 200,
       message: 'ok',
       data: {
-        knowledgeSyncStatus: knowledgeRelevantChanged
-          ? knowledgeSyncResetFields.knowledge_sync_status
-          : normalizeText(current.knowledge_sync_status) || 'pending',
-        imageEmbeddingStatus: imageFields.imageChanged
-          ? imageFields.status
+        imageEmbeddingStatus: vectorRelevantChanged
+          ? resetFields.image_embedding_status
           : normalizeText(current.image_embedding_status) || 'pending',
-        knowledgeSyncTriggered: shouldTriggerKnowledgeSync
+        imageVectorSyncTriggered: shouldTriggerImageVectorSync
       }
     }
   } catch (error) {

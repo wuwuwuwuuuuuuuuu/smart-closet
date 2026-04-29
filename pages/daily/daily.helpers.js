@@ -182,6 +182,8 @@ function normalizeRecommendationResult(raw = {}) {
     retrievalSource: normalizeInput(raw.retrievalSource) || 'unknown',
     knowledgeId: normalizeInput(raw.knowledgeId),
     retrievalHitCount: normalizeHitCount(raw.retrievalHitCount),
+    retrievalVectorCount: normalizeHitCount(raw.retrievalVectorCount),
+    retrievalSameDimCount: normalizeHitCount(raw.retrievalSameDimCount),
     fallbackReason: normalizeInput(raw.fallbackReason)
   }
 }
@@ -311,15 +313,15 @@ function buildInventorySummaryLine(inventorySummary = {}) {
   const summary = normalizePlainObject(inventorySummary, 'daily.buildInventorySummaryLine.summary')
   const totalWardrobeCount = Number(summary.totalWardrobeCount) || 0
   const syncableCount = Number(summary.syncableCount) || 0
-  const readyInKnowledgeCount = Number(summary.readyInKnowledgeCount) || 0
-  const missingKnowledgeCount = Number(summary.missingKnowledgeCount) || 0
+  const readyVectorCount = Number(summary.readyVectorCount) || Number(summary.readyInKnowledgeCount) || 0
+  const missingVectorCount = Number(summary.missingVectorCount) || Number(summary.missingKnowledgeCount) || 0
   const missingImageCount = Number(summary.missingImageCount) || 0
 
-  if (!totalWardrobeCount && !syncableCount && !readyInKnowledgeCount) {
+  if (!totalWardrobeCount && !syncableCount && !readyVectorCount) {
     return ''
   }
 
-  let text = `\u8863\u6a71 ${totalWardrobeCount} \u4ef6 / \u53ef\u540c\u6b65 ${syncableCount} \u4ef6 / \u5df2\u5165\u5e93 ${readyInKnowledgeCount} \u4ef6 / \u7f3a\u5931 ${missingKnowledgeCount} \u4ef6`
+  let text = `衣橱 ${totalWardrobeCount} 件 / 可同步 ${syncableCount} 件 / 已有向量 ${readyVectorCount} 件 / 缺失向量 ${missingVectorCount} 件`
   if (missingImageCount > 0) {
     text += `\uff08\u5176\u4e2d\u65e0\u56fe ${missingImageCount} \u4ef6\uff09`
   }
@@ -339,14 +341,13 @@ function buildKnowledgeRebuildFeedback(result = {}) {
   const queuedCount = Number(data.queuedCount) || 0
   const failedCount = Number(data.failedCount) || 0
   const skippedCount = Number(data.skippedCount) || 0
-  const knowledgeId = normalizeInput(data.knowledgeId) || '\u672a\u8fd4\u56de'
   const completedCount = readyCount + syncedCount
   const pendingCount = syncingCount + queuedCount
   const firstFailure = normalizeInput(sampleFailures[0] && sampleFailures[0].error)
   const inventoryLine = buildInventorySummaryLine(data.inventorySummary)
   const missingImageCount = Number(skipReasonStats.missing_image) || Number(data.inventorySummary && data.inventorySummary.missingImageCount) || 0
   const requestMode = normalizeInput(data.requestMode) || 'normal'
-  const modeLabel = requestMode === 'forceResync' ? '\u5f3a\u5236\u91cd\u540c\u6b65' : '\u8865\u540c\u6b65'
+  const modeLabel = requestMode === 'forceResync' ? '强制重建向量' : '向量补同步'
 
   if (code !== 200) {
     return {
@@ -361,8 +362,8 @@ function buildKnowledgeRebuildFeedback(result = {}) {
       status: 'pending',
       title: `${modeLabel}\u5df2\u53d1\u8d77`,
       summaryText: [
-        inventoryLine || `\u77e5\u8bc6\u5e93\uff1a${knowledgeId}`,
-        `\u77e5\u8bc6\u5e93\uff1a${knowledgeId}\uff1b\u540c\u6b65\u4e2d ${pendingCount} \u4ef6\uff0c\u5df2\u5b8c\u6210 ${completedCount} \u4ef6\uff0c\u5931\u8d25 ${failedCount} \u4ef6\u3002\u8bf7\u7a0d\u540e\u518d\u6b21\u68c0\u67e5\u72b6\u6001\u3002`
+        inventoryLine,
+        `图片向量同步中 ${pendingCount} 件，已完成 ${completedCount} 件，失败 ${failedCount} 件。请稍后再次检查状态。`
       ].filter(Boolean).join('\uff1b')
     }
   }
@@ -373,7 +374,7 @@ function buildKnowledgeRebuildFeedback(result = {}) {
       title: `${modeLabel}\u5b8c\u6210`,
       summaryText: [
         inventoryLine,
-        `\u77e5\u8bc6\u5e93\uff1a${knowledgeId}\uff1b\u672c\u6b21\u5b8c\u6210 ${completedCount} \u4ef6\uff0c\u5931\u8d25 ${failedCount} \u4ef6\uff0c\u8df3\u8fc7 ${skippedCount} \u4ef6\u3002`
+        `本次生成/更新向量 ${completedCount} 件，失败 ${failedCount} 件，跳过 ${skippedCount} 件。`
       ].filter(Boolean).join('\uff1b')
     }
   }
@@ -384,17 +385,17 @@ function buildKnowledgeRebuildFeedback(result = {}) {
       title: `${modeLabel}\u5931\u8d25`,
       summaryText: [
         inventoryLine,
-        `\u77e5\u8bc6\u5e93\uff1a${knowledgeId}\uff1b\u5171\u5904\u7406 ${total} \u4ef6\uff0c\u5931\u8d25 ${failedCount} \u4ef6${firstFailure ? `\u3002\u9996\u4e2a\u9519\u8bef\uff1a${firstFailure}` : '\u3002'}`
+        `共处理 ${total} 件，向量生成失败 ${failedCount} 件${firstFailure ? `。首个错误：${firstFailure}` : '。'}`
       ].filter(Boolean).join('\uff1b')
     }
   }
 
   return {
     status: 'idle',
-    title: '\u65e0\u9700\u8865\u540c\u6b65',
+    title: '无需补同步',
     summaryText: [
       inventoryLine,
-      `\u77e5\u8bc6\u5e93\uff1a${knowledgeId}\uff1b\u5f53\u524d\u6ca1\u6709\u5f85\u540c\u6b65\u8863\u7269${missingImageCount > 0 ? `\uff0c\u5176\u4e2d\u65e0\u56fe ${missingImageCount} \u4ef6` : ''}\u3002`
+      `当前没有待同步衣物向量${missingImageCount > 0 ? `，其中无图 ${missingImageCount} 件` : ''}。`
     ].filter(Boolean).join('\uff1b')
   }
 }
