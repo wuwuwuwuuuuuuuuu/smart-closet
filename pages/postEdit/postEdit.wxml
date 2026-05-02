@@ -1,54 +1,64 @@
-<!-- 编辑帖子页 -->
+<!-- 发布穿搭页 - 小红书标准重构 -->
 <view class="container">
-  <!-- 顶部导航 -->
-  <view class="nav-bar">
-    <view class="nav-left" bindtap="onBack">
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img26.png" class="nav-icon" />
-    </view>
-    <text class="nav-title">发布穿搭</text>
-    <view class="nav-right"></view>
-  </view>
-
   <!-- 内容区域 -->
   <scroll-view class="content-scroll" scroll-y="true">
-    <!-- 图片区域 -->
-    <view class="image-section">
-      <view class="image-upload" bindtap="chooseImage">
-        <image wx:if="{{postImage}}" src="{{postImage}}" class="uploaded-image" mode="aspectFill" />
-        <view wx:else class="upload-placeholder">
-          <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img35.png" class="add-icon" />
-          <text class="upload-text">添加图片</text>
+    
+    <!-- 九宫格图片上传区域 - CSS Grid布局 -->
+    <view class="image-grid-section">
+      <view class="section-header">
+        <text class="section-title">上传穿搭图片</text>
+        <text class="image-count">{{imageList.length}}/9</text>
+      </view>
+      
+      <view class="image-grid">
+        <!-- 已上传图片 -->
+        <view class="grid-item" wx:for="{{imageList}}" wx:key="*this">
+          <image src="{{item}}" class="grid-image" mode="aspectFill" />
+          <view class="delete-btn" bindtap="deleteImage" data-index="{{index}}">
+            <text class="delete-icon">×</text>
+          </view>
+        </view>
+        
+        <!-- 上传按钮（未满9张时显示） -->
+        <view class="grid-item upload-btn" wx:if="{{imageList.length < 9}}" bindtap="chooseImages">
+          <view class="upload-placeholder">
+            <text class="add-icon">+</text>
+            <text class="upload-text">添加图片</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- 标题输入 -->
+    <!-- 标题输入 - 纯净输入区 -->
     <view class="input-section">
       <input 
         class="title-input" 
-        placeholder="请输入标题" 
+        placeholder="给穿搭起个吸引人的标题吧" 
         maxlength="50"
         bindinput="onTitleInput"
         value="{{postTitle}}" />
       <text class="char-count">{{postTitle.length}}/50</text>
     </view>
 
-    <!-- 正文输入 -->
+    <!-- 正文输入 - 纯净输入区 -->
     <view class="input-section">
       <textarea 
         class="content-input" 
-        placeholder="添加正文（选填）" 
+        placeholder="分享你的穿搭心得、搭配技巧或心情故事..." 
         maxlength="500"
         bindinput="onContentInput"
+        show-confirm-bar="{{false}}"
+        auto-height
         value="{{postContent}}" />
       <text class="char-count">{{postContent.length}}/500</text>
     </view>
-  </scroll-view>
 
-  <!-- 底部发布按钮 -->
-  <view class="publish-section">
-    <view class="publish-btn {{canPublish ? 'active' : ''}}" bindtap="publishPost">
-      <text class="publish-text">发布</text>
+    <!-- 发布按钮 - 小红书红 -->
+    <view class="publish-section">
+      <view class="publish-btn {{canPublish ? 'active' : ''}}" bindtap="publishPost">
+        <text class="publish-text">发布穿搭</text>
+      </view>
     </view>
-  </view>
+    
+  </scroll-view>
 </view>

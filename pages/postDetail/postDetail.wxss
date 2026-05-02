@@ -1,212 +1,337 @@
-/* 帖子详情页样式 */
+/* ================= 全局基础设置 ================= */
 .container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-/* 顶部导航 */
-.nav-bar {
-  height: 88rpx;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 20rpx;
   background: #FFFFFF;
-  border-bottom: 1rpx solid #E0E0E0;
 }
 
-.nav-right {
-  width: 88rpx;
-  height: 88rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nav-icon {
-  width: 32rpx;
-  height: 32rpx;
-}
-
-/* 内容区域 */
 .content-scroll {
   flex: 1;
 }
 
-/* 帖子大图 */
-.post-image {
+/* 导航栏图标 */
+.nav-bar {
+  padding: 20rpx 32rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+.nav-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+/* ================= 顶部轮播图区域 ================= */
+.image-swiper-section {
+  position: relative;
+  width: 100vw;
+  height: 100vw; /* 正方形比例，小红书常用宽高比 1:1 或 3:4 */
+}
+.post-swiper {
   width: 100%;
+  height: 100%;
+}
+.swiper-image {
+  width: 100%;
+  height: 100%;
+}
+.swiper-indicator {
+  position: absolute;
+  right: 24rpx;
+  bottom: 24rpx;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+.indicator-text {
+  color: #FFFFFF;
+  font-size: 24rpx;
 }
 
-/* 帖子信息 */
+/* ================= 帖子正文信息 (紧凑排版) ================= */
 .post-info {
-  padding: 32rpx;
-  background: #FFFFFF;
-  border-bottom: 1rpx solid #E0E0E0;
+  padding: 24rpx 32rpx 10rpx 32rpx; /* 减小底部 padding，让评论区更紧凑 */
 }
-
 .post-title {
-  font-size: 32rpx;
-  color: #333333;
+  font-size: 34rpx;
   font-weight: 600;
-  margin-bottom: 16rpx;
+  color: #333333;
+  margin-bottom: 16rpx; /* 缩小标题和正文的间距 */
   display: block;
 }
-
-.post-meta {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  margin-bottom: 20rpx;
+.post-content {
+  font-size: 30rpx;
+  color: #333333;
+  line-height: 1.6;
+  margin-bottom: 20rpx; /* 缩小正文和时间的间距 */
+  word-break: break-all;
 }
-
-.post-author, .post-time {
+.post-meta-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+.post-time {
   font-size: 24rpx;
   color: #999999;
 }
 
-.post-content {
+/* （保留作者相关样式，防止你WXML中还有这部分节点） */
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.author-info {
+  display: flex;
+  align-items: center;
+}
+.author-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  margin-right: 16rpx;
+}
+.post-author {
   font-size: 28rpx;
   color: #333333;
-  line-height: 1.6;
-  margin-bottom: 24rpx;
-  display: block;
+  font-weight: 500;
 }
 
-.like-section {
-  display: flex;
-  align-items: center;
-}
 
-.like-btn {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 12rpx 24rpx;
-  background: #EDEDED;
-  border-radius: 20rpx;
-}
-
-.like-btn.liked {
-  background: #FFE8E8;
-}
-
-.like-icon {
-  width: 24rpx;
-  height: 24rpx;
-}
-
-.like-count {
-  font-size: 24rpx;
-  color: #333333;
-}
-
-/* 评论区 */
+/* ================= 评论区全局布局 ================= */
 .comment-section {
-  padding: 32rpx;
-  background: #FFFFFF;
+  padding: 10rpx 32rpx 32rpx 32rpx;
+  border-top: 1rpx solid #F5F5F5; /* 极细的浅灰线，告别割裂感 */
 }
-
 .section-title {
-  font-size: 28rpx;
-  color: #333333;
-  font-weight: 600;
-  margin-bottom: 24rpx;
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 24rpx; /* 缩小标题与第一条评论的间距 */
   display: block;
 }
 
+/* 一级评论流式布局 (左侧头像，右侧内容) */
 .comment-item {
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #E0E0E0;
+  margin-bottom: 36rpx;
+}
+.comment-main {
+  display: flex;
+  align-items: flex-start;
+}
+.comment-avatar {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  flex-shrink: 0; /* 防止头像被挤压 */
+}
+.comment-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.comment-author {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+.comment-content {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+  word-break: break-all;
 }
 
-.comment-item:last-child {
-  border-bottom: none;
+/* 底部操作行：时间/回复 在左，点赞 在右 */
+.comment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.time-reply {
+  display: flex;
+  align-items: center;
+}
+.comment-time, .reply-time {
+  font-size: 24rpx;
+  color: #999;
+}
+.reply-text {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 500;
+  margin-left: 24rpx;
+  padding: 10rpx 0; /* 增大点击热区 */
 }
 
-.comment-header {
+/* 评论区点赞图标样式 */
+.comment-like, .reply-like {
+  display: flex;
+  align-items: center;
+  padding: 10rpx 0 10rpx 20rpx;
+}
+.comment-like-icon, .reply-like-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 8rpx;
+}
+.comment-like-count, .reply-like-count {
+  font-size: 24rpx;
+  color: #999;
+}
+.liked-text {
+  color: #FF2442 !important; /* 点赞后的红色文字 */
+}
+
+/* 🌟 展开/收起按钮样式 (高级灰) */
+.expand-btn, .collapse-btn {
+  margin-top: 12rpx;
+  padding: 10rpx 0;
+  display: inline-flex;
+}
+.expand-text {
+  font-size: 24rpx;
+  color: #999999;
+  font-weight: normal;
+}
+.arrow {
+  font-size: 20rpx;
+  margin-left: 4rpx;
+  font-weight: normal;
+  color: #CCCCCC;
+}
+
+/* ================= 楼中楼嵌套布局 ================= */
+.reply-list {
+  margin-top: 16rpx;
+  display: flex;
+  flex-direction: column;
+}
+.reply-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+.reply-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+.reply-body {
+  flex: 1;
+}
+
+/* 🌟 楼中楼头部排版（完美处理 A 回复 B） */
+.reply-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+.reply-author {
+  font-size: 26rpx;
+  color: #666;
+  font-weight: bold;
+}
+.reply-to {
+  font-size: 24rpx;
+  color: #999;
+  margin: 0 8rpx;
+}
+.reply-target {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: bold;
+}
+
+/* ================= 底部固定悬浮交互栏 ================= */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12rpx;
-}
-
-.comment-author {
-  font-size: 24rpx;
-  color: #333333;
-  font-weight: 600;
-}
-
-.comment-like {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.comment-like-icon {
-  width: 16rpx;
-  height: 16rpx;
-}
-
-.comment-like-count {
-  font-size: 20rpx;
-  color: #999999;
-}
-
-.comment-content {
-  font-size: 26rpx;
-  color: #333333;
-  line-height: 1.5;
-  margin-bottom: 8rpx;
-  display: block;
-}
-
-.comment-time {
-  font-size: 20rpx;
-  color: #999999;
-}
-
-/* 底部输入栏 */
-.input-bar {
-  height: 100rpx;
+  padding: 16rpx 32rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom)); /* 适配底部安全区 */
   background: #FFFFFF;
-  border-top: 1rpx solid #E0E0E0;
-  padding: 0 20rpx;
+  border-top: 1rpx solid #F2F2F2;
+  box-sizing: border-box;
+  z-index: 999;
+}
+
+.input-section {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  height: 72rpx;
+  background: #F5F5F5;
+  border-radius: 36rpx;
+  padding: 0 24rpx;
+  transition: all 0.3s ease;
+}
+
+.input-section.expanded {
+  margin-right: 24rpx;
+}
+
+/* 🌟 输入框左侧铅笔小图标 (动态显隐) */
+.input-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  transition: opacity 0.3s;
 }
 
 .comment-input {
   flex: 1;
-  background: #EDEDED;
-  border-radius: 20rpx;
-  padding: 16rpx 24rpx;
-  font-size: 24rpx;
-  color: #333333;
+  font-size: 28rpx;
+  color: #333;
 }
 
-.action-buttons {
+/* 右侧图标加数字排版 */
+.action-section {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  margin-left: 32rpx;
 }
 
-.like-btn-small, .send-btn {
+.action-btn {
+  display: flex;
+  align-items: center;
+  margin-left: 36rpx; /* 增大图标之间的间距 */
+}
+
+.action-icon {
   width: 44rpx;
   height: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.like-icon-small {
-  width: 20rpx;
-  height: 20rpx;
+.action-text {
+  font-size: 26rpx;
+  color: #333;
+  margin-left: 8rpx;
+  font-weight: 500;
+}
+.collected-text {
+  color: #FFC107 !important; /* 收藏后的黄色文字 */
 }
 
-.send-icon {
-  width: 20rpx;
-  height: 20rpx;
+/* 红色发送按钮 */
+.send-btn {
+  background: #FF2442;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 600;
+  padding: 0 32rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  white-space: nowrap;
 }

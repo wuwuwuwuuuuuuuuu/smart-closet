@@ -1,0 +1,105 @@
+page {
+  /* 🌟 奶油白背景 */
+  background-color: #fcfaf5; 
+  height: 100vh;
+  overflow: hidden; /* 防止页面滑动 */
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  padding: 0 60rpx;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ================= 核心内容区 ================= */
+.main-content {
+  margin-top: 22vh; /* 动态高度：离顶部22%的距离，适配大小屏幕 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.logo-image {
+  width: 280rpx;
+  height: 280rpx;
+  margin-bottom: 60rpx;
+  opacity: 0.85; /* 稍微降低透明度，增加素雅感 */
+}
+
+.text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.title {
+  /* 解决挤在一起的问题：使用 display: block */
+  display: block; 
+  font-family: 'PingFang SC', serif; 
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #3e3a36;
+  margin-bottom: 24rpx;
+  letter-spacing: 8rpx; /* 增加字间距，显得更大气 */
+  text-align: center;
+  width: 100%;
+}
+
+.subtitle {
+  /* 解决挤在一起的问题：使用 display: block */
+  display: block; 
+  font-size: 26rpx;
+  color: #88827c;
+  text-align: center;
+  line-height: 1.8;
+  width: 100%;
+  white-space: pre-wrap; /* 确保 \n 换行符生效 */
+}
+
+/* ================= 底部操作区 ================= */
+.bottom-section {
+  position: absolute;
+  bottom: 10vh; /* 固定在距离底部10%的位置 */
+  width: calc(100% - 120rpx); /* 100% 减去两侧的 60rpx padding */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wechat-btn {
+  /* 🌟 品牌色：深绿到森林绿渐变 */
+  background: linear-gradient(135deg, #2e6041, #1e4d31);
+  border-radius: 50rpx;
+  box-shadow: 0 16rpx 32rpx rgba(46, 96, 65, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24rpx 0;
+  width: 100% !important;
+  transition: all 0.2s ease;
+}
+
+.wechat-btn:active {
+  transform: scale(0.98); /* 点击时的微缩放反馈 */
+  box-shadow: 0 8rpx 16rpx rgba(46, 96, 65, 0.2);
+}
+
+.btn-text {
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+
+.tips {
+  margin-top: 40rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #b5b1ae;
+}

@@ -1,67 +1,42 @@
-<!-- 试穿预览/换背景页 -->
 <view class="container">
-  <!-- 顶部导航 -->
-  <view class="nav-bar">
-    <view class="nav-left" bindtap="goBack">
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img10.png" class="nav-icon" />
+  <view class="main-image-wrap">
+    <image src="{{displayImage}}" mode="aspectFit" class="main-image" show-menu-by-longpress="true"></image>
+  </view>
+
+  <view class="bottom-panel">
+    <view class="panel-header">一键场景穿越</view>
+    
+    <view class="scene-actions">
+      <view class="scene-item" bindtap="chooseLocalBackground">
+        <view class="icon-box"><text class="icon-text">相册</text></view>
+        <text class="scene-name">传图</text>
+      </view>
+
+      <view class="scene-item" bindtap="openPromptModal">
+        <view class="icon-box highlight-box"><text class="icon-text">AI</text></view>
+        <text class="scene-name">文字</text>
+      </view>
     </view>
-    <view class="nav-right" bindtap="showBackgroundOptions">
-      <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img11.png" class="nav-icon" />
+
+    <view class="btn-group">
+      <view class="btn btn-cancel" bindtap="goBack">返回</view>
+      <view class="btn btn-star {{isCollected ? 'collected' : ''}}" bindtap="addToCollection">
+        {{isCollected ? '已收藏' : '⭐ 收藏'}}
+      </view>
+      <view class="btn btn-primary" bindtap="saveToAlbum">保存相册</view>
     </view>
   </view>
 
-  <!-- 中央预览区域 -->
-  <view class="preview-area">
-    <view class="preview-container">
-      <!-- 背景图片 -->
-      <image 
-        src="{{currentBackground}}" 
-        class="background-image" 
-        mode="aspectFill" />
-      
-      <!-- 试穿照片显示 -->
-      <view class="tryon-display" wx:if="{{tryonImage}}">
-        <image src="{{tryonImage}}" class="tryon-image" mode="aspectFit" />
-      </view>
-      
-      <!-- 无试穿照片提示 -->
-      <view class="no-tryon-section" wx:if="{{!tryonImage}}">
-        <view class="no-tryon-icon">👕</view>
-        <text class="no-tryon-text">暂无试穿照片</text>
+  <view class="modal-mask" wx:if="{{showPromptModal}}">
+    <view class="modal-content">
+      <view class="modal-title">描述你想要的场景</view>
+      <textarea class="prompt-input" bindinput="onPromptInput" placeholder="例如：极简高级灰纯色背景，影棚打光..." value="{{promptText}}" cursor-spacing="20"></textarea>
+      <view class="modal-btns">
+        <view class="modal-btn cancel" bindtap="closePromptModal">取消</view>
+        <view class="modal-btn confirm" bindtap="generateByPrompt">AI 穿越</view>
       </view>
     </view>
   </view>
 
-  <!-- 右下角生成海报按钮 -->
-  <view class="generate-btn" bindtap="generatePoster">
-    <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img12.png" class="generate-icon" />
-    <text class="generate-text">生成海报</text>
-  </view>
-
-  <!-- 背景选择弹窗 -->
-  <view class="modal {{showBackgroundModal ? 'show' : ''}}" bindtap="hideBackgroundModal">
-    <view class="modal-content" catchtap="">
-      <view class="modal-header">
-        <text class="modal-title">选择背景</text>
-        <view class="modal-close" bindtap="hideBackgroundModal">×</view>
-      </view>
-      
-      <view class="background-options">
-        <view 
-          class="background-item {{currentBackground === item.image ? 'active' : ''}}" 
-          wx:for="{{backgroundOptions}}" 
-          wx:key="id"
-          bindtap="selectBackground"
-          data-background="{{item.image}}">
-          <image src="{{item.image}}" class="background-thumb" mode="aspectFill" />
-          <text class="background-name">{{item.name}}</text>
-        </view>
-      </view>
-      
-      <view class="modal-actions">
-        <view class="btn btn-secondary" bindtap="chooseLocalBackground">导入本地图片</view>
-        <view class="btn btn-primary" bindtap="confirmBackground">确定</view>
-      </view>
-    </view>
-  </view>
+  <canvas type="2d" id="compCanvas" style="width:750rpx; height:1334rpx; position:absolute; left:-10000px; top:-10000px;"></canvas>
 </view>

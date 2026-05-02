@@ -9,9 +9,13 @@
 /* 搜索框 */
 .search-section {
   padding: 40rpx 20rpx 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .search-box {
+  flex: 1;
   height: 80rpx;
   background: #EDEDED;
   border-radius: 12rpx;
@@ -21,8 +25,24 @@
   padding: 0 24rpx;
 }
 
-.search-placeholder {
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 80rpx;
   font-size: 28rpx;
+  color: #333333;
+}
+
+.search-placeholder {
+  color: #999999;
+}
+
+.clear-search {
+  width: 56rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  text-align: center;
+  font-size: 34rpx;
   color: #999999;
 }
 
@@ -173,9 +193,32 @@
 .clothes-name {
   font-size: 24rpx;
   color: #333333;
-  padding: 16rpx;
+  padding: 16rpx 16rpx 8rpx;
   text-align: center;
   display: block;
+}
+
+.clothes-info {
+  padding-bottom: 16rpx;
+}
+
+.tag-box {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 0 12rpx;
+}
+
+.tag {
+  max-width: 100%;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  color: #666666;
+  font-size: 20rpx;
+  line-height: 32rpx;
+  word-break: break-all;
 }
 
 /* 右下角悬浮加号按钮 */

@@ -1,313 +1,399 @@
-// 每日穿搭页逻辑 - 海报展示版
+const { logError, logWarning } = require('../../utils/logger')
+const {
+  normalizeInput,
+  buildDateLabel,
+  buildWeatherSuggestion,
+  normalizeRecommendationResult,
+  hasTryOnSelection,
+  buildRecommendationStatus,
+  buildRecommendationPayload,
+  buildMockRecommendationResult,
+  isCloudFunctionTimeoutError,
+  buildKnowledgeRebuildFeedback,
+  inferOccasion,
+  inferPreferredStyle,
+  inferPreferredColor
+} = require('./daily.helpers')
+
 Page({
   data: {
-    dateList: [
-      { 
-        weekDay: '周六', 
-        dateNum: '14', 
-        isToday: false, 
-        ootdContent: '休闲周末穿搭：牛仔裤搭配卫衣，舒适又时尚',
-        poster: null
-      },
-      { 
-        weekDay: '周日', 
-        dateNum: '15', 
-        isToday: false, 
-        ootdContent: '周日约会穿搭：连衣裙搭配小外套，甜美优雅',
-        poster: null
-      },
-      { 
-        weekDay: '周一', 
-        dateNum: '16', 
-        isToday: false, 
-        ootdContent: '周一上班穿搭：西装外套搭配衬衫，专业干练',
-        poster: null
-      },
-      { 
-        weekDay: '今天', 
-        dateNum: '17', 
-        isToday: true, 
-        ootdContent: '今日穿搭：根据天气选择合适搭配，舒适为主',
-        poster: null
-      },
-      { 
-        weekDay: '周三', 
-        dateNum: '18', 
-        isToday: false, 
-        ootdContent: '周三休闲穿搭：运动装搭配运动鞋，活力满满',
-        poster: null
-      },
-      { 
-        weekDay: '周四', 
-        dateNum: '19', 
-        isToday: false, 
-        ootdContent: '周四商务穿搭：针织衫搭配西裤，简约大方',
-        poster: null
-      },
-      { 
-        weekDay: '周五', 
-        dateNum: '20', 
-        isToday: false, 
-        ootdContent: '周五派对穿搭：亮色单品搭配，时尚吸睛',
-        poster: null
-      }
-    ],
-    currentDate: '17',
-    currentOotdContent: '今日穿搭：根据天气选择合适搭配，舒适为主',
-    isAnimating: false,
-    selectedPoster: null
+    heroImage: 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/images/smart_recommend_hero_compressed.jpg',
+    arrowIcon: '/images/67134f606087c7f32d75f9d9f47f5af.png',
+    currentCity: '定位中...',
+    currentDateLabel: '',
+    weatherInfo: {
+      temp: '--',
+      text: '获取中',
+      icon: '⏳'
+    },
+    weatherSuggestion: '正在为你整理今天天气提醒...',
+    pendingUserInput: '',
+    conversationList: [],
+    recommendationResult: null,
+    isRecommendationLoading: false,
+    isLocating: false,
+    amapKey: ''
   },
 
-  onLoad(options) {
-    console.log('每日穿搭页加载', options)
-    
-    // 检查是否有传递的日期参数
-    if (options.selectedDate) {
-      const selectedDate = options.selectedDate
-      console.log('接收到日期参数:', selectedDate)
-      
-      // 更新日期列表的选中状态
-      const dateList = this.data.dateList.map(item => ({
-        ...item,
-        isToday: item.dateNum === selectedDate
-      }))
-      
-      // 获取对应日期的OOTD内容
-      const selectedItem = dateList.find(item => item.dateNum === selectedDate)
-      const newOotdContent = selectedItem ? selectedItem.ootdContent : '默认穿搭内容'
-      
-      // 检查该日期是否有已保存的海报数据
-      const dateKey = `daily_poster_${selectedDate}`
-      const savedPoster = wx.getStorageSync(dateKey)
-      
-      this.setData({
-        dateList: dateList,
-        currentDate: selectedDate,
-        currentOotdContent: newOotdContent,
-        selectedPoster: savedPoster || null
-      })
-      
-      console.log('根据参数切换到日期', selectedDate, '的穿搭内容:', newOotdContent)
+  onLoad() {
+    if (!this.data.heroImage) {
+      logWarning('daily.hero', 'hero image missing')
     }
-    
-    // 检查是否有从历史页面传递过来的海报数据
-    if (options.posterData) {
-      try {
-        const posterData = JSON.parse(decodeURIComponent(options.posterData))
-        this.setData({
-          selectedPoster: posterData
-        })
-        console.log('接收到海报数据:', posterData)
-      } catch (err) {
-        console.error('解析海报数据失败:', err)
-      }
-    }
-    
-    // 检查是否有从本地相册选择的图片
-    if (options.selectedImage) {
-      const selectedImage = decodeURIComponent(options.selectedImage)
-      console.log('接收到本地图片:', selectedImage)
-      
-      // 创建今日穿搭数据
-      const todayOotd = {
-        id: new Date().getTime(),
-        image: selectedImage,
-        date: new Date().toLocaleDateString(),
-        title: '今日穿搭',
-        description: '记录美好一天'
-      }
-      
-      this.setData({
-        selectedPoster: todayOotd
-      })
-      
-      console.log('创建今日穿搭数据:', todayOotd)
-    }
-  },
-
-  onShow() {
-    console.log('每日穿搭页显示')
-    
-    // 检查本地存储中是否有海报数据
-    const selectedPoster = wx.getStorageSync('selectedPoster')
-    if (selectedPoster) {
-      // 将海报数据与当前日期关联保存
-      const dateKey = `daily_poster_${this.data.currentDate}`
-      wx.setStorageSync(dateKey, selectedPoster)
-      
-      this.setData({
-        selectedPoster: selectedPoster
-      })
-      
-      console.log('海报数据已保存到日期', this.data.currentDate)
-      
-      // 清除存储，避免重复显示
-      wx.removeStorageSync('selectedPoster')
-    }
-  },
-
-  // 返回上一页
-  goBack() {
-    wx.navigateBack()
-  },
-
-  // 选择日期（带平滑动画）
-  selectDate(e) {
-    if (this.data.isAnimating) return
-    
-    const selectedDate = e.currentTarget.dataset.date
-    console.log('选择日期:', selectedDate)
-    
-    // 防止重复点击
-    this.setData({ isAnimating: true })
-    
-    // 更新选中状态
-    const dateList = this.data.dateList.map(item => ({
-      ...item,
-      isToday: item.dateNum === selectedDate
-    }))
-    
-    // 获取对应日期的OOTD内容和海报数据
-    const selectedItem = dateList.find(item => item.dateNum === selectedDate)
-    const newOotdContent = selectedItem ? selectedItem.ootdContent : '默认穿搭内容'
-    
-    // 检查该日期是否有已保存的海报数据
-    const dateKey = `daily_poster_${selectedDate}`
-    const savedPoster = wx.getStorageSync(dateKey)
-    
-    // 先隐藏内容，然后更新数据，最后显示动画
+    // 先用本地时间兜底显示，等高德接口回来后会覆盖它
     this.setData({
-      dateList: dateList,
-      currentDate: selectedDate,
-      currentOotdContent: newOotdContent,
-      selectedPoster: savedPoster || null
+      currentDateLabel: buildDateLabel(new Date())
     })
-    
-    console.log('切换到日期', selectedDate, '的穿搭内容:', newOotdContent)
-    if (savedPoster) {
-      console.log('该日期有已保存的海报:', savedPoster)
-    }
-    
-    // 动画完成后重置状态
-    setTimeout(() => {
-      this.setData({ isAnimating: false })
-    }, 500)
+    this.getRealTimeWeather()
   },
 
-  // 选择城市
-  selectCity() {
-    wx.showActionSheet({
-      itemList: ['北京市', '上海市', '广州市', '深圳市', '武汉市', '成都市'],
-      success: (res) => {
-        const cities = ['北京市', '上海市', '广州市', '深圳市', '武汉市', '成都市']
-        const selectedCity = cities[res.tapIndex]
-        console.log('选择城市:', selectedCity)
+  getRealTimeWeather() {
+    this.setData({ isLocating: true, currentCity: '定位中...' })
+    wx.showNavigationBarLoading()
+
+    wx.getLocation({
+      type: 'wgs84',
+      success: ({ longitude, latitude }) => {
+        this.callWeatherCloudFunction({ longitude, latitude })
+      },
+      fail: error => {
+        this.setData({ isLocating: false })
+        wx.hideNavigationBarLoading()
+        logWarning('daily.getRealTimeWeather', '定位失败，使用默认天气')
+        this.applyFallbackWeather('未获取定位', {
+          customSuggestion: '定位失败，请检查定位权限后点击“重新定位”，也可以手动切换城市。'
+        })
+      }
+    })
+  },
+
+  requestWeatherByCity(city) {
+    const safeCity = normalizeInput(city)
+    if (!safeCity) return
+
+    this.setData({ isLocating: true, currentCity: safeCity })
+    wx.showNavigationBarLoading()
+
+    this.callWeatherCloudFunction({ city: safeCity })
+  },
+
+  // 🌟 核心升级：一键直达云端，获取天气 + 精准日期
+  async callWeatherCloudFunction(payload) {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getWeather',
+        data: payload
+      })
+
+      if (res.result && res.result.code === 200) {
+        // 多解构出一个 reportTime
+        const { city, temp, text, reportTime } = res.result.data
         
-        wx.showToast({
-          title: `已切换到${selectedCity}`,
-          icon: 'success'
+        // 解析高德的时间并格式化（把 - 替换为 / 是为了兼容 iOS）
+        let dateLabel = this.data.currentDateLabel
+        if (reportTime) {
+          const dateObj = new Date(reportTime.replace(/-/g, '/'))
+          dateLabel = buildDateLabel(dateObj)
+        }
+
+        this.applyWeatherInfo({
+          city: normalizeInput(city),
+          temp: `${temp}°C`,
+          text: normalizeInput(text) || '未知',
+          icon: this.mapWeatherIcon(text),
+          dateLabel: dateLabel // 👈 把日期一并传下去
         })
-      },
-      fail: (err) => {
-        console.error('选择城市失败:', err)
+      } else {
+        throw new Error(res.result ? res.result.message : '云函数返回异常')
       }
+    } catch (error) {
+      logError('daily.callWeatherCloudFunction', error)
+      this.applyFallbackWeather(payload.city || '当前位置', {
+        customSuggestion: '云端天气获取失败，当前展示默认天气，可稍后重试。'
+      })
+    } finally {
+      this.setData({ isLocating: false })
+      wx.hideNavigationBarLoading()
+    }
+  },
+
+  // === 🌟 修复了这里原本缺失的右侧大括号 ===
+  applyWeatherInfo({ city, temp, text, icon, suggestion, dateLabel }) {
+    const weatherInfo = {
+      temp: temp || '--',
+      text: text || '未知',
+      icon: icon || '☁️'
+    }
+    const currentCity = city || '当前城市'
+
+    // 准备要更新的 data 对象
+    const updateData = {
+      currentCity,
+      weatherInfo,
+      weatherSuggestion: suggestion || buildWeatherSuggestion({
+        temp: weatherInfo.temp,
+        text: weatherInfo.text,
+        city: currentCity
+      }),
+      isLocating: false
+    }
+
+    // 如果接口传回了日期，一并更新到页面的 currentDateLabel
+    if (dateLabel) {
+      updateData.currentDateLabel = dateLabel
+    }
+
+    this.setData(updateData)
+  },
+
+  applyFallbackWeather(city = '当前位置', options = {}) {
+    this.applyWeatherInfo({
+      city,
+      temp: '24°C',
+      text: '多云',
+      icon: '⛅',
+      suggestion: options.customSuggestion || `${city}已定位成功，当前展示默认天气。`
     })
   },
 
-  // 显示上传选项（修复版）
-  showUploadOptions() {
+  mapWeatherIcon(text) {
+    const safeText = normalizeInput(text)
+    if (safeText.includes('雨')) return '🌧️'
+    if (safeText.includes('雪')) return '❄️'
+    if (safeText.includes('晴')) return '☀️'
+    if (safeText.includes('阴') || safeText.includes('云')) return '☁️'
+    return '⛅'
+  },
+
+  refreshLocation() {
+    if (this.data.isLocating) return
+    this.getRealTimeWeather()
+  },
+
+  selectCity() {
+    const cityOptions = ['北京', '上海', '广州', '深圳', '武汉', '成都', '杭州']
     wx.showActionSheet({
-      itemList: ['访问生成海报', '访问本地图片'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          // 访问生成海报 → 跳转到历史海报页面（选择模式）
-          wx.navigateTo({
-            url: '/pages/history/history?from=daily'
-          })
-        } else if (res.tapIndex === 1) {
-          // 访问本地图片
-          this.chooseLocalImage()
-        }
-      },
-      fail: (err) => {
-        console.error('选择上传方式失败:', err)
+      itemList: cityOptions,
+      success: res => {
+        const selectedCity = cityOptions[res.tapIndex]
+        this.requestWeatherByCity(selectedCity)
       }
     })
   },
 
-  // 选择本地图片
-  chooseLocalImage() {
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['original', 'compressed'],
-      sourceType: ['album'],
+  runKnowledgeRebuild(forceResync = false) {
+    if (this.data.isRebuildingKnowledge) {
+      return
+    }
+
+    this.setData({
+      isRebuildingKnowledge: true,
+      knowledgeRebuildSummary: ''
+    })
+
+    wx.showLoading({
+      title: forceResync ? '强制重同步中...' : '补同步检查中...'
+    })
+
+    wx.cloud.callFunction({
+      name: 'rebuildUserKnowledgeBase',
+      data: {
+        limit: 30,
+        forceResync
+      },
       success: (res) => {
-        console.log('选择图片成功:', res.tempFilePaths[0])
-        // 跳转到今日穿搭页面，并传递选择的图片路径和当前日期
-        wx.navigateTo({
-          url: '/pages/daily/daily?selectedImage=' + encodeURIComponent(res.tempFilePaths[0]) + '&selectedDate=' + this.data.currentDate
+        const result = res && res.result ? res.result : {}
+        const data = result.data || {}
+        const feedback = buildKnowledgeRebuildFeedback(result)
+
+        this.setData({
+          knowledgeRebuildSummary: feedback.summaryText
+        })
+
+        console.log(forceResync ? '强制重同步结果' : '补同步结果', result)
+        if (Array.isArray(data.sampleFailures) && data.sampleFailures.length) {
+          console.log('知识库同步失败样本', data.sampleFailures)
+        }
+        if (Array.isArray(data.sampleDiagnostics) && data.sampleDiagnostics.length) {
+          console.log('知识库诊断样本', data.sampleDiagnostics.map(item => ({
+            clothingId: normalizeInput(item && item.clothingId),
+            name: normalizeInput(item && item.name),
+            reason: normalizeInput(item && item.reason),
+            syncStatus: normalizeInput(item && item.syncStatus),
+            knowledge_sync_error: normalizeInput(item && item.knowledge_sync_error),
+            hasImage: Boolean(item && item.hasImage),
+            hasKnowledgeDoc: Boolean(item && item.hasKnowledgeDoc),
+            isReadyInKnowledge: Boolean(item && item.isReadyInKnowledge),
+            canSync: Boolean(item && item.canSync)
+          })))
+        }
+
+        if (feedback.status === 'pending' || feedback.status === 'idle') {
+          wx.showToast({
+            title: feedback.status === 'pending' ? '已发起，请稍后查状态' : '当前没有待同步衣物',
+            icon: 'none',
+            duration: 2500
+          })
+          return
+        }
+
+        wx.showModal({
+          title: feedback.title,
+          content: feedback.summaryText,
+          showCancel: false
         })
       },
-      fail: (err) => {
-        console.error('选择图片失败:', err)
+      fail: (error) => {
+        const timeoutPending = isCloudFunctionTimeoutError(error)
+        const errMsg = timeoutPending
+          ? `${forceResync ? '强制重同步' : '补同步'}已发起，但云函数执行较慢。请等待几秒后再次点击对应按钮查看状态。`
+          : (error && error.errMsg ? error.errMsg : '调用云函数失败')
+
+        this.setData({
+          knowledgeRebuildSummary: errMsg
+        })
+
+        if (timeoutPending) {
+          logWarning('daily.runKnowledgeRebuild', 'rebuild timeout treated as async pending', {
+            errMsg: error && error.errMsg,
+            forceResync
+          })
+          wx.showToast({
+            title: '已发起，请稍后查状态',
+            icon: 'none',
+            duration: 2500
+          })
+          return
+        }
+
+        console.error(forceResync ? '强制重同步失败' : '补同步失败', error)
+        logError('daily.runKnowledgeRebuild', error, { forceResync })
+        wx.showModal({
+          title: forceResync ? '强制重同步失败' : '补同步失败',
+          content: errMsg,
+          showCancel: false
+        })
+      },
+      complete: () => {
+        wx.hideLoading()
+        this.setData({
+          isRebuildingKnowledge: false
+        })
       }
     })
   },
 
-  // 编辑海报
-  editPoster() {
-    if (this.data.selectedPoster) {
-      wx.navigateTo({
-        url: `/pages/poster/poster?posterId=${this.data.selectedPoster.id}`
-      })
-    }
+  triggerKnowledgeRebuild() {
+    this.runKnowledgeRebuild(false)
   },
 
-  // 分享海报
-  sharePoster() {
-    if (this.data.selectedPoster) {
-      wx.showActionSheet({
-        itemList: ['分享给好友', '保存到相册'],
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            // 分享给好友
-            wx.showToast({
-              title: '分享功能开发中',
-              icon: 'none'
-            })
-          } else if (res.tapIndex === 1) {
-            // 保存到相册
-            this.savePosterToAlbum()
+  triggerKnowledgeForceResync() {
+    this.runKnowledgeRebuild(true)
+  },
+
+  // ========= 以下为大模型推荐聊天逻辑 =========
+  onRecommendationInput(event) {
+    const value = event && event.detail ? event.detail.value : ''
+    this.setData({ pendingUserInput: typeof value === 'string' ? value : '' })
+  },
+
+  appendConversationMessage(message) {
+    const conversationItem = {
+      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      ...message
+    }
+    this.setData({
+      conversationList: this.data.conversationList.concat(conversationItem)
+    })
+  },
+
+  submitRecommendationRequest() {
+    const userQuery = normalizeInput(this.data.pendingUserInput)
+    if (!userQuery) {
+      return wx.showToast({ title: '请先输入需求', icon: 'none' })
+    }
+
+    this.appendConversationMessage({ role: 'user', type: 'text', text: userQuery })
+    this.setData({ pendingUserInput: '', isRecommendationLoading: true })
+
+    const payload = buildRecommendationPayload(userQuery, {
+      city: this.data.currentCity,
+      currentDateLabel: this.data.currentDateLabel,
+      weatherSuggestion: this.data.weatherSuggestion,
+      weatherInfo: this.data.weatherInfo,
+      occasion: inferOccasion(userQuery),
+      userPreferences: {
+        preferredStyle: inferPreferredStyle(userQuery),
+        preferredColor: inferPreferredColor(userQuery)
+      }
+    })
+
+    this.requestRecommendationWithFallback(payload)
+      .then(result => {
+        const normalizedResult = normalizeRecommendationResult(result)
+        this.appendConversationMessage({
+          role: 'assistant',
+          type: 'result-card',
+          data: normalizedResult
+        })
+        this.setData({ recommendationResult: normalizedResult })
+      })
+      .catch(error => {
+        logError('daily.submitRecommendationRequest', error)
+        wx.showToast({ title: '生成建议失败', icon: 'none' })
+      })
+      .finally(() => {
+        this.setData({ isRecommendationLoading: false })
+      })
+  },
+
+  requestRecommendationWithFallback(payload) {
+    return new Promise(resolve => {
+      if (!wx.cloud) {
+        resolve(buildMockRecommendationResult(payload))
+        return
+      }
+      wx.cloud.callFunction({
+        name: 'smartRecommendPhoto',
+        data: payload,
+        success: res => {
+          const result = res && res.result
+          const normalizedResult = normalizeRecommendationResult(result && (result.data || result))
+          if (buildRecommendationStatus(normalizedResult) !== 'invalid') {
+            resolve(normalizedResult)
+            return
           }
+          resolve(buildMockRecommendationResult(payload))
+        },
+        fail: error => {
+          resolve(buildMockRecommendationResult(payload))
         }
       })
-    }
+    })
   },
 
-  // 保存海报到相册
-  savePosterToAlbum() {
-    if (this.data.selectedPoster) {
-      wx.saveImageToPhotosAlbum({
-        filePath: this.data.selectedPoster.image,
-        success: () => {
-          wx.showToast({
-            title: '保存成功',
-            icon: 'success'
-          })
-          
-          // 将海报数据与当前日期关联保存
-          const dateKey = `daily_poster_${this.data.currentDate}`
-          wx.setStorageSync(dateKey, this.data.selectedPoster)
-          console.log('海报数据已保存到日期', this.data.currentDate)
-        },
-        fail: (err) => {
-          console.error('保存失败:', err)
-          wx.showToast({
-            title: '保存失败',
-            icon: 'none'
-          })
-        }
+  goToTryOnFromRecommendation() {
+    const result = this.data.recommendationResult
+    if (!result || !hasTryOnSelection(result)) {
+      wx.showToast({
+        title: result ? '当前结果没有可试穿衣物' : '暂无可试穿建议',
+        icon: 'none'
       })
+      return
+    }
+
+    try {
+      wx.setStorageSync('smartRecommendTryonEntry', {
+        source: 'smartRecommend',
+        requestId: result.requestId,
+        title: result.summary,
+        selectedClothesIds: result.selectedClothesIds,
+        createdAt: Date.now(),
+        active: true
+      })
+      wx.switchTab({ url: '/pages/tryon/tryon' })
+    } catch (error) {
+      logError('daily.goToTryOnFromRecommendation', error)
+      wx.showToast({ title: '跳转失败', icon: 'none' })
     }
   }
 })

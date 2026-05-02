@@ -1,229 +1,113 @@
-/* 试穿预览页样式 */
+page { background-color: #1a1a1a; }
+
 .container {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
+  box-sizing: border-box;
+}
+
+.main-image-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30rpx;
   overflow: hidden;
 }
 
-/* 顶部导航 */
-.nav-bar {
-  height: 88rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20rpx;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.9);
+.main-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 24rpx;
+  box-shadow: 0 10rpx 40rpx rgba(0,0,0,0.3);
 }
 
-.nav-left, .nav-right {
-  width: 88rpx;
-  height: 88rpx;
+.bottom-panel {
+  background-color: #ffffff;
+  border-radius: 40rpx 40rpx 0 0;
+  padding: 40rpx 30rpx 60rpx;
+  box-shadow: 0 -10rpx 30rpx rgba(0,0,0,0.1);
+}
+
+.panel-header {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 40rpx;
+  text-align: center; 
+}
+
+.scene-actions {
   display: flex;
-  align-items: center;
   justify-content: center;
+  gap: 80rpx; 
+  margin-bottom: 50rpx;
 }
 
-.nav-icon {
-  width: 32rpx;
-  height: 32rpx;
-}
-
-/* 预览区域 */
-.preview-area {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.preview-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.background-image {
-  width: 100%;
-  height: 100%;
-}
-
-/* 试穿照片显示 */
-.tryon-display {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tryon-image {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 12rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.2);
-}
-
-/* 无试穿照片提示 */
-.no-tryon-section {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.scene-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.icon-box {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 30rpx; 
+  background-color: #f5f5f5;
+  display: flex;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.no-tryon-icon {
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
-}
-
-.no-tryon-text {
-  font-size: 28rpx;
-  color: #5D6D7E;
-}
-
-/* 生成海报按钮 */
-.generate-btn {
-  position: absolute;
-  right: 32rpx;
-  bottom: 120rpx;
-  background: #EDEDED;
-  border-radius: 24rpx;
-  padding: 16rpx 24rpx;
-  display: flex;
   align-items: center;
-  gap: 12rpx;
-  z-index: 99;
-}
-
-.generate-icon {
-  width: 24rpx;
-  height: 24rpx;
-}
-
-.generate-text {
-  font-size: 24rpx;
-  color: #333333;
-}
-
-/* 背景选择弹窗 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.modal.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-.modal-content {
-  width: 80%;
-  max-height: 70%;
-  background: #FFFFFF;
-  border-radius: 12rpx;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 32rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1rpx solid #E0E0E0;
-}
-
-.modal-title {
-  font-size: 32rpx;
-  color: #333333;
-  font-weight: 600;
-}
-
-.modal-close {
-  width: 44rpx;
-  height: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32rpx;
-  color: #999999;
-}
-
-.background-options {
-  padding: 32rpx;
-  max-height: 400rpx;
-  overflow-y: auto;
-}
-
-.background-item {
-  display: flex;
-  align-items: center;
-  padding: 20rpx;
+  border: 2rpx dashed #ccc;
   margin-bottom: 16rpx;
-  border: 1rpx solid #E0E0E0;
-  border-radius: 8rpx;
+  transition: all 0.2s;
 }
 
-.background-item.active {
-  border-color: #333333;
-  background: #EDEDED;
+.icon-box:active { transform: scale(0.95); }
+
+.highlight-box {
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  border: none;
+  box-shadow: 0 8rpx 20rpx rgba(3, 105, 161, 0.15);
 }
 
-.background-thumb {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 6rpx;
-  margin-right: 20rpx;
-}
+.icon-text { font-size: 28rpx; color: #666; font-weight: bold; }
+.highlight-box .icon-text { color: #0369a1; }
+.scene-name { font-size: 26rpx; color: #666; font-weight: 500; }
 
-.background-name {
-  font-size: 28rpx;
-  color: #333333;
-}
-
-.modal-actions {
-  padding: 32rpx;
+/* 🌟 新版三个按钮排版 */
+.btn-group {
   display: flex;
-  gap: 20rpx;
+  justify-content: space-between;
+  gap: 16rpx;
 }
-
-.modal-actions .btn {
-  flex: 1;
-  padding: 20rpx;
-  text-align: center;
-  border-radius: 8rpx;
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50rpx;
   font-size: 28rpx;
+  height: 80rpx;
+  font-weight: bold;
 }
+.btn-cancel { flex: 1; background: #f0f0f0; color: #666; }
+.btn-star { flex: 1.2; background: #fffcf8; color: #f59e0b; border: 2rpx solid #f59e0b; box-sizing: border-box; }
+.btn-star.collected { background: #f59e0b; color: #fff; }
+.btn-primary { flex: 1.5; background: #2F9C7D; color: #fff; }
 
-.btn-secondary {
-  background: #EDEDED;
-  color: #333333;
+/* 弹窗样式 */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 999;
 }
-
-.btn-primary {
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
-  color: #333333;
+.modal-content { background: #fff; width: 80%; border-radius: 30rpx; padding: 40rpx; box-sizing: border-box; }
+.modal-title { font-size: 32rpx; font-weight: bold; margin-bottom: 30rpx; text-align: center; }
+.prompt-input {
+  width: 100%; height: 200rpx; background: #f9f9f9; padding: 20rpx; border-radius: 16rpx;
+  font-size: 28rpx; box-sizing: border-box; margin-bottom: 30rpx;
 }
+.modal-btns { display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 20rpx; }
+.modal-btn { width: 48%; text-align: center; padding: 20rpx 0; font-size: 30rpx; border-radius: 16rpx; }
+.modal-btn.cancel { background: #f5f5f5; color: #666; }
+.modal-btn.confirm { background: #2F9C7D; color: #fff; }
