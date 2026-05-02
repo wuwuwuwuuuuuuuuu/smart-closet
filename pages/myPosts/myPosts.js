@@ -146,20 +146,6 @@ Page({
     })
   },
 
-  // 编辑帖子
-  editPost() {
-    const { selectedPostIndex, myPosts } = this.data
-    if (selectedPostIndex === -1) return
-
-    const post = myPosts[selectedPostIndex]
-    // 跳转到发布页，并带上帖子 id 进行回显
-    wx.navigateTo({
-      url: `/pages/publish/publish?editId=${post.id}`
-    })
-    
-    this.hideOptionsModal()
-  },
-
   // 删除帖子
   deletePost() {
     const { selectedPostIndex } = this.data
