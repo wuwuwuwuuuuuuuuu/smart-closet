@@ -100,6 +100,55 @@ async loadClothesFromCloud() {
   }
 },
 
+  // 标准化搜索文字，避免大小写和首尾空格影响标签匹配
+  normalizeSearchText(value) {
+    return value === undefined || value === null ? '' : String(value).trim().toLowerCase()
+  },
+
+  // 收集衣物可搜索标签，兼容自定义标签、知识库标签和基础分类信息
+  collectSearchableTags(item = {}) {
+    const tagFields = [
+      item.tags,
+      item.user_tags,
+      item.merged_tags,
+      item.retrieval_tags
+    ]
+
+    const tagList = tagFields.reduce((result, field) => {
+      if (Array.isArray(field)) {
+        return result.concat(field)
+      }
+      return result
+    }, [])
+
+    const seasonTags = typeof item.season === 'string'
+      ? item.season.split(/[\/,，、\s]+/)
+      : []
+
+    return [
+      ...tagList,
+      item.category,
+      ...seasonTags,
+      item.material,
+      item.brand
+    ]
+      .filter(tag => tag !== undefined && tag !== null)
+      .map(tag => String(tag).trim())
+      .filter(Boolean)
+  },
+
+  // 判断衣物标签是否命中搜索词，支持自定义标签的模糊匹配
+  isTagMatched(item, keyword) {
+    const normalizedKeyword = this.normalizeSearchText(keyword)
+    if (!normalizedKeyword) {
+      return true
+    }
+
+    return this.collectSearchableTags(item).some(tag => (
+      this.normalizeSearchText(tag).includes(normalizedKeyword)
+    ))
+  },
+
   // 🔍 筛选逻辑（包含容错防御）
   filterClothes() {
     const { currentSeason, currentCategory, searchKeyword, allClothes } = this.data
@@ -129,8 +178,8 @@ async loadClothesFromCloud() {
         return false
       }
       
-      // 3. 关键词搜索
-      if (searchKeyword && (!item.name || !item.name.includes(searchKeyword))) {
+      // 3. 标签关键词搜索
+      if (!this.isTagMatched(item, searchKeyword)) {
         return false
       }
       
@@ -167,10 +216,13 @@ async loadClothesFromCloud() {
     wx.navigateTo({ url: '/pages/uploadClothes/uploadClothes' })
   },
 
-  showSearch() {
-    wx.showToast({ title: '搜索功能开发中', icon: 'none' })
+  // 监听搜索框输入，实时按标签刷新衣物列表
+  onSearchInput(e) {
+    this.setData({ searchKeyword: e.detail.value })
+    this.filterClothes()
   },
 
+  // 清空搜索词并恢复当前季节、分类下的衣物列表
   clearSearch() {
     this.setData({ searchKeyword: '' })
     this.filterClothes()

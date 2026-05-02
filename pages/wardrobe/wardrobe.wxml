@@ -1,7 +1,13 @@
 <view class="container">
   <view class="search-section">
-    <view class="search-box" bindtap="showSearch">
-      <text class="search-placeholder">{{searchKeyword ? searchKeyword : '搜索衣物名称'}}</text>
+    <view class="search-box">
+      <input
+        class="search-input"
+        placeholder="搜索衣物标签"
+        placeholder-class="search-placeholder"
+        value="{{searchKeyword}}"
+        confirm-type="search"
+        bindinput="onSearchInput" />
       <image src="/images/icons/search.png" class="search-icon" />
     </view>
     <view class="clear-search" wx:if="{{searchKeyword}}" bindtap="clearSearch">×</view>

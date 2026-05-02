@@ -57,6 +57,7 @@ Page({
     this.setData({ newTagInput: e.detail.value })
   },
 
+  // 添加标签到本地编辑列表，等待用户点击保存后再写入云端
   addTag() {
     const tag = (this.data.newTagInput || '').trim()
     if (!tag) {
@@ -75,6 +76,7 @@ Page({
     })
   },
 
+  // 从本地编辑列表移除指定标签，等待保存后同步到云端
   removeEditedTag(e) {
     const index = e.currentTarget.dataset.index
     const newTags = [...this.data.editedTags]
@@ -82,6 +84,7 @@ Page({
     this.setData({ editedTags: newTags })
   },
 
+  // 保存标签到云端，成功后同步更新详情页展示数据
   async saveTags() {
     const tags = Array.isArray(this.data.editedTags) ? this.data.editedTags : []
 
@@ -110,8 +113,17 @@ Page({
 
       wx.showToast({ title: '标签已更新', icon: 'success' })
     } catch (err) {
+      const message = err && (err.message || err.errMsg)
+        ? (err.message || err.errMsg)
+        : '未知错误'
+
       console.error('更新标签失败:', err)
-      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+      wx.showToast({
+        title: message.includes('Cannot find module')
+          ? '云函数依赖缺失，请重新部署'
+          : '保存失败，请重试',
+        icon: 'none'
+      })
     } finally {
       wx.hideLoading()
     }
