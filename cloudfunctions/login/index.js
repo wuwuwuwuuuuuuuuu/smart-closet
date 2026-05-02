@@ -1,58 +1,43 @@
+// cloudfunctions/login/index.js
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
 exports.main = async (event, context) => {
+  const wxContext = cloud.getWXContext()
+  const openid = wxContext.OPENID
+
   try {
-    const { userInfo } = event
-    const wxContext = cloud.getWXContext()
-    const openid = wxContext.OPENID
-    
-    // 1. 查找用户
-    const user = await db.collection('users').where({ openid }).get()
-    
-    if (user.data.length === 0) {
-      // 🌟 核心修改：创建时手动加上 _openid，解决前端无法读取的问题
-      await db.collection('users').add({
+    // 1. 去数据库里找，有没有这个人的记录
+    const { data } = await db.collection('users').where({
+      _openid: openid
+    }).get()
+
+    if (data.length === 0) {
+      // 2. 🌟 破案核心：如果是新用户，新建档案时【必须】强行写入 _openid！
+      const result = await db.collection('users').add({
         data: {
-          _openid: openid, // 👈 必须加这个！
-          openid: openid,
-          nickname: userInfo.nickName || '微信用户',
-          avatar: userInfo.avatarUrl || '',
-          gender: userInfo.gender || 0,
-          created_at: db.serverDate(), // 使用服务端时间更稳
-          updated_at: db.serverDate()
+          _openid: openid, // 👈 就是这一行拯救了全剧！
+          nickname: '衣橱新主人',
+          avatar: '', // 留空，等用户自己传
+          createdAt: db.serverDate()
         }
       })
+      return { 
+        code: 200, 
+        message: '注册成功',
+        data: { userInfo: { id: result._id, _openid: openid } } 
+      }
     } else {
-      // 🌟 更新时也同步一下
-      await db.collection('users').where({ openid }).update({
-        data: {
-          nickname: userInfo.nickName,
-          avatar: userInfo.avatarUrl,
-          gender: userInfo.gender,
-          updated_at: db.serverDate()
-        }
-      })
-    }
-    
-    // 2. 重新获取最新数据返回给前端
-    const finalResult = await db.collection('users').where({ openid }).get()
-    const userData = finalResult.data[0]
-    
-    return {
-      code: 200,
-      data: {
-        token: openid,
-        userInfo: {
-          id: userData._id,
-          nickname: userData.nickname,
-          avatar: userData.avatar,
-          gender: userData.gender
-        }
+      // 3. 如果是老用户，直接返回资料
+      return { 
+        code: 200, 
+        message: '登录成功',
+        data: { userInfo: { id: data[0]._id, _openid: openid, ...data[0] } } 
       }
     }
-  } catch (error) {
-    return { code: 500, message: '登录失败', error: error.message }
+  } catch (err) {
+    console.error('云函数登录异常:', err)
+    return { code: 500, message: '服务器异常', error: err }
   }
 }

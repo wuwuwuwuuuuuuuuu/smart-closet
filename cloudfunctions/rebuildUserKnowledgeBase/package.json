@@ -1,0 +1,9 @@
+﻿{
+  "name": "rebuilduserknowledgebase",
+  "version": "1.0.0",
+  "description": "图片向量同步云函数，兼容旧 rebuildUserKnowledgeBase 入口",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

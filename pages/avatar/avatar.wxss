@@ -1,145 +1,107 @@
-/* 我的形象页面样式 */
+page {
+  background-color: #f8f9fa;
+}
+
 .container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #F8F9FA 0%, #EDEDED 100%);
+  padding: 40rpx;
 }
 
-/* 页面标题 */
-.page-header {
-  padding: 60rpx 20rpx 40rpx;
-  text-align: center;
+.header {
+  margin-bottom: 40rpx;
 }
 
-.page-title {
-  font-size: 36rpx;
-  color: #333333;
-  font-weight: 700;
-  margin-bottom: 16rpx;
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
   display: block;
+  margin-bottom: 10rpx;
 }
 
-.page-subtitle {
-  font-size: 26rpx;
-  color: #666666;
-  line-height: 1.4;
-  display: block;
+.subtitle {
+  font-size: 24rpx;
+  color: #888;
 }
 
-/* 形象预览 */
-.avatar-preview {
-  flex: 1;
-  padding: 0 20rpx 40rpx;
+/* 网格布局：一行两列 */
+.avatar-grid {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
-.preview-container {
-  width: 100%;
-  height: 500rpx;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-frame {
-  width: 100%;
-  height: 100%;
-  background: #FFFFFF;
+.avatar-item {
+  width: 48%;
+  height: 400rpx;
   border-radius: 20rpx;
+  background: #fff;
+  margin-bottom: 30rpx;
+  position: relative;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  overflow: hidden;
+  border: 4rpx solid transparent;
+  transition: all 0.2s ease;
+}
+
+/* 选中状态的边框高亮 */
+.avatar-item.active {
+  border-color: #07c160;
+  box-shadow: 0 8rpx 20rpx rgba(7, 193, 96, 0.2);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 使用中标签 */
+.current-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(7, 193, 96, 0.9);
+  color: #fff;
+  font-size: 24rpx;
+  text-align: center;
+  padding: 8rpx 0;
+}
+
+/* 删除按钮 */
+.delete-btn {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
-  border: 2rpx dashed #E0E0E0;
-  transition: all 0.3s ease;
+  font-size: 24rpx;
 }
 
-.preview-container:active .preview-frame {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-}
-
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.upload-placeholder {
-  text-align: center;
+/* 上传新形象按钮 */
+.upload-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24rpx;
+  justify-content: center;
+  border: 2rpx dashed #ccc;
+  background: #fafafa;
 }
 
-.upload-icon {
-  width: 80rpx;
-  height: 80rpx;
-  opacity: 0.7;
+.plus-icon {
+  font-size: 80rpx;
+  color: #ccc;
+  margin-bottom: 20rpx;
+  line-height: 1;
 }
 
 .upload-text {
-  font-size: 32rpx;
-  color: #333333;
-  font-weight: 600;
-  display: block;
-}
-
-.upload-hint {
-  font-size: 24rpx;
-  color: #999999;
-  display: block;
-  line-height: 1.4;
-}
-
-/* 创建按钮 */
-.create-section {
-  padding: 0 20rpx 60rpx;
-}
-
-.create-btn {
-  width: 100%;
-  height: 88rpx;
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F0FF 100%);
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(255, 232, 232, 0.3);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.create-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.create-btn:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 4rpx 12rpx rgba(255, 232, 232, 0.2);
-}
-
-.create-btn:active::before {
-  left: 100%;
-}
-
-.create-text {
-  font-size: 32rpx;
-  color: #333333;
-  font-weight: 600;
-  letter-spacing: 2rpx;
+  font-size: 28rpx;
+  color: #999;
 }

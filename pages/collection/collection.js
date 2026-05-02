@@ -1,4 +1,6 @@
-// 我的收藏页面逻辑
+const db = wx.cloud.database()
+const app = getApp()
+
 Page({
   data: {
     searchKeyword: '',
@@ -8,109 +10,86 @@ Page({
   },
 
   onLoad() {
-    console.log('我的收藏页加载')
     this.loadCollections()
   },
 
   onShow() {
-    console.log('我的收藏页显示')
+    // 每次进入收藏页都刷新一下，保证能看到刚刚收藏的图
+    this.loadCollections()
   },
 
-  // 加载收藏数据
-  loadCollections() {
-    // 模拟收藏数据
-    const mockCollections = [
-      {
-        id: 1,
-        image: 'https://picsum.photos/400/600?random=51',
-        tags: ['正式', '春']
-      },
-      {
-        id: 2,
-        image: 'https://picsum.photos/400/600?random=52',
-        tags: ['休闲', '夏']
-      },
-      {
-        id: 3,
-        image: 'https://picsum.photos/400/600?random=53',
-        tags: ['运动', '秋']
-      },
-      {
-        id: 4,
-        image: 'https://picsum.photos/400/600?random=54',
-        tags: ['约会', '冬']
-      },
-      {
-        id: 5,
-        image: 'https://picsum.photos/400/600?random=55',
-        tags: ['工作', '春']
-      },
-      {
-        id: 6,
-        image: 'https://picsum.photos/400/600?random=56',
-        tags: ['日常', '夏']
-      }
-    ]
+  // === 🌟 核心：专门去查 collections 收藏表 ===
+  async loadCollections() {
+    wx.showLoading({ title: '加载收藏夹...' })
+    try {
+      const userId = app.globalData.currentUserId || 'unknown_user'
+      
+      // 🌟 注意这里：改成了查 collections 表
+      const res = await db.collection('collections')
+        .where({ userId: userId }) 
+        .orderBy('createTime', 'desc') 
+        .get()
 
-    this.setData({
-      collections: mockCollections,
-      filteredCollections: mockCollections
-    })
+      const realData = res.data.map(item => {
+        let dateStr = '最新'
+        if (item.createTime) {
+          const dateObj = new Date(item.createTime)
+          dateStr = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}` 
+        }
+
+        const tags = [item.sceneUrl || '精选收藏', dateStr]
+
+        return {
+          id: item._id,
+          image: item.finalImage,               // 融合大片
+          clothesImage: item.originalTryonImage,// 穿的衣服原图
+          scene: item.sceneUrl,
+          tags: tags,
+          date: dateStr,
+          rawData: item
+        }
+      })
+
+      this.setData({
+        collections: realData,
+        filteredCollections: realData 
+      })
+
+    } catch (error) {
+      console.error('❌ 加载收藏失败:', error)
+      wx.showToast({ title: '加载收藏失败', icon: 'none' })
+    } finally {
+      wx.hideLoading()
+    }
   },
 
-  // 返回上一页
-  goBack() {
-    wx.navigateBack()
-  },
+  goBack() { wx.navigateBack() },
 
-  // 搜索输入
   onSearchInput(e) {
-    const keyword = e.detail.value
-    this.setData({
-      searchKeyword: keyword
-    })
+    this.setData({ searchKeyword: e.detail.value })
     this.filterCollections()
   },
 
-  // 过滤收藏
   filterCollections() {
     const { searchKeyword, collections } = this.data
-    
     if (!searchKeyword.trim()) {
-      this.setData({
-        filteredCollections: collections
-      })
-      return
+      return this.setData({ filteredCollections: collections })
     }
-
-    const filtered = collections.filter(item => {
-      return item.tags.some(tag => tag.includes(searchKeyword))
-    })
-
-    this.setData({
-      filteredCollections: filtered
-    })
+    const keyword = searchKeyword.trim().toLowerCase()
+    const filtered = collections.filter(item => item.tags.some(tag => tag.toLowerCase().includes(keyword)))
+    this.setData({ filteredCollections: filtered })
   },
 
-  // 下拉刷新
-  onRefresh() {
-    this.setData({
-      refreshing: true
-    })
-
-    setTimeout(() => {
-      this.loadCollections()
-      this.setData({
-        refreshing: false
-      })
-    }, 800)
+  async onRefresh() {
+    this.setData({ refreshing: true })
+    await this.loadCollections()
+    this.setData({ refreshing: false })
   },
 
-  // 跳转到海报页
   goToPoster(e) {
     const item = e.currentTarget.dataset.item
     wx.navigateTo({
-      url: `/pages/poster/poster?image=${encodeURIComponent(item.image)}`
+      url: `/pages/poster/poster?image=${encodeURIComponent(item.image)}&clothes=${encodeURIComponent(item.clothesImage)}`
     })
   }
 })

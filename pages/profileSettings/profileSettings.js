@@ -9,16 +9,8 @@ Page({
     birthday: '',
     gender: '',
     currentDate: '',
-    
-    // 弹窗状态
-    showNicknameModal: false,
-    showGenderModal: false,
-    showDatePicker: false,
-    
-    // 临时数据
-    tempNickname: '',
-    tempGender: '',
-    tempBirthday: '',
+    genderRange: ['男', '女'],
+    genderIndex: 0,
     
     canSave: false
   },
@@ -46,11 +38,16 @@ Page({
     try {
       const res = await db.collection('users').doc(userId).get()
       const user = res.data
+      
+      // 设置性别索引
+      const genderIndex = user.gender === '女' ? 1 : 0
+      
       this.setData({
         avatarUrl: user.avatar || this.data.avatarUrl,
         nickname: user.nickname || '',
         birthday: user.birthday || '',
-        gender: user.gender || ''
+        gender: user.gender || '',
+        genderIndex: genderIndex
       })
       this.checkSaveButton()
       wx.hideLoading()
@@ -106,32 +103,38 @@ Page({
     })
   },
 
-  // 编辑昵称逻辑 (保持不变)
-  editNickname() { this.setData({ showNicknameModal: true, tempNickname: this.data.nickname }) },
-  onNicknameInput(e) { this.setData({ tempNickname: e.detail.value }) },
-  cancelEditNickname() { this.setData({ showNicknameModal: false, tempNickname: '' }) },
-  confirmEditNickname() {
-    const nickname = this.data.tempNickname.trim()
-    if (!nickname) return wx.showToast({ title: '昵称不能为空', icon: 'none' })
-    this.setData({ nickname, showNicknameModal: false, tempNickname: '' })
+  // 昵称编辑逻辑 (直接输入)
+  onNicknameInput(e) { 
+    this.setData({ nickname: e.detail.value })
+    this.checkSaveButton()
+  },
+  onNicknameFocus() {
+    // 昵称输入框获得焦点时清空原内容
+    if (this.data.nickname && this.data.nickname !== '') {
+      this.setData({ nickname: '' })
+    }
+  },
+  onNicknameBlur() {
+    // 昵称输入框失去焦点时的处理
     this.checkSaveButton()
   },
 
-  // 日期/性别选择逻辑 (保持不变)
-  showDatePicker() { this.setData({ showDatePicker: true, tempBirthday: this.data.birthday || '' }) },
-  hideDatePicker() { this.setData({ showDatePicker: false, tempBirthday: '' }) },
-  onDateChange(e) { this.setData({ tempBirthday: e.detail.value }) },
-  confirmDate() {
-    if (this.data.tempBirthday) {
-      this.setData({ birthday: this.data.tempBirthday, showDatePicker: false, tempBirthday: '' })
-      this.checkSaveButton()
-    }
+  // 日期选择逻辑
+  onBirthdayChange(e) {
+    this.setData({ 
+      birthday: e.detail.value
+    })
+    this.checkSaveButton()
   },
-  selectGender() { this.setData({ showGenderModal: true, tempGender: this.data.gender || '' }) },
-  selectGenderOption(e) { this.setData({ tempGender: e.currentTarget.dataset.gender }) },
-  confirmSelectGender() {
-    if (!this.data.tempGender) return wx.showToast({ title: '请选择性别', icon: 'none' })
-    this.setData({ gender: this.data.tempGender, showGenderModal: false, tempGender: '' })
+
+  // 性别选择逻辑
+  onGenderChange(e) {
+    const index = e.detail.value
+    const gender = this.data.genderRange[index]
+    this.setData({ 
+      gender,
+      genderIndex: index
+    })
     this.checkSaveButton()
   },
 

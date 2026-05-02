@@ -8,7 +8,6 @@
 /* 顶部轮播图 */
 .swiper-container {
   margin: 40rpx 0;
-  /* 关键：swiper父容器固定高度 */
   height: 400rpx;
 }
 swiper {
@@ -20,11 +19,10 @@ swiper {
 .swiper-image {
   width: 100%;
   height: 150%;
-  /* 关键：完整显示图片，不裁剪、不变形 */
   object-fit: contain;
   display: block;
 }
-/* 穿搭日记卡片 */
+/* 智能推荐卡片 */
 .diary-card {
   background: #FFFFFF;
   border-radius: 12rpx;

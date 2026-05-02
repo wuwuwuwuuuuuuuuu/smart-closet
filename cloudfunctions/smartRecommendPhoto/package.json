@@ -1,0 +1,9 @@
+﻿{
+  "name": "smartrecommendphoto",
+  "version": "1.0.0",
+  "description": "智能推荐图片向量检索云函数入口",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

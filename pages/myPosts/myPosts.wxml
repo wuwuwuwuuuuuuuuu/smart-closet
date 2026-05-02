@@ -1,6 +1,16 @@
-<!-- 我的帖子页面 -->
 <view class="container">
-  <!-- 帖子列表 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{activeTab === item.key ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="key"
+      bindtap="switchTab"
+      data-tab="{{item.key}}">
+      <text class="tab-text">{{item.label}}</text>
+      <view class="tab-line"></view>
+    </view>
+  </view>
+
   <scroll-view 
     class="post-list" 
     scroll-y="true" 
@@ -11,7 +21,7 @@
     <view class="grid-container">
       <view 
         class="post-card" 
-        wx:for="{{myPosts}}" 
+        wx:for="{{currentPosts}}" 
         wx:key="id"
         bindtap="goToPostDetail"
         bindlongpress="showPostOptions"
@@ -25,7 +35,7 @@
             <text class="post-time">{{item.time}}</text>
             <view class="like-info">
               <image 
-                src="{{item.liked ? '/images/icon_heart_filled.png' : '/images/icon_heart.png'}}" 
+                src="{{item.liked ? 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img28.png' : 'cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img27.png'}}" 
                 class="like-icon" />
               <text class="like-count">{{item.likes}}</text>
             </view>
@@ -34,14 +44,12 @@
       </view>
     </view>
     
-    <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{myPosts.length === 0}}">
-      <text class="empty-text">暂无发布的帖子</text>
-      <text class="empty-hint">快去发布你的穿搭吧！</text>
+    <view class="empty-state" wx:if="{{currentPosts.length === 0}}">
+      <text class="empty-text">{{emptyText}}</text>
+      <text class="empty-hint">{{emptyHint}}</text>
     </view>
   </scroll-view>
 
-  <!-- 帖子操作弹窗 -->
   <view class="modal {{showOptionsModal ? 'show' : ''}}" bindtap="hideOptionsModal">
     <view class="modal-content options-modal" catchtap="">
       <view class="option-item" bindtap="editPost">

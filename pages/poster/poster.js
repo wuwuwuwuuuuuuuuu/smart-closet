@@ -1,146 +1,95 @@
-// 海报操作页逻辑
+const db = wx.cloud.database()
+const app = getApp()
+
 Page({
   data: {
-    posterImage: 'https://picsum.photos/750/1334?random=50',
-    showCollectionModal: false,
-    selectedTags: [],
-    customTag: '',
-    presetTags: ['正式', '休闲', '运动', '约会', '工作', '春', '夏', '秋', '冬']
+    posterImage: '', // 接收真实图片
+    clothesImage: '' // 接收穿搭的原图
   },
 
-  onLoad() {
-    console.log('海报页加载')
+  onLoad(options) {
+    console.log('海报页加载，接收到的参数：', options)
+    
+    // 核心修复：接收上一个页面传过来的真实图片地址，告别假图
+    if (options.image) {
+      this.setData({
+        posterImage: decodeURIComponent(options.image)
+      })
+    }
+    
+    if (options.clothes) {
+      this.setData({
+        clothesImage: decodeURIComponent(options.clothes)
+      })
+    }
   },
 
   onShow() {
     console.log('海报页显示')
   },
 
-  // 下载海报
-  downloadPoster() {
-    wx.showLoading({
-      title: '下载中...'
-    })
+  // === 🌟 核心：支持云端/网络图片下载保存至相册 ===
+  async downloadPoster() {
+    if (!this.data.posterImage) return wx.showToast({ title: '暂无图片可保存', icon: 'none' })
     
-    // 模拟下载过程
-    setTimeout(() => {
-      wx.hideLoading()
-      wx.saveImageToPhotosAlbum({
-        filePath: this.data.posterImage,
-        success: () => {
-          wx.showToast({
-            title: '已保存到本地',
-            icon: 'success'
+    wx.showLoading({ title: '下载海报中...', mask: true })
+    
+    try {
+      let finalPath = this.data.posterImage
+
+      // 1. 如果是云存储图片 (cloud://)，先下载获取临时路径
+      if (finalPath.startsWith('cloud://')) {
+        const res = await wx.cloud.downloadFile({ fileID: finalPath })
+        finalPath = res.tempFilePath
+      } 
+      // 2. 如果是普通网络图片 (http:// 或 https://)
+      else if (finalPath.startsWith('http')) {
+        const res = await new Promise((resolve, reject) => {
+          wx.downloadFile({
+            url: finalPath,
+            success: resolve,
+            fail: reject
           })
+        })
+        finalPath = res.tempFilePath
+      }
+
+      // 3. 将本地临时文件保存到相册
+      wx.saveImageToPhotosAlbum({
+        filePath: finalPath,
+        success: () => {
+          wx.hideLoading()
+          wx.showToast({ title: '已保存到相册', icon: 'success' })
         },
         fail: (err) => {
-          console.error('保存失败:', err)
-          wx.showToast({
-            title: '保存失败',
-            icon: 'none'
-          })
+          wx.hideLoading()
+          if (err.errMsg.includes('fail auth')) {
+            // 用户拒绝了授权，引导去设置页开启
+            wx.showModal({
+              title: '需要权限',
+              content: '请开启保存相册的权限。',
+              confirmText: '去设置',
+              success: (modalRes) => {
+                if (modalRes.confirm) wx.openSetting()
+              }
+            })
+          } else {
+            wx.showToast({ title: '保存取消或失败', icon: 'none' })
+          }
         }
       })
-    }, 1000)
+    } catch (error) {
+      wx.hideLoading()
+      console.error('下载海报失败:', error)
+      wx.showToast({ title: '下载失败', icon: 'none' })
+    }
   },
 
-  // 分享海报
+  // 分享海报（跳转到发布社区页）
   sharePoster() {
+    if (!this.data.posterImage) return
     wx.navigateTo({
       url: '/pages/postEdit/postEdit?image=' + encodeURIComponent(this.data.posterImage)
     })
-  },
-
-  // 显示收藏弹窗
-  showCollectionModal() {
-    this.setData({
-      showCollectionModal: true
-    })
-  },
-
-  // 隐藏收藏弹窗
-  hideCollectionModal() {
-    this.setData({
-      showCollectionModal: false,
-      selectedTags: [],
-      customTag: ''
-    })
-  },
-
-  // 切换标签选择
-  toggleTag(e) {
-    const tag = e.currentTarget.dataset.tag
-    const selectedTags = [...this.data.selectedTags]
-    
-    const index = selectedTags.indexOf(tag)
-    if (index > -1) {
-      selectedTags.splice(index, 1)
-    } else {
-      selectedTags.push(tag)
-    }
-    
-    this.setData({
-      selectedTags: selectedTags
-    })
-  },
-
-  // 标签输入
-  onTagInput(e) {
-    this.setData({
-      customTag: e.detail.value
-    })
-  },
-
-  // 添加自定义标签
-  addCustomTag() {
-    const { customTag, selectedTags } = this.data
-    
-    if (!customTag.trim()) {
-      wx.showToast({
-        title: '请输入标签',
-        icon: 'none'
-      })
-      return
-    }
-    
-    if (selectedTags.includes(customTag)) {
-      wx.showToast({
-        title: '标签已存在',
-        icon: 'none'
-      })
-      return
-    }
-    
-    this.setData({
-      selectedTags: [...selectedTags, customTag],
-      customTag: ''
-    })
-  },
-
-  // 确认收藏
-  confirmCollection() {
-    const { selectedTags } = this.data
-    
-    if (selectedTags.length === 0) {
-      wx.showToast({
-        title: '请选择标签',
-        icon: 'none'
-      })
-      return
-    }
-    
-    // 模拟收藏操作
-    wx.showLoading({
-      title: '收藏中...'
-    })
-    
-    setTimeout(() => {
-      wx.hideLoading()
-      this.hideCollectionModal()
-      wx.showToast({
-        title: '已加入我的收藏',
-        icon: 'success'
-      })
-    }, 800)
   }
 })

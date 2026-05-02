@@ -73,6 +73,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8rpx;
+}
+
+.author-avatar {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .post-author {

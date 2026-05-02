@@ -1,7 +1,15 @@
-<view class="container">
-  <view class="user-header gradient-bg">
-    <view class="user-info">
-      <view class="avatar-container" bindtap="goToProfileSettings">
+<view class="page-container">
+  
+  <view class="header-bg" bindtap="changeBackground">
+    <image class="bg-img" src="{{userInfo.bgImage || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'}}" mode="aspectFill"></image>
+    <view class="bg-mask"></view> 
+    <view class="change-bg-tip">点击更换背景</view>
+  </view>
+
+  <view class="main-content">
+    
+    <view class="user-header">
+      <view class="avatar-container" catchtap="goToProfileSettings">
         <image 
           src="{{userInfo.avatar ? userInfo.avatar : 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'}}" 
           class="user-avatar" 
@@ -10,56 +18,57 @@
       </view>
       
       <view class="user-details">
-        <text class="user-name">{{userInfo.name}}</text>
-        <text class="user-desc">{{userInfo.desc}}</text>
+        <text class="user-name">{{userInfo.name || '衣橱新主人'}}</text>
+        <text class="user-desc">{{userInfo.desc || '云端 ID: ' + (userInfo._id || '未登录')}}</text>
       </view>
     </view>
-  </view>
 
-  <view class="function-grid">
-    <view class="function-item" bindtap="goToCollection">
-      <view class="function-icon">
-        <image src="/images/icons/collection.png" class="icon-img" />
+    <view class="function-grid">
+      <view class="function-item" bindtap="goToCollection">
+        <view class="function-icon">
+          <image src="/images/icons/collection.png" class="icon-img" />
+        </view>
+        <text class="function-text">我的收藏</text>
       </view>
-      <text class="function-text">我的收藏</text>
-    </view>
-    
-    <view class="function-item" bindtap="goToAvatar">
-      <view class="function-icon">
-        <image src="/images/icons/avatar.png" class="icon-img" />
+      
+      <view class="function-item" bindtap="goToAvatar">
+        <view class="function-icon">
+          <image src="/images/icons/avatar.png" class="icon-img" />
+        </view>
+        <text class="function-text">我的形象</text>
       </view>
-      <text class="function-text">我的形象</text>
-    </view>
-    
-    <view class="function-item" bindtap="goToWardrobe">
-      <view class="function-icon">
-        <image src="/images/icons/wardrobe.png" class="icon-img" />
+      
+      <view class="function-item" bindtap="goToWardrobe">
+        <view class="function-icon">
+          <image src="/images/icons/wardrobe.png" class="icon-img" />
+        </view>
+        <text class="function-text">我的衣橱</text>
       </view>
-      <text class="function-text">我的衣橱</text>
-    </view>
-    
-    <view class="function-item" bindtap="goToMyPosts">
-      <view class="function-icon">
-        <image src="/images/icons/posts.png" class="icon-img" />
+      
+      <view class="function-item" bindtap="goToMyPosts">
+        <view class="function-icon">
+          <image src="/images/icons/posts.png" class="icon-img" />
+        </view>
+        <text class="function-text">我的帖子</text>
       </view>
-      <text class="function-text">我的帖子</text>
     </view>
-  </view>
 
-  <view class="settings-section">
-    <view class="setting-item" bindtap="goToHistory">
-      <text class="setting-text">生成历史</text>
-      <text class="arrow">></text> 
+    <view class="settings-section">
+      <view class="setting-item" bindtap="goToHistory">
+        <text class="setting-text">生成历史</text>
+        <text class="arrow">></text> 
+      </view>
+      
+      <view class="setting-item" bindtap="contactUs">
+        <text class="setting-text">联系我们</text>
+        <text class="arrow">></text>
+      </view>
+      
+      <view class="setting-item" bindtap="goToFeedback">
+        <text class="setting-text">意见与反馈</text>
+        <text class="arrow">></text>
+      </view>
     </view>
-    
-    <view class="setting-item" bindtap="contactUs">
-      <text class="setting-text">联系我们</text>
-      <text class="arrow">></text>
-    </view>
-    
-    <view class="setting-item" bindtap="goToFeedback">
-      <text class="setting-text">意见与反馈</text>
-      <text class="arrow">></text>
-    </view>
+
   </view>
 </view>
