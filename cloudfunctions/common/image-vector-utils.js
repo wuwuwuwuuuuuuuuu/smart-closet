@@ -56,8 +56,21 @@ function pickTopKBySimilarity({ queryVector, items = [], topK = 8 }) {
     .slice(0, safeTopK)
 }
 
+function summarizeVectorDocs(vectorDocs = [], queryVector = []) {
+  const docs = Array.isArray(vectorDocs) ? vectorDocs : []
+  const queryDim = Array.isArray(queryVector) ? queryVector.length : 0
+  const sameDimCount = docs.filter(doc => Array.isArray(doc && doc.vector) && doc.vector.length === queryDim).length
+  return {
+    queryDim,
+    total: docs.length,
+    sameDimCount,
+    skippedByDimCount: Math.max(0, docs.length - sameDimCount)
+  }
+}
+
 module.exports = {
   isValidVector,
   cosineSimilarity,
-  pickTopKBySimilarity
+  pickTopKBySimilarity,
+  summarizeVectorDocs
 }

@@ -1,7 +1,7 @@
 ﻿const cloud = require('wx-server-sdk')
 const { createImageEmbedding } = require('./common/dashscope-multimodal-provider')
 const { isValidVector } = require('./common/image-vector-utils')
-const { normalizeLimit, buildRebuildStatsSummary } = require('./rebuild.helpers')
+const { normalizeLimit, buildRebuildStatsSummary, buildVectorDoc } = require('./rebuild.helpers')
 
 let localConfig = {}
 try {
@@ -19,14 +19,14 @@ const db = cloud.database()
 
 
 function logError(scope, error, extra = {}) {
-  console.error(`[ImageKnowledge][${scope}]`, {
+  console.error(`[ImageVector][${scope}]`, {
     message: error && error.message ? error.message : String(error),
     ...extra
   })
 }
 
 function logWarning(scope, message, extra = {}) {
-  console.warn(`[ImageKnowledge][${scope}] ${message}`, extra)
+  console.warn(`[ImageVector][${scope}] ${message}`, extra)
 }
 
 function normalizeText(value) {
@@ -35,6 +35,12 @@ function normalizeText(value) {
 
 function getDashScopeApiKey() {
   return normalizeText(process.env.DASHSCOPE_API_KEY || localConfig.DASHSCOPE_API_KEY)
+}
+
+function getDashScopeEmbeddingModel() {
+  return normalizeText(process.env.DASHSCOPE_EMBEDDING_MODEL)
+    || normalizeText(localConfig.DASHSCOPE_EMBEDDING_MODEL)
+    || undefined
 }
 
 async function getCurrentUser(openid) {
@@ -54,7 +60,15 @@ function shouldSyncClothing(clothing, forceResync) {
   return !status || status === 'pending' || status === 'failed'
 }
 
-async function loadSyncableClothes({ userId, limit, forceResync }) {
+async function loadSyncableClothes({ userId, clothingId, limit, forceResync }) {
+  const targetClothingId = normalizeText(clothingId)
+  if (targetClothingId) {
+    const res = await db.collection('clothes')
+      .where({ _id: targetClothingId, user_id: userId })
+      .limit(1)
+      .get()
+    return (res.data || []).filter(item => shouldSyncClothing(item, true))
+  }
   const res = await db.collection('clothes')
     .where({ user_id: userId })
     .orderBy('created_at', 'desc')
@@ -90,7 +104,6 @@ async function getTempUrl(fileId) {
 async function markClothingSkipped(clothingId, reason) {
   await db.collection('clothes').doc(clothingId).update({
     data: {
-      image_knowledge_status: 'skipped_no_image',
       image_embedding_status: 'skipped_no_image',
       image_embedding_error: reason || '',
       image_embedding_updated_at: db.serverDate(),
@@ -102,7 +115,6 @@ async function markClothingSkipped(clothingId, reason) {
 async function markClothingReady(clothingId, vectorDim) {
   await db.collection('clothes').doc(clothingId).update({
     data: {
-      image_knowledge_status: 'ready',
       image_embedding_status: 'ready',
       image_embedding_error: '',
       image_embedding_dim: vectorDim,
@@ -115,7 +127,6 @@ async function markClothingReady(clothingId, vectorDim) {
 async function markClothingFailed(clothingId, error) {
   await db.collection('clothes').doc(clothingId).update({
     data: {
-      image_knowledge_status: 'failed',
       image_embedding_status: 'failed',
       image_embedding_error: error && error.message ? error.message : String(error),
       image_embedding_updated_at: db.serverDate(),
@@ -160,9 +171,11 @@ async function ensureCollectionExists(collectionName) {
 
 exports.main = async (event = {}) => {
   const wxContext = cloud.getWXContext()
-  const openid = wxContext.OPENID
+  const openid = normalizeText(event.targetOpenid) || wxContext.OPENID
   const limit = normalizeLimit(event.limit, 30)
   const forceResync = event.forceResync === true
+  const clothingId = normalizeText(event.clothingId)
+  const syncSource = clothingId ? 'single_clothing_auto' : (forceResync ? 'manual_force' : 'manual_patch')
 
   try {
     const user = await getCurrentUser(openid)
@@ -174,6 +187,7 @@ exports.main = async (event = {}) => {
 
     const clothes = await loadSyncableClothes({
       userId: user._id,
+      clothingId,
       limit,
       forceResync
     })
@@ -188,7 +202,9 @@ exports.main = async (event = {}) => {
       inventorySummary: {
         totalWardrobeCount: clothes.length,
         syncableCount: clothes.length,
+        readyVectorCount: 0,
         readyInKnowledgeCount: 0,
+        missingVectorCount: 0,
         missingKnowledgeCount: 0,
         missingImageCount: 0
       }
@@ -208,7 +224,7 @@ exports.main = async (event = {}) => {
         const vector = await createImageEmbedding({
           imageUrl,
           apiKey: getDashScopeApiKey(),
-          model: normalizeText(localConfig.DASHSCOPE_EMBEDDING_MODEL) || undefined,
+          model: getDashScopeEmbeddingModel(),
           timeoutMs: Number(localConfig.BAILIAN_RESPONSE_TIMEOUT_MS) || 60000
         })
 
@@ -219,26 +235,26 @@ exports.main = async (event = {}) => {
         await removeExistingVector({ clothingId: clothing._id, userId: user._id })
         await db.collection('clothes_image_vectors').add({
           data: {
-            _openid: openid,
-            user_id: user._id,
-            clothing_id: clothing._id,
-            image_file_id: imageFileId,
-            image_temp_url_sample: imageUrl,
-            vector,
-            vector_dim: vector.length,
-            category: normalizeText(clothing.category),
-            season: normalizeText(clothing.season),
-            tags: Array.isArray(clothing.tags) ? clothing.tags : [],
-            name: normalizeText(clothing.name),
+            ...buildVectorDoc({
+              openid,
+              userId: user._id,
+              clothing,
+              imageFileId,
+              vector,
+              syncSource
+            }),
+            created_at: db.serverDate(),
             updated_at: db.serverDate()
           }
         })
 
         await markClothingReady(clothing._id, vector.length)
         stats.readyCount += 1
+        stats.inventorySummary.readyVectorCount += 1
         stats.inventorySummary.readyInKnowledgeCount += 1
       } catch (error) {
         stats.failedCount += 1
+        stats.inventorySummary.missingVectorCount += 1
         stats.inventorySummary.missingKnowledgeCount += 1
         if (stats.sampleFailures.length < 5) {
           stats.sampleFailures.push({
@@ -258,20 +274,21 @@ exports.main = async (event = {}) => {
     const summary = buildRebuildStatsSummary(stats)
     return {
       code: 200,
-      message: '图片知识库重建完成',
+      message: '图片向量同步完成',
       data: {
         ...stats,
         summary
       }
     }
   } catch (error) {
-    logError('rebuild.imageEmbedding.main', error, { limit, forceResync })
+    logError('rebuild.imageEmbedding.main', error, { limit, forceResync, clothingId })
     return {
       code: 500,
-      message: '图片知识库重建失败',
+      message: '图片向量同步失败',
       error: error && error.message ? error.message : String(error)
 
     }
   }
 }
+
 

@@ -30,10 +30,10 @@
         <text class="weather-suggestion">{{weatherSuggestion}}</text>
         <view class="debug-actions">
           <text class="debug-action {{isRebuildingKnowledge ? 'debug-action-disabled' : ''}}" bindtap="triggerKnowledgeRebuild">
-            {{isRebuildingKnowledge ? '补同步处理中...' : '补同步/查状态'}}
+            {{isRebuildingKnowledge ? '向量补同步处理中...' : '向量补同步/查状态'}}
           </text>
           <text class="debug-action debug-action-secondary {{isRebuildingKnowledge ? 'debug-action-disabled' : ''}}" bindtap="triggerKnowledgeForceResync">
-            {{isRebuildingKnowledge ? '强制重同步处理中...' : '强制全量重同步'}}
+            {{isRebuildingKnowledge ? '强制重建向量处理中...' : '强制重建全部向量'}}
           </text>
         </view>
         <text class="debug-summary" wx:if="{{knowledgeRebuildSummary}}">{{knowledgeRebuildSummary}}</text>

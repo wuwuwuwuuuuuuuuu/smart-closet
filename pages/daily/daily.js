@@ -191,7 +191,7 @@ Page({
     })
 
     wx.showLoading({
-      title: forceResync ? '强制重同步中...' : '补同步检查中...'
+      title: forceResync ? '强制重建向量中...' : '向量补同步中...'
     })
 
     wx.cloud.callFunction({
@@ -209,20 +209,20 @@ Page({
           knowledgeRebuildSummary: feedback.summaryText
         })
 
-        console.log(forceResync ? '强制重同步结果' : '补同步结果', result)
+        console.log(forceResync ? '强制重建向量结果' : '向量补同步结果', result)
         if (Array.isArray(data.sampleFailures) && data.sampleFailures.length) {
-          console.log('知识库同步失败样本', data.sampleFailures)
+          console.log('image vector sync failures', data.sampleFailures)
         }
         if (Array.isArray(data.sampleDiagnostics) && data.sampleDiagnostics.length) {
-          console.log('知识库诊断样本', data.sampleDiagnostics.map(item => ({
+          console.log('image vector diagnostics', data.sampleDiagnostics.map(item => ({
             clothingId: normalizeInput(item && item.clothingId),
             name: normalizeInput(item && item.name),
             reason: normalizeInput(item && item.reason),
             syncStatus: normalizeInput(item && item.syncStatus),
-            knowledge_sync_error: normalizeInput(item && item.knowledge_sync_error),
+            image_embedding_error: normalizeInput(item && item.image_embedding_error),
             hasImage: Boolean(item && item.hasImage),
-            hasKnowledgeDoc: Boolean(item && item.hasKnowledgeDoc),
-            isReadyInKnowledge: Boolean(item && item.isReadyInKnowledge),
+            hasVector: Boolean(item && item.hasVector),
+            isReadyVector: Boolean(item && item.isReadyVector),
             canSync: Boolean(item && item.canSync)
           })))
         }
@@ -245,7 +245,7 @@ Page({
       fail: (error) => {
         const timeoutPending = isCloudFunctionTimeoutError(error)
         const errMsg = timeoutPending
-          ? `${forceResync ? '强制重同步' : '补同步'}已发起，但云函数执行较慢。请等待几秒后再次点击对应按钮查看状态。`
+          ? `${forceResync ? '强制重建向量' : '向量补同步'}已发起，但云函数执行较慢。请稍后再次点击按钮查看状态。`
           : (error && error.errMsg ? error.errMsg : '调用云函数失败')
 
         this.setData({
@@ -265,10 +265,10 @@ Page({
           return
         }
 
-        console.error(forceResync ? '强制重同步失败' : '补同步失败', error)
+        console.error(forceResync ? '强制重建向量失败' : '向量补同步失败', error)
         logError('daily.runKnowledgeRebuild', error, { forceResync })
         wx.showModal({
-          title: forceResync ? '强制重同步失败' : '补同步失败',
+          title: forceResync ? '强制重建向量失败' : '向量补同步失败',
           content: errMsg,
           showCancel: false
         })

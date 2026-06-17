@@ -1,4 +1,4 @@
-const assert = require('assert')
+﻿const assert = require('assert')
 const {
   isCloudFunctionTimeoutError,
   buildKnowledgeRebuildFeedback,
@@ -9,23 +9,22 @@ assert.strictEqual(
   buildInventorySummaryLine({
     totalWardrobeCount: 6,
     syncableCount: 3,
-    readyInKnowledgeCount: 3,
-    missingKnowledgeCount: 3,
+    readyVectorCount: 3,
+    missingVectorCount: 3,
     missingImageCount: 3
   }),
-  '\u8863\u6a71 6 \u4ef6 / \u53ef\u540c\u6b65 3 \u4ef6 / \u5df2\u5165\u5e93 3 \u4ef6 / \u7f3a\u5931 3 \u4ef6\uff08\u5176\u4e2d\u65e0\u56fe 3 \u4ef6\uff09'
+  '衣橱 6 件 / 可同步 3 件 / 已有向量 3 件 / 缺失向量 3 件（其中无图 3 件）'
 )
 
 const pendingFeedback = buildKnowledgeRebuildFeedback({
   code: 200,
   data: {
-    knowledgeId: 'kb_123',
     requestMode: 'normal',
     inventorySummary: {
       totalWardrobeCount: 6,
       syncableCount: 3,
-      readyInKnowledgeCount: 2,
-      missingKnowledgeCount: 1,
+      readyVectorCount: 2,
+      missingVectorCount: 1,
       missingImageCount: 3
     },
     queuedCount: 1,
@@ -37,20 +36,19 @@ const pendingFeedback = buildKnowledgeRebuildFeedback({
 })
 
 assert.strictEqual(pendingFeedback.status, 'pending')
-assert.strictEqual(pendingFeedback.title, '\u8865\u540c\u6b65\u5df2\u53d1\u8d77')
-assert.ok(pendingFeedback.summaryText.includes('kb_123'))
-assert.ok(pendingFeedback.summaryText.includes('\u8863\u6a71 6 \u4ef6 / \u53ef\u540c\u6b65 3 \u4ef6 / \u5df2\u5165\u5e93 2 \u4ef6 / \u7f3a\u5931 1 \u4ef6\uff08\u5176\u4e2d\u65e0\u56fe 3 \u4ef6\uff09'))
+assert.strictEqual(pendingFeedback.title, '向量补同步已发起')
+assert.ok(!pendingFeedback.summaryText.includes('知识库'))
+assert.ok(pendingFeedback.summaryText.includes('已有向量 2 件'))
 
 const successFeedback = buildKnowledgeRebuildFeedback({
   code: 200,
   data: {
-    knowledgeId: 'kb_456',
     requestMode: 'forceResync',
     inventorySummary: {
       totalWardrobeCount: 6,
       syncableCount: 3,
-      readyInKnowledgeCount: 3,
-      missingKnowledgeCount: 0,
+      readyVectorCount: 3,
+      missingVectorCount: 0,
       missingImageCount: 3
     },
     readyCount: 1,
@@ -61,19 +59,19 @@ const successFeedback = buildKnowledgeRebuildFeedback({
 })
 
 assert.strictEqual(successFeedback.status, 'success')
-assert.strictEqual(successFeedback.title, '\u5f3a\u5236\u91cd\u540c\u6b65\u5b8c\u6210')
-assert.ok(successFeedback.summaryText.includes('\u672c\u6b21\u5b8c\u6210 3 \u4ef6'))
-assert.ok(successFeedback.summaryText.includes('\u5931\u8d25 1 \u4ef6'))
+assert.strictEqual(successFeedback.title, '强制重建向量完成')
+assert.ok(successFeedback.summaryText.includes('生成/更新向量 3 件'))
+assert.ok(successFeedback.summaryText.includes('失败 1 件'))
+assert.ok(!successFeedback.summaryText.includes('知识库'))
 
 const idleFeedback = buildKnowledgeRebuildFeedback({
   code: 200,
   data: {
-    knowledgeId: 'kb_789',
     inventorySummary: {
       totalWardrobeCount: 6,
       syncableCount: 3,
-      readyInKnowledgeCount: 3,
-      missingKnowledgeCount: 0,
+      readyVectorCount: 3,
+      missingVectorCount: 0,
       missingImageCount: 3
     },
     skipReasonStats: {
@@ -86,7 +84,8 @@ const idleFeedback = buildKnowledgeRebuildFeedback({
 })
 
 assert.strictEqual(idleFeedback.status, 'idle')
-assert.ok(idleFeedback.summaryText.includes('\u5176\u4e2d\u65e0\u56fe 3 \u4ef6'))
+assert.ok(idleFeedback.summaryText.includes('无图 3 件'))
+assert.ok(!idleFeedback.summaryText.includes('知识库'))
 
 const failedFeedback = buildKnowledgeRebuildFeedback({
   code: 500,

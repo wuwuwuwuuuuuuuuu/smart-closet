@@ -1,6 +1,6 @@
 ﻿const cloud = require('wx-server-sdk')
 const { createTextEmbedding, requestCompatibleChat } = require('./common/dashscope-multimodal-provider')
-const { pickTopKBySimilarity } = require('./common/image-vector-utils')
+const { isValidVector, pickTopKBySimilarity, summarizeVectorDocs } = require('./common/image-vector-utils')
 
 let localConfig = {}
 try {
@@ -41,6 +41,18 @@ function getDashScopeApiKey() {
   return normalizeInput(process.env.DASHSCOPE_API_KEY || localConfig.DASHSCOPE_API_KEY)
 }
 
+function getDashScopeResponseModel() {
+  return normalizeInput(process.env.DASHSCOPE_RESPONSE_MODEL)
+    || normalizeInput(localConfig.DASHSCOPE_RESPONSE_MODEL)
+    || 'qwen-vl-plus'
+}
+
+function getDashScopeEmbeddingModel() {
+  return normalizeInput(process.env.DASHSCOPE_EMBEDDING_MODEL)
+    || normalizeInput(localConfig.DASHSCOPE_EMBEDDING_MODEL)
+    || undefined
+}
+
 async function getCurrentUser(openid) {
   const res = await db.collection('users')
     .where({ _openid: openid })
@@ -72,7 +84,16 @@ async function loadUserImageVectors(userId) {
       .where({ user_id: userId })
       .limit(100)
       .get()
-    return (res.data || []).filter(item => Array.isArray(item.vector) && item.vector.length)
+    const docs = res.data || []
+    const validDocs = docs.filter(item => isValidVector(item && item.vector))
+    const invalidCount = docs.length - validDocs.length
+    if (invalidCount > 0) {
+      logWarning('recommend.imageRetrieval', 'invalid image vectors skipped', {
+        total: docs.length,
+        invalidCount
+      })
+    }
+    return validDocs
   } catch (error) {
     const message = error && error.message ? error.message : String(error)
     if (/collection not exists|Db or Table not exist|DATABASE_COLLECTION_NOT_EXIST|ResourceNotFound/i.test(message)) {
@@ -128,7 +149,9 @@ async function attachPhotoUrls(items = []) {
 
 function mergeHitsWithClothes(topHits, clothes) {
   const clothesMap = new Map((clothes || []).map(item => [String(item._id), item]))
-  return topHits.map(hit => {
+  return topHits
+    .filter(hit => clothesMap.has(String(hit.id)))
+    .map(hit => {
     const clothing = clothesMap.get(String(hit.id)) || {}
     return {
       ...hit,
@@ -182,7 +205,7 @@ function normalizeRecommendation(raw = {}, hits = [], meta = {}) {
 
   return {
     requestId: normalizeInput(meta.requestId) || `img_rec_${Date.now()}`,
-    summary: normalizeInput(raw.summary) || '图片知识库推荐已生成',
+    summary: normalizeInput(raw.summary) || '衣橱图片匹配推荐已生成',
     replyText: replyText || '我已根据你的需求和衣橱图片，挑选出更适合试穿的搭配。',
     selectedClothesIds,
     selectedPhotoUrls: uniqueStringList(selectedPhotoUrls),
@@ -191,7 +214,9 @@ function normalizeRecommendation(raw = {}, hits = [], meta = {}) {
     ctaLabel: normalizeInput(raw.ctaLabel) || '去试穿页继续搭配',
     retrievalSource: normalizeInput(meta.retrievalSource) || 'image_vector',
     retrievalHitCount: Number(meta.retrievalHitCount) || hits.length,
-    fallbackReason: normalizeInput(meta.fallbackReason)
+    fallbackReason: normalizeInput(meta.fallbackReason),
+    retrievalVectorCount: Number(meta.retrievalVectorCount) || 0,
+    retrievalSameDimCount: Number(meta.retrievalSameDimCount) || 0
   }
 }
 
@@ -394,9 +419,9 @@ function buildFallbackRecommendation(event = {}, reason = 'fallback', clothes = 
       summary: '智能推荐已生成',
       replyText: clothes.length
         ? '当前图片向量检索不可用，我先从你的衣橱中挑选了一组可继续试穿的衣物。'
-        : '当前图片知识库还没有可用衣物，请先上传衣物并点击补同步。',
+        : '当前还没有可用的衣物图片向量，请先上传衣物，系统会自动生成；也可以点击补同步。',
       tips: [
-        reason === 'no_image_vector_hits' ? '图片知识库暂无命中，请先补同步或上传更多衣物。' : '已使用降级推荐，建议稍后重试图片知识库。'
+        reason === 'no_image_vector_hits' ? '衣物图片向量暂无命中，请补同步或上传更多衣物。' : '已使用降级推荐，建议稍后重试图片匹配。'
       ]
     }, hits, {
       retrievalSource: 'fallback',
@@ -449,7 +474,7 @@ async function buildMultimodalRecommendation({ userQuery, weatherInfo, city, hit
     const raw = await requestCompatibleChat({
       apiKey: getDashScopeApiKey(),
       baseUrl: normalizeInput(localConfig.DASHSCOPE_BASE_URL) || undefined,
-      model: normalizeInput(localConfig.DASHSCOPE_RESPONSE_MODEL) || 'qwen-vl-plus',
+      model: getDashScopeResponseModel(),
       timeoutMs: Number(localConfig.BAILIAN_RESPONSE_TIMEOUT_MS) || 60000,
       messages: buildVisionMessages({ prompt, hits })
     })
@@ -490,7 +515,7 @@ exports.main = async (event = {}) => {
       queryVector = await createTextEmbedding({
         text: buildRetrievalQuery(event),
         apiKey: getDashScopeApiKey(),
-        model: normalizeInput(localConfig.DASHSCOPE_EMBEDDING_MODEL) || undefined,
+        model: getDashScopeEmbeddingModel(),
         timeoutMs: Number(localConfig.BAILIAN_RESPONSE_TIMEOUT_MS) || 60000
       })
     } catch (error) {
@@ -506,6 +531,11 @@ exports.main = async (event = {}) => {
       logWarning('recommend.imageRetrieval', 'no image vectors found', { userId: user._id })
       const fallbackClothes = await attachPhotoUrls(await loadFallbackClothes(user._id, 4))
       return buildFallbackRecommendation(event, 'no_image_vectors', fallbackClothes)
+    }
+
+    const vectorStats = summarizeVectorDocs(vectorDocs, queryVector)
+    if (vectorStats.skippedByDimCount > 0) {
+      logWarning('recommend.imageRetrieval', 'image vectors skipped by dimension mismatch', vectorStats)
     }
 
     const topHits = pickTopKBySimilarity({
@@ -530,6 +560,11 @@ exports.main = async (event = {}) => {
 
     const clothes = await loadClothesByIds(topHits.map(item => item.id))
     const mergedHits = await attachPhotoUrls(mergeHitsWithClothes(topHits, clothes))
+    if (!mergedHits.length) {
+      logWarning('recommend.imageRetrieval', 'vector hits are stale because matched clothes no longer exist')
+      const fallbackClothes = await attachPhotoUrls(await loadFallbackClothes(user._id, 4))
+      return buildFallbackRecommendation(event, 'stale_image_vectors', fallbackClothes)
+    }
     const recommendation = await buildMultimodalRecommendation({
       userQuery,
       weatherInfo: event.weatherInfo,
@@ -537,6 +572,8 @@ exports.main = async (event = {}) => {
       hits: mergedHits,
       requestId: event.requestId
     })
+    recommendation.retrievalVectorCount = vectorStats.total
+    recommendation.retrievalSameDimCount = vectorStats.sameDimCount
 
     return {
       code: 200,
@@ -552,4 +589,5 @@ exports.main = async (event = {}) => {
     }
   }
 }
+
 

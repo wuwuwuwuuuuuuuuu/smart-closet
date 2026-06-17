@@ -105,9 +105,9 @@ Page({
 
       this.setData({
         'info.tags': tags,
-        'info.knowledge_sync_status': result.data && result.data.knowledgeSyncStatus
-          ? result.data.knowledgeSyncStatus
-          : (this.data.info && this.data.info.knowledge_sync_status) || '',
+        'info.image_embedding_status': result.data && result.data.imageEmbeddingStatus
+          ? result.data.imageEmbeddingStatus
+          : (this.data.info && this.data.info.image_embedding_status) || '',
         isEditingTags: false
       })
 

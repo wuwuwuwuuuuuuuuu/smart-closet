@@ -1,10 +1,9 @@
 ﻿const cloud = require('wx-server-sdk')
 const {
   normalizeText,
-  normalizeTagList,
-  buildKnowledgeSyncFields
-} = require('./utils/retrieval-profile')
-const { triggerKnowledgeSyncInBackground } = require('./utils/knowledge-sync-trigger')
+  normalizeTagList
+} = require('./utils/clothing-fields')
+const { triggerImageVectorSyncInBackground } = require('./utils/image-vector-sync-trigger')
 const { buildImageKnowledgeFields } = require('./common/clothing-image-fields')
 
 cloud.init({
@@ -46,16 +45,6 @@ exports.main = async (event = {}) => {
     const material = normalizeText(event.material)
     const brand = normalizeText(event.brand)
     const tags = normalizeTagList(event.tags)
-    const knowledgeSyncFields = buildKnowledgeSyncFields({
-      name,
-      image,
-      originalImage,
-      season,
-      category,
-      tags,
-      material,
-      brand
-    })
 
     const result = await db.collection('clothes').add({
       data: {
@@ -69,21 +58,21 @@ exports.main = async (event = {}) => {
         tags,
         material,
         brand,
-        ...knowledgeSyncFields,
-        image_knowledge_status: imageFields.status,
         image_embedding_status: imageFields.status,
         image_embedding_error: '',
         image_embedding_updated_at: null,
+        image_embedding_dim: 0,
         created_at: db.serverDate(),
         updated_at: db.serverDate()
       }
     })
 
     if (image) {
-      triggerKnowledgeSyncInBackground({
+      triggerImageVectorSyncInBackground({
         cloud,
         openid,
-        limit: 5
+        clothingId: result._id,
+        forceResync: true
       })
     }
 
@@ -92,8 +81,8 @@ exports.main = async (event = {}) => {
       message: '添加衣物成功',
       data: {
         id: result._id,
-        knowledgeSyncStatus: knowledgeSyncFields.knowledge_sync_status,
-        imageEmbeddingStatus: imageFields.status
+        imageEmbeddingStatus: imageFields.status,
+        imageVectorSyncTriggered: Boolean(image)
       }
     }
   } catch (error) {
