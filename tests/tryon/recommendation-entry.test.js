@@ -2,7 +2,8 @@ const assert = require('assert')
 const {
   matchSelectedClothes,
   buildSuggestedPlacements,
-  isValidSmartRecommendEntry
+  isValidSmartRecommendEntry,
+  buildTryonContextData
 } = require('../../pages/tryon/tryon.helpers')
 
 const matched = matchSelectedClothes(
@@ -29,5 +30,32 @@ assert.strictEqual(isValidSmartRecommendEntry({
   source: 'smartRecommend',
   createdAt: Date.now() - 31 * 60 * 1000
 }), false)
+
+assert.deepStrictEqual(buildTryonContextData([
+  { _id: 'wardrobe-a' },
+  { _id: 'wardrobe-a' },
+  { _id: 'wardrobe-b' }
+]), {
+  clothingIds: ['wardrobe-a', 'wardrobe-b'],
+  source: 'wardrobe'
+})
+
+assert.deepStrictEqual(buildTryonContextData([
+  { _id: 'recommended-a' },
+  { _id: 'recommended-b' }
+], {
+  source: 'smartRecommend',
+  selectedClothesIds: ['recommended-a', 'recommended-b']
+}), {
+  clothingIds: ['recommended-a', 'recommended-b'],
+  source: 'recommendation'
+})
+
+assert.deepStrictEqual(buildTryonContextData([
+  { source: 'productTryon', image: 'cloud://product.png' }
+]), {
+  clothingIds: [],
+  source: 'product'
+})
 
 console.log('recommendation-entry.test.js passed')

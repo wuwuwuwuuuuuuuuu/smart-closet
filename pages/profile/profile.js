@@ -127,6 +127,7 @@ Page({
   goToWardrobe() { wx.navigateTo({ url: '/pages/wardrobe/wardrobe' }) },
   goToMyPosts() { wx.navigateTo({ url: '/pages/myPosts/myPosts' }) },
   goToHistory() { wx.navigateTo({ url: '/pages/history/history' }) },
+  goToLowCarbon() { wx.navigateTo({ url: '/pages/lowCarbon/lowCarbon' }) },
 
   goToProfileSettings() {
     console.log('点击头像，跳转到个人信息设置页面')

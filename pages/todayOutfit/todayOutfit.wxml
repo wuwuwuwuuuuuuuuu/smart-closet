@@ -1,0 +1,61 @@
+<view class="page">
+  <view class="summary-card">
+    <view>
+      <text class="summary-title">今日穿搭</text>
+      <text class="summary-meta">已记录{{count}}套，还可记录{{remaining}}套</text>
+    </view>
+    <view class="summary-badge">{{count}} / 3</view>
+  </view>
+
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-dot"></view>
+    <text>正在整理今日穿搭...</text>
+  </view>
+
+  <view class="error-state" wx:elif="{{errorMessage}}">
+    <text class="state-title">加载失败</text>
+    <text class="state-desc">{{errorMessage}}</text>
+    <button class="primary-btn compact-btn" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <view class="outfit-list count-{{count}}" wx:elif="{{outfits.length > 0}}">
+    <view class="outfit-card" wx:for="{{outfits}}" wx:key="_id">
+      <image
+        class="outfit-image"
+        src="{{item.outfitImageFileID}}"
+        mode="aspectFill"
+        bindtap="onOutfitImageTap"
+        data-outfit="{{item}}"
+      />
+      <view class="outfit-content">
+        <view class="card-actions">
+          <button
+            class="action-btn"
+            catchtap="saveImage"
+            data-outfit="{{item}}"
+            loading="{{savingId === item._id}}"
+          >保存图片</button>
+          <button
+            class="action-btn danger-btn"
+            catchtap="deleteOutfit"
+            data-outfit="{{item}}"
+            loading="{{deletingId === item._id}}"
+          >删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <view class="empty-icon-wrap">
+      <image class="empty-icon" src="/images/icons/wardrobe.png" mode="aspectFit" />
+    </view>
+    <text class="state-title">今日还没有记录穿搭</text>
+    <button class="primary-btn" bindtap="goToTryOn">去记录今日穿搭</button>
+  </view>
+
+  <view class="history-entry" bindtap="goToOutfitHistory">
+    <text>查看历史穿搭</text>
+    <text class="history-arrow">›</text>
+  </view>
+</view>

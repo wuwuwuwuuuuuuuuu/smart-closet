@@ -61,8 +61,51 @@ function isValidSmartRecommendEntry(entry, now = Date.now(), ttlMs = 30 * 60 * 1
   return now >= entry.createdAt && now - entry.createdAt <= ttlMs
 }
 
+function isValidTryonSelectionEntry(entry, now = Date.now(), ttlMs = 30 * 60 * 1000) {
+  if (!entry || !['smartRecommend', 'outfitHistory', 'todayOutfit'].includes(entry.source)) {
+    return false
+  }
+  if (!Array.isArray(entry.selectedClothesIds) || entry.selectedClothesIds.length === 0) {
+    return false
+  }
+  if (typeof entry.createdAt !== 'number' || !Number.isFinite(entry.createdAt)) {
+    return false
+  }
+  return typeof ttlMs === 'number'
+    && ttlMs > 0
+    && now >= entry.createdAt
+    && now - entry.createdAt <= ttlMs
+}
+
+function buildTryonContextData(selectedClothes = [], smartRecommendEntry = null) {
+  const safeClothes = Array.isArray(selectedClothes) ? selectedClothes : []
+  const hasProductItem = safeClothes.some(item => item && item.source === 'productTryon')
+  const clothingIds = [...new Set(
+    safeClothes
+      .map(item => item && item._id)
+      .filter(id => typeof id === 'string' && id.trim())
+      .map(id => id.trim())
+  )]
+
+  if (hasProductItem && clothingIds.length === 0) {
+    return { clothingIds: [], source: 'product' }
+  }
+  if (
+    smartRecommendEntry
+    && smartRecommendEntry.source === 'smartRecommend'
+  ) {
+    return { clothingIds, source: 'recommendation' }
+  }
+  if (clothingIds.length > 0) {
+    return { clothingIds, source: 'wardrobe' }
+  }
+  return { clothingIds: [], source: 'unknown' }
+}
+
 module.exports = {
   matchSelectedClothes,
   buildSuggestedPlacements,
-  isValidSmartRecommendEntry
+  isValidSmartRecommendEntry,
+  isValidTryonSelectionEntry,
+  buildTryonContextData
 }

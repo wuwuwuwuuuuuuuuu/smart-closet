@@ -1,5 +1,13 @@
 const db = wx.cloud.database()
 const app = getApp()
+const outfitService = require('../../services/outfitService')
+const { ensureOutfitImageFileID } = require('../../utils/outfitImage')
+const {
+  getCurrentTryonContext,
+  clearCurrentTryonContext,
+  isContextForResult,
+  createTryonRequestId
+} = require('../../utils/currentTryonContext')
 
 Page({
   data: {
@@ -19,7 +27,13 @@ Page({
     showPromptModal: false,
     promptText: '',
     
-    isCollected: false // 🌟 新增：追踪是否已收藏
+    isCollected: false, // 🌟 新增：追踪是否已收藏
+
+    tryonClothingIds: [],
+    tryonSource: 'unknown',
+    outfitRequestId: '',
+    isOutfitSaving: false,
+    isOutfitSaved: false
   },
 
   onLoad(options) {
@@ -29,12 +43,52 @@ Page({
     this.setData({
       tryonType: options.productImage ? 'product' : 'ai',
       originalTryonImage: tryonImgUrl,
-      displayImage: tryonImgUrl 
+      displayImage: tryonImgUrl,
+      outfitRequestId: createTryonRequestId(tryonImgUrl),
+      isOutfitSaving: false,
+      isOutfitSaved: false
     })
-
+    this.initialTryonResultImage = tryonImgUrl
+    this.loadTryonContext(tryonImgUrl)
     const transparentBase64 = wx.getStorageSync('currentTransparentImage')
     if (transparentBase64) {
       this.prepareTransparentImage(transparentBase64)
+    }
+  },
+
+  onShow() {
+    console.log('[OUTFIT_REAL_DEBUG] preview onShow after back', {
+      requestId: this.data.outfitRequestId,
+      displayImage: this.data.displayImage,
+      clothingIds: this.data.tryonClothingIds,
+      isOutfitSaved: this.data.isOutfitSaved,
+      isOutfitSaving: this.data.isOutfitSaving
+    })
+  },
+
+  loadTryonContext(initialResultImage) {
+    const context = getCurrentTryonContext()
+    if (isContextForResult(context, initialResultImage)) {
+      this.setData({
+        tryonClothingIds: context.clothingIds,
+        tryonSource: context.source
+      })
+      return
+    }
+
+    this.setData({
+      tryonClothingIds: [],
+      tryonSource: 'unknown'
+    })
+    wx.showToast({
+      title: '试穿信息已失效，本次将仅保存图片',
+      icon: 'none'
+    })
+  },
+
+  onUnload() {
+    if (this.initialTryonResultImage) {
+      clearCurrentTryonContext(this.initialTryonResultImage)
     }
   },
 
@@ -290,6 +344,116 @@ Page({
       wx.showToast({ title: '收藏失败', icon: 'none' })
       console.error(error)
     }
+  },
+
+  saveTodayOutfit() {
+    console.log('[OUTFIT_REAL_DEBUG] preview save click', {
+      displayImage: this.data.displayImage,
+      clothingIds: this.data.tryonClothingIds,
+      requestId: this.data.outfitRequestId,
+      isOutfitSaved: this.data.isOutfitSaved,
+      isOutfitSaving: this.data.isOutfitSaving
+    })
+    if (this.data.isOutfitSaving || this.data.isOutfitSaved) return
+    if (!this.data.displayImage) {
+      wx.showToast({ title: '当前没有可保存的穿搭图片', icon: 'none' })
+      return
+    }
+
+    const hasLinkedClothing = this.data.tryonClothingIds.length > 0
+    const content = hasLinkedClothing
+      ? '确认保存当前穿搭吗？'
+      : '当前穿搭未关联衣橱衣物，保存后不会参与衣物使用统计。'
+
+    wx.showModal({
+      title: '保存今日穿搭',
+      content,
+      cancelText: '取消',
+      confirmText: '确认保存',
+      success: result => {
+        if (result.confirm) {
+          this.performSaveTodayOutfit()
+        }
+      }
+    })
+  },
+
+  async performSaveTodayOutfit() {
+    if (this.data.isOutfitSaving || this.data.isOutfitSaved) return
+    const currentDisplayImage = this.data.displayImage
+    if (!currentDisplayImage) {
+      wx.showToast({ title: '当前没有可保存的穿搭图片', icon: 'none' })
+      return
+    }
+
+    this.setData({ isOutfitSaving: true })
+    try {
+      const outfitImageFileID = outfitService.isUsingMock()
+        ? currentDisplayImage
+        : await ensureOutfitImageFileID(currentDisplayImage)
+      const result = await outfitService.saveOutfitRecord({
+        outfitImageFileID,
+        clothingIds: this.data.tryonClothingIds,
+        requestId: this.data.outfitRequestId
+      })
+      console.log('[OUTFIT_REAL_DEBUG] preview save result', result)
+
+      if (
+        result
+        && result.code === 409
+        && result.data
+        && result.data.reason === 'DAILY_OUTFIT_LIMIT_REACHED'
+      ) {
+        this.setData({
+          isOutfitSaving: false,
+          isOutfitSaved: false
+        })
+        this.showOutfitLimitDialog()
+        return
+      }
+
+      if (!result || result.code !== 200 || !result.data) {
+        throw new Error(result && result.message ? result.message : '服务返回格式异常')
+      }
+
+      this.setData({ isOutfitSaved: true })
+      wx.showModal({
+        title: '保存成功',
+        content: '今日穿搭保存成功',
+        cancelText: '知道了',
+        confirmText: '查看今日穿搭',
+        success: modalResult => {
+          if (modalResult.confirm) {
+            wx.navigateTo({ url: '/pages/todayOutfit/todayOutfit' })
+          }
+        }
+      })
+    } catch (error) {
+      console.error('preview.performSaveTodayOutfit失败:', error)
+      wx.showToast({
+        title: error && error.message ? error.message : '保存失败，请稍后重试',
+        icon: 'none'
+      })
+    } finally {
+      this.setData({ isOutfitSaving: false })
+    }
+  },
+
+  showOutfitLimitDialog() {
+    console.log('[OUTFIT_REAL_DEBUG] limit modal shown')
+    wx.showModal({
+      title: '今日穿搭已满',
+      content: '已保存3套穿搭，是否前往删除一套后再保存？',
+      cancelText: '取消',
+      confirmText: '去删除',
+      success: modalResult => {
+        if (modalResult.confirm) {
+          wx.navigateTo({
+            url: '/pages/todayOutfit/todayOutfit'
+          })
+        }
+      }
+    })
   },
 
   saveToAlbum() {

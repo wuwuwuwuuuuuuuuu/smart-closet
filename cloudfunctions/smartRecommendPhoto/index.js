@@ -1,6 +1,10 @@
 ﻿const cloud = require('wx-server-sdk')
 const { createTextEmbedding, requestCompatibleChat } = require('./common/dashscope-multimodal-provider')
 const { pickTopKBySimilarity } = require('./common/image-vector-utils')
+const {
+  buildLowCarbonSignalMap,
+  rerankEligibleCandidates
+} = require('./utils/low-carbon-ranker')
 
 let localConfig = {}
 try {
@@ -385,25 +389,65 @@ function buildFallbackRecommendation(event = {}, reason = 'fallback', clothes = 
   const hits = clothes.map((item, index) => ({
     ...item,
     id: String(item._id),
-    score: Math.max(0, 1 - index * 0.1),
+    score: Math.max(0, 1 - index * 0.02),
     photoUrl: item.photoUrl || ''
   }))
+  const recommendation = normalizeRecommendation({
+    summary: '智能推荐已生成',
+    replyText: clothes.length
+      ? '当前图片向量检索不可用，我先从你的衣橱中挑选了一组可继续试穿的衣物。'
+      : '当前图片知识库还没有可用衣物，请先上传衣物并点击补同步。',
+    tips: [
+      reason === 'no_image_vector_hits' ? '图片知识库暂无命中，请先补同步或上传更多衣物。' : '已使用降级推荐，建议稍后重试图片知识库。'
+    ]
+  }, hits, {
+    retrievalSource: 'fallback',
+    retrievalHitCount: hits.length,
+    fallbackReason: reason,
+    requestId: event.requestId
+  })
   return {
     code: 200,
-    data: normalizeRecommendation({
-      summary: '智能推荐已生成',
-      replyText: clothes.length
-        ? '当前图片向量检索不可用，我先从你的衣橱中挑选了一组可继续试穿的衣物。'
-        : '当前图片知识库还没有可用衣物，请先上传衣物并点击补同步。',
-      tips: [
-        reason === 'no_image_vector_hits' ? '图片知识库暂无命中，请先补同步或上传更多衣物。' : '已使用降级推荐，建议稍后重试图片知识库。'
-      ]
-    }, hits, {
-      retrievalSource: 'fallback',
-      retrievalHitCount: hits.length,
-      fallbackReason: reason,
-      requestId: event.requestId
+    data: applyLowCarbonRerank(recommendation, hits, event)
+  }
+}
+
+function applyLowCarbonRerank(recommendation = {}, eligibleHits = [], event = {}) {
+  if (event.lowCarbonPriority !== true) return recommendation
+
+  // 当前信号来自前端Mock，仅用于联调。真实数据库接入后应由服务端基于
+  // clothingUsage、clothes.wearCount和clothes.lastWornAt生成可信信号。
+  const signalMap = buildLowCarbonSignalMap(event.lowCarbonSignals)
+  if (!signalMap.size) return recommendation
+
+  const selectedSet = new Set(uniqueStringList(recommendation.selectedClothesIds))
+  const selectedCandidates = eligibleHits
+    .filter(item => selectedSet.has(String(item.id || item._id)))
+    .sort((a, b) => {
+      const aScore = Number(a.score)
+      const bScore = Number(b.score)
+      return (Number.isFinite(bScore) ? bScore : 0)
+        - (Number.isFinite(aScore) ? aScore : 0)
     })
+
+  // 只处理模型或fallback已经选出的合格集合，不会把其他衣物重新加入。
+  const reranked = rerankEligibleCandidates(selectedCandidates, signalMap, {
+    enabled: true
+  })
+  if (!reranked.applied) return recommendation
+
+  const selectedClothesIds = reranked.candidates
+    .map(item => String(item.id || item._id))
+    .filter(Boolean)
+  const selectedPhotoUrls = reranked.candidates
+    .map(item => normalizeInput(item.photoUrl))
+    .filter(Boolean)
+  return {
+    ...recommendation,
+    selectedClothesIds,
+    selectedPhotoUrls,
+    lowCarbonApplied: true,
+    lowCarbonReason: '优先考虑了较少使用的合适衣物'
   }
 }
 
@@ -540,7 +584,7 @@ exports.main = async (event = {}) => {
 
     return {
       code: 200,
-      data: recommendation
+      data: applyLowCarbonRerank(recommendation, mergedHits, event)
     }
   } catch (error) {
     logError('recommend.main', error)

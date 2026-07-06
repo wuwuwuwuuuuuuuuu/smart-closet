@@ -6,8 +6,14 @@ const { logWarning } = require('../../utils/logger')
 const {
   matchSelectedClothes,
   buildSuggestedPlacements,
-  isValidSmartRecommendEntry
+  isValidTryonSelectionEntry,
+  buildTryonContextData
 } = require('./tryon.helpers')
+const { setCurrentTryonContext } = require('../../utils/currentTryonContext')
+const {
+  getTryonSelectionEntry,
+  markTryonSelectionEntryConsumed
+} = require('../../utils/tryonSelectionEntry')
 
 Page({
   data: {
@@ -113,10 +119,9 @@ Page({
 
   consumePendingSmartRecommendEntry() {
     try {
-      const entry = wx.getStorageSync('smartRecommendTryonEntry')
+      const entry = getTryonSelectionEntry()
       
-      // 🌟 结合 helpers 中的 isValidSmartRecommendEntry 进行有效期等合法性校验
-      if (!entry || entry.active !== true || !isValidSmartRecommendEntry(entry)) {
+      if (!entry || entry.active !== true || !isValidTryonSelectionEntry(entry)) {
         if (entry && entry.active === true) {
           logWarning('tryon.consumePendingSmartRecommendEntry', 'invalid or expired entry ignored')
         }
@@ -125,11 +130,10 @@ Page({
       }
 
       // 消费后标记为非活跃状态
-      wx.setStorageSync('smartRecommendTryonEntry', {
-        ...entry,
-        active: false
+      markTryonSelectionEntryConsumed(entry)
+      this.setData({
+        smartRecommendEntry: entry.source === 'smartRecommend' ? entry : null
       })
-      this.setData({ smartRecommendEntry: entry })
 
       return entry
     } catch (error) {
@@ -152,19 +156,42 @@ Page({
       logWarning('tryon.applySmartRecommendEntryIfNeeded', 'no recommended clothes matched current wardrobe', {
         selectedClothesIds: entry.selectedClothesIds
       })
+      if (['outfitHistory', 'todayOutfit'].includes(entry.source)) {
+        wx.showToast({
+          title: entry.source === 'outfitHistory'
+            ? '这套历史穿搭中的衣物已不在当前衣橱中'
+            : '这套穿搭中的衣物已不在当前衣橱中',
+          icon: 'none',
+          duration: 3000
+        })
+      }
       this.pendingSmartRecommendEntry = null
       return
+    }
+
+    const requestedCount = [...new Set(entry.selectedClothesIds)].length
+    if (
+      ['outfitHistory', 'todayOutfit'].includes(entry.source)
+      && matchedClothes.length < requestedCount
+    ) {
+      wx.showToast({
+        title: entry.source === 'outfitHistory'
+          ? '部分历史衣物已不在衣橱中，已为你选择剩余衣物'
+          : '部分衣物已不在衣橱中，已为你选择剩余衣物',
+        icon: 'none',
+        duration: 3000
+      })
     }
 
     const timestamp = Date.now()
     // 🌟 调用 helpers 中的 buildSuggestedPlacements 进行排版
     const placedClothes = buildSuggestedPlacements(matchedClothes).map(item => ({
       ...item,
-      boardId: `recommend_${item._id}_${timestamp}`
+      boardId: `${entry.source}_${item._id}_${timestamp}`
     }))
 
     this.setData({
-      smartRecommendEntry: entry,
+      smartRecommendEntry: entry.source === 'smartRecommend' ? entry : null,
       selectedClothes: placedClothes
     })
     this.pendingSmartRecommendEntry = null
@@ -313,13 +340,17 @@ Page({
       // 智能区分上下装
       let topGarmentFileID = ''
       let bottomGarmentFileID = ''
+      let topGarmentItem = null
+      let bottomGarmentItem = null
 
       selectedClothes.forEach(item => {
         const garmentFileID = item.tryonImageFileID || item.image
         if (item.category === '下装') {
           bottomGarmentFileID = garmentFileID
+          bottomGarmentItem = item
         } else {
           topGarmentFileID = garmentFileID
+          topGarmentItem = item
         }
       })
 
@@ -351,7 +382,27 @@ Page({
           console.warn('⚠️ 云函数返回结果中没有找到透明人像 Base64！如果你确认在 aiTryon 中做了百度抠图，请检查返回的字段名。')
         }
 
-        // 跳转到预览页
+        const tryonContext = buildTryonContextData(
+          [topGarmentItem, bottomGarmentItem].filter(Boolean),
+          this.data.smartRecommendEntry
+        )
+
+        // 只在试穿成功后写入本次上下文，衣物ID均来自真实 clothes._id。
+        try {
+          setCurrentTryonContext({
+            ...tryonContext,
+            createdAt: new Date().toISOString(),
+            resultImage: finalImageUrl
+          })
+        } catch (contextError) {
+          console.error('tryon.currentTryonContext写入失败:', contextError)
+          wx.showToast({
+            title: '试穿信息保存失败，本次将仅保存图片',
+            icon: 'none'
+          })
+        }
+
+        // 写入上下文后再跳转到预览页
         wx.navigateTo({
           url: `/pages/preview/preview?img=${encodeURIComponent(finalImageUrl)}`
         })

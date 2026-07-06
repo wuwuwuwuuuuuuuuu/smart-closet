@@ -31,6 +31,13 @@
     <image src="cloud://cloudbase-2gvrvh4ve926f3d8.636c-cloudbase-2gvrvh4ve926f3d8-1411253050/clothing-images/images/img7.png" class="diary-icon" mode="aspectFit" />
   </view>
 
+  <!-- 今日穿搭入口 -->
+  <view class="today-outfit-card" bindtap="goToTodayOutfit">
+    <image src="/images/icons/wardrobe.png" class="today-outfit-icon" mode="aspectFit" />
+    <text class="today-outfit-title">今日穿搭</text>
+    <text class="today-outfit-arrow">›</text>
+  </view>
+
   <!-- 功能按钮区 -->
   <view class="function-grid">
     <view class="function-item" bindtap="uploadClothes">

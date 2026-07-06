@@ -54,6 +54,11 @@
     </view>
 
     <view class="settings-section">
+      <view class="setting-item" bindtap="goToLowCarbon">
+        <text class="setting-text">闲置预警</text>
+        <text class="arrow">></text>
+      </view>
+
       <view class="setting-item" bindtap="goToHistory">
         <text class="setting-text">生成历史</text>
         <text class="arrow">></text> 

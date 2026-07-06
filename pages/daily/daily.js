@@ -14,6 +14,7 @@ const {
   inferPreferredStyle,
   inferPreferredColor
 } = require('./daily.helpers')
+const lowCarbonService = require('../../services/lowCarbonService')
 
 Page({
   data: {
@@ -30,6 +31,8 @@ Page({
     pendingUserInput: '',
     conversationList: [],
     recommendationResult: null,
+    lowCarbonPriorityEnabled: false,
+    lowCarbonReason: '',
     isRecommendationLoading: false,
     isLocating: false,
     amapKey: ''
@@ -306,7 +309,7 @@ Page({
     })
   },
 
-  submitRecommendationRequest() {
+  async submitRecommendationRequest() {
     const userQuery = normalizeInput(this.data.pendingUserInput)
     if (!userQuery) {
       return wx.showToast({ title: '请先输入需求', icon: 'none' })
@@ -315,7 +318,7 @@ Page({
     this.appendConversationMessage({ role: 'user', type: 'text', text: userQuery })
     this.setData({ pendingUserInput: '', isRecommendationLoading: true })
 
-    const payload = buildRecommendationPayload(userQuery, {
+    const basePayload = buildRecommendationPayload(userQuery, {
       city: this.data.currentCity,
       currentDateLabel: this.data.currentDateLabel,
       weatherSuggestion: this.data.weatherSuggestion,
@@ -326,6 +329,27 @@ Page({
         preferredColor: inferPreferredColor(userQuery)
       }
     })
+    let payload = basePayload
+    try {
+      const signalResult = await lowCarbonService.getRecommendationSignals()
+      const signalData = signalResult && signalResult.code === 200
+        ? signalResult.data
+        : null
+      const enabled = Boolean(signalData && signalData.enabled)
+      this.setData({ lowCarbonPriorityEnabled: enabled })
+      if (enabled) {
+        payload = {
+          ...basePayload,
+          lowCarbonPriority: true,
+          // 当前为前端Mock联动。真实数据库接入后应由服务端根据
+          // clothingUsage、clothes.wearCount和clothes.lastWornAt生成。
+          lowCarbonSignals: Array.isArray(signalData.signals) ? signalData.signals : []
+        }
+      }
+    } catch (error) {
+      logWarning('daily.lowCarbonSignals', 'usage signals unavailable, continue original recommendation')
+      this.setData({ lowCarbonPriorityEnabled: false })
+    }
 
     this.requestRecommendationWithFallback(payload)
       .then(result => {
@@ -335,7 +359,12 @@ Page({
           type: 'result-card',
           data: normalizedResult
         })
-        this.setData({ recommendationResult: normalizedResult })
+        this.setData({
+          recommendationResult: normalizedResult,
+          lowCarbonReason: normalizedResult.lowCarbonApplied
+            ? normalizedResult.lowCarbonReason
+            : ''
+        })
       })
       .catch(error => {
         logError('daily.submitRecommendationRequest', error)
