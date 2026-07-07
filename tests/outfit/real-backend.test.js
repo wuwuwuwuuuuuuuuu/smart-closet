@@ -8,6 +8,10 @@ const {
 } = require('../../cloudfunctions/getOutfitHistory/service')
 const { expireOutfitDetails } = require('../../cloudfunctions/expireOutfitDetails/service')
 const {
+  getDocumentOrNull,
+  isDocumentDoesNotExistError
+} = require('../../cloudfunctions/saveOutfitRecord/common/cloudbase-doc-utils')
+const {
   buildUsageDocumentId
 } = require('../../cloudfunctions/saveOutfitRecord/common/outfit-document-id')
 
@@ -128,9 +132,53 @@ function save(gateway, requestId, clothingIds = ['A'], extra = {}) {
   })
 }
 
+function createDocumentReader(errorOrData) {
+  return {
+    collection() {
+      return {
+        doc() {
+          return {
+            async get() {
+              if (errorOrData instanceof Error || errorOrData && errorOrData.errMsg) {
+                throw errorOrData
+              }
+              return { data: errorOrData }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 async function run() {
+  const cloudbaseMissingError = {
+    errMsg: 'document.get:fail document with _id 4fa11a81d66c1a54aa8b2816821fa8ea527a25b017871d1582b16709d19c234e does not exist'
+  }
+  assert.strictEqual(isDocumentDoesNotExistError(cloudbaseMissingError), true)
+  assert.strictEqual(await getDocumentOrNull(
+    createDocumentReader(cloudbaseMissingError),
+    'outfitRecords',
+    'missing'
+  ), null)
+  await assert.rejects(() => getDocumentOrNull(
+    createDocumentReader({ errMsg: 'document.get:fail permission denied' }),
+    'outfitRecords',
+    'forbidden'
+  ), error => error && error.errMsg === 'document.get:fail permission denied')
+  assert.deepStrictEqual(await getDocumentOrNull(
+    createDocumentReader({ _id: 'exists' }),
+    'outfitRecords',
+    'exists'
+  ), { _id: 'exists' })
+
   const gateway = new Gateway()
   const first = await save(gateway, 'r1', ['A', 'A', '', 'B'])
+  assert.strictEqual(first.code, 200)
+  assert.strictEqual(first.data.idempotent, false)
+  assert.strictEqual(first.data.slot, 1)
+  assert.strictEqual(gateway.outfits.length, 1)
+  assert.strictEqual(gateway.usages.find(item => item.clothingId === 'B').count, 1)
   const second = await save(gateway, 'r2', ['A'])
   const third = await save(gateway, 'r3', [])
   assert.deepStrictEqual([first.data.slot, second.data.slot, third.data.slot], [1, 2, 3])
@@ -151,6 +199,41 @@ async function run() {
   })).code, 200)
   assert.strictEqual(gateway.clothes.find(item => item._id === 'A').wearCount, 1)
   assert.strictEqual((await save(gateway, 'r4')).data.slot, 2)
+
+  const invalidClothingGateway = new Gateway()
+  const invalidClothing = await save(invalidClothingGateway, 'invalid-clothing', ['missing-clothing'])
+  assert.strictEqual(invalidClothing.code, 404)
+  assert.strictEqual(invalidClothingGateway.clothes.some(item => item._id === 'missing-clothing'), false)
+  assert.strictEqual(invalidClothingGateway.outfits.length, 0)
+
+  const missingUsageDeleteGateway = new Gateway()
+  missingUsageDeleteGateway.outfits.push({
+    _id: 'manual-outfit',
+    _openid: OPENID,
+    user_id: USER_ID,
+    dateKey: '2026-07-05',
+    slot: 1,
+    outfitImageFileID: 'cloud://env/manual.png',
+    clothingIds: ['A'],
+    requestId: 'manual',
+    detailsExpired: false
+  })
+  missingUsageDeleteGateway.clothes[0].wearCount = 0
+  const missingUsageDelete = await deleteTodayOutfit({
+    gateway: missingUsageDeleteGateway,
+    openid: OPENID,
+    event: { outfitId: 'manual-outfit' },
+    now: NOW
+  })
+  assert.strictEqual(missingUsageDelete.code, 200)
+  assert.strictEqual(missingUsageDeleteGateway.outfits.length, 0)
+
+  assert.strictEqual((await deleteTodayOutfit({
+    gateway: new Gateway(),
+    openid: OPENID,
+    event: { outfitId: 'missing-outfit' },
+    now: NOW
+  })).code, 404)
 
   const historical = { ...gateway.outfits[0], _id: 'old', dateKey: '2026-07-04' }
   gateway.outfits.push(historical)

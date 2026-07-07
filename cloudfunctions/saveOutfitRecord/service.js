@@ -86,8 +86,10 @@ async function saveOutfitRecord({ gateway, openid, event = {}, now = new Date() 
 
       const todayOutfits = []
       for (const slot of [1, 2, 3]) {
+        console.log('[OUTFIT_CLOUD] checking slot', { slot })
         const outfit = await tx.findOutfit(buildOutfitDocumentId(openid, dateKey, slot))
         if (outfit) todayOutfits.push(outfit)
+        else console.log('[OUTFIT_CLOUD] empty slot found', { slot })
       }
       const slot = allocateSmallestAvailableSlot(todayOutfits)
       if (!slot) {
@@ -118,6 +120,7 @@ async function saveOutfitRecord({ gateway, openid, event = {}, now = new Date() 
         if (usage) {
           await tx.updateUsage(usageId, { count: (Number(usage.count) || 0) + 1 })
         } else {
+          console.log('[OUTFIT_CLOUD] usage document missing, create new')
           await tx.setUsage(usageId, {
             _openid: openid,
             user_id: user._id,
@@ -131,6 +134,7 @@ async function saveOutfitRecord({ gateway, openid, event = {}, now = new Date() 
           lastWornAt: now
         })
       }
+      console.log('[OUTFIT_CLOUD] outfit saved', { dateKey, slot, clothingCount: clothes.length })
     })
   } catch (error) {
     if (error.businessResponse) return error.businessResponse

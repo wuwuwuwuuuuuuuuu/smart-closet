@@ -1,4 +1,4 @@
-const USE_MOCK_OUTFIT = true
+const USE_MOCK_OUTFIT = false
 
 const implementation = USE_MOCK_OUTFIT
   ? require('./outfitService.mock')

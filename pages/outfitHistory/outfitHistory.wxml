@@ -40,12 +40,16 @@
     <button class="primary-btn compact-btn" bindtap="retryLoad">重新加载</button>
   </view>
 
-  <view class="outfit-list count-{{records.length}}" wx:elif="{{records.length}}">
-    <view class="outfit-card" wx:for="{{records}}" wx:key="_id">
+  <view class="outfit-list layout-{{records.length}}" wx:elif="{{records.length}}">
+    <view
+      class="outfit-card {{records.length === 3 && index === 2 ? 'third-card' : ''}}"
+      wx:for="{{records}}"
+      wx:key="_id"
+    >
       <image
         class="outfit-image"
         src="{{item.outfitImageFileID}}"
-        mode="aspectFill"
+        mode="widthFix"
         data-record="{{item}}"
         bindtap="onOutfitImageTap"
       />
