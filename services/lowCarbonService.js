@@ -1,4 +1,4 @@
-const USE_MOCK_LOW_CARBON = true
+const USE_MOCK_LOW_CARBON = false
 
 const implementation = USE_MOCK_LOW_CARBON
   ? require('./lowCarbonService.mock')
