@@ -14,7 +14,7 @@
   <block wx:else>
     <view class="empty-wardrobe" wx:if="{{totalClothes === 0}}">
       <image src="/images/icons/wardrobe.png" class="empty-icon" mode="aspectFit" />
-      <text class="state-title">衣橱还没有衣物</text>
+      <text class="state-title">闲置衣橱还没有衣物</text>
     </view>
 
     <view class="metric-card idle-card" bindtap="goToIdleClothes">
