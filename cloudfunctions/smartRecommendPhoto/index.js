@@ -2,9 +2,9 @@
 const { createTextEmbedding, requestCompatibleChat } = require('./common/dashscope-multimodal-provider')
 const { pickTopKBySimilarity } = require('./common/image-vector-utils')
 const {
-  buildLowCarbonSignalMap,
-  rerankEligibleCandidates
-} = require('./utils/low-carbon-ranker')
+  buildTrustedLowCarbonContext,
+  applyLowCarbonRerank
+} = require('./utils/trusted-low-carbon')
 
 let localConfig = {}
 try {
@@ -385,7 +385,7 @@ function enforceOutfitSelectionRules({ selectedClothesIds = [], hits = [], maxCo
   return firstPrimary ? [String(firstPrimary.id || firstPrimary._id)] : []
 }
 
-function buildFallbackRecommendation(event = {}, reason = 'fallback', clothes = []) {
+function buildFallbackRecommendation(event = {}, reason = 'fallback', clothes = [], lowCarbonContext = {}) {
   const hits = clothes.map((item, index) => ({
     ...item,
     id: String(item._id),
@@ -408,46 +408,7 @@ function buildFallbackRecommendation(event = {}, reason = 'fallback', clothes = 
   })
   return {
     code: 200,
-    data: applyLowCarbonRerank(recommendation, hits, event)
-  }
-}
-
-function applyLowCarbonRerank(recommendation = {}, eligibleHits = [], event = {}) {
-  if (event.lowCarbonPriority !== true) return recommendation
-
-  // 当前信号来自前端Mock，仅用于联调。真实数据库接入后应由服务端基于
-  // clothingUsage、clothes.wearCount和clothes.lastWornAt生成可信信号。
-  const signalMap = buildLowCarbonSignalMap(event.lowCarbonSignals)
-  if (!signalMap.size) return recommendation
-
-  const selectedSet = new Set(uniqueStringList(recommendation.selectedClothesIds))
-  const selectedCandidates = eligibleHits
-    .filter(item => selectedSet.has(String(item.id || item._id)))
-    .sort((a, b) => {
-      const aScore = Number(a.score)
-      const bScore = Number(b.score)
-      return (Number.isFinite(bScore) ? bScore : 0)
-        - (Number.isFinite(aScore) ? aScore : 0)
-    })
-
-  // 只处理模型或fallback已经选出的合格集合，不会把其他衣物重新加入。
-  const reranked = rerankEligibleCandidates(selectedCandidates, signalMap, {
-    enabled: true
-  })
-  if (!reranked.applied) return recommendation
-
-  const selectedClothesIds = reranked.candidates
-    .map(item => String(item.id || item._id))
-    .filter(Boolean)
-  const selectedPhotoUrls = reranked.candidates
-    .map(item => normalizeInput(item.photoUrl))
-    .filter(Boolean)
-  return {
-    ...recommendation,
-    selectedClothesIds,
-    selectedPhotoUrls,
-    lowCarbonApplied: true,
-    lowCarbonReason: '优先考虑了较少使用的合适衣物'
+    data: applyLowCarbonRerank(recommendation, hits, lowCarbonContext)
   }
 }
 
@@ -542,14 +503,16 @@ exports.main = async (event = {}) => {
         errMsg: error && error.message
       })
       const fallbackClothes = await attachPhotoUrls(await loadFallbackClothes(user._id, 4))
-      return buildFallbackRecommendation(event, 'text_embedding_failed', fallbackClothes)
+      const lowCarbonContext = buildTrustedLowCarbonContext(user, fallbackClothes, new Date(), { logWarning })
+      return buildFallbackRecommendation(event, 'text_embedding_failed', fallbackClothes, lowCarbonContext)
     }
 
     const vectorDocs = await loadUserImageVectors(user._id)
     if (!vectorDocs.length) {
       logWarning('recommend.imageRetrieval', 'no image vectors found', { userId: user._id })
       const fallbackClothes = await attachPhotoUrls(await loadFallbackClothes(user._id, 4))
-      return buildFallbackRecommendation(event, 'no_image_vectors', fallbackClothes)
+      const lowCarbonContext = buildTrustedLowCarbonContext(user, fallbackClothes, new Date(), { logWarning })
+      return buildFallbackRecommendation(event, 'no_image_vectors', fallbackClothes, lowCarbonContext)
     }
 
     const topHits = pickTopKBySimilarity({
@@ -569,11 +532,13 @@ exports.main = async (event = {}) => {
     if (!topHits.length) {
       logWarning('recommend.imageRetrieval', 'no image vector hits after similarity ranking')
       const fallbackClothes = await attachPhotoUrls(await loadFallbackClothes(user._id, 4))
-      return buildFallbackRecommendation(event, 'no_image_vector_hits', fallbackClothes)
+      const lowCarbonContext = buildTrustedLowCarbonContext(user, fallbackClothes, new Date(), { logWarning })
+      return buildFallbackRecommendation(event, 'no_image_vector_hits', fallbackClothes, lowCarbonContext)
     }
 
     const clothes = await loadClothesByIds(topHits.map(item => item.id))
     const mergedHits = await attachPhotoUrls(mergeHitsWithClothes(topHits, clothes))
+    const lowCarbonContext = buildTrustedLowCarbonContext(user, mergedHits, new Date(), { logWarning })
     const recommendation = await buildMultimodalRecommendation({
       userQuery,
       weatherInfo: event.weatherInfo,
@@ -584,7 +549,7 @@ exports.main = async (event = {}) => {
 
     return {
       code: 200,
-      data: applyLowCarbonRerank(recommendation, mergedHits, event)
+      data: applyLowCarbonRerank(recommendation, mergedHits, lowCarbonContext)
     }
   } catch (error) {
     logError('recommend.main', error)
@@ -595,5 +560,11 @@ exports.main = async (event = {}) => {
 
     }
   }
+}
+
+exports.__test__ = {
+  buildTrustedLowCarbonContext,
+  applyLowCarbonRerank,
+  buildFallbackRecommendation
 }
 
