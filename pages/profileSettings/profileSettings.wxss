@@ -328,3 +328,140 @@
 .date-picker-btn.cancel {
   color: #666666;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+}
+
+.container {
+  background: transparent;
+}
+
+.avatar-section {
+  padding: 82rpx 0 42rpx;
+  animation: fadeUp 520ms ease both;
+}
+
+.avatar-container {
+  width: 136rpx;
+  height: 136rpx;
+}
+
+.avatar-image {
+  width: 136rpx;
+  height: 136rpx;
+  border-radius: 50%;
+  background: #edf3ef;
+  border: 6rpx solid #ffffff;
+  box-shadow: 0 16rpx 34rpx rgba(37, 49, 44, 0.14);
+}
+
+.edit-button {
+  width: 46rpx;
+  height: 46rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 10rpx 20rpx rgba(47, 156, 125, 0.24);
+}
+
+.form-section {
+  margin: 0 24rpx;
+  padding: 10rpx 26rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms 80ms ease both;
+}
+
+.form-item {
+  height: 98rpx;
+  border-bottom-color: rgba(38, 49, 44, 0.08);
+}
+
+.item-label {
+  color: #26312c;
+  font-weight: 800;
+}
+
+.item-value,
+.nickname-input-direct {
+  color: #26312c;
+}
+
+.item-value.placeholder,
+.nickname-input-direct.placeholder {
+  color: #8a9690;
+}
+
+.save-section {
+  padding: 58rpx 24rpx 42rpx;
+}
+
+.save-btn {
+  height: 92rpx;
+  border-radius: 999rpx;
+  background: #dce5df;
+}
+
+.save-btn.active {
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 18rpx 38rpx rgba(47, 156, 125, 0.22);
+}
+
+.save-btn.active .save-text {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.modal-mask,
+.date-picker-mask {
+  background: rgba(20, 31, 27, 0.54);
+}
+
+.modal-content,
+.date-picker-content {
+  border-radius: 36rpx 36rpx 0 0;
+  box-shadow: 0 -18rpx 44rpx rgba(37, 49, 44, 0.16);
+}
+
+.modal-header,
+.date-picker-header {
+  border-bottom-color: rgba(38, 49, 44, 0.08);
+}
+
+.modal-title,
+.date-picker-title {
+  color: #26312c;
+  font-weight: 900;
+}
+
+.nickname-input,
+.gender-option {
+  border-radius: 24rpx;
+  border-color: rgba(47, 156, 125, 0.14);
+  background: #f8fbf8;
+}
+
+.gender-option.selected {
+  border-color: #2f9c7d;
+  background: linear-gradient(135deg, #eaf8f1 0%, #edf5ff 100%);
+}
+
+.gender-check,
+.date-picker-btn {
+  color: #2f9c7d;
+}
+
+.modal-btn {
+  border-radius: 999rpx;
+}
+
+.modal-btn.cancel {
+  background: #f2f7f4;
+}
+
+.modal-btn.confirm {
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+}

@@ -88,7 +88,7 @@
           </view>
         </view>
       </view>
-      <view style="height: 140rpx;"></view>
+      <view class="bottom-safe-space"></view>
     </view>
   </scroll-view>
 

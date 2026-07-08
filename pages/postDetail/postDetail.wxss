@@ -8,6 +8,7 @@
 
 .content-scroll {
   flex: 1;
+  min-height: 0;
 }
 
 /* 导航栏图标 */
@@ -252,6 +253,8 @@
 /* ================= 底部固定悬浮交互栏 ================= */
 .bottom-bar {
   position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
   width: 100%;
   display: flex;
@@ -334,4 +337,125 @@
   line-height: 64rpx;
   border-radius: 32rpx;
   white-space: nowrap;
+}
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+}
+
+.container {
+  background: transparent;
+}
+
+.nav-bar {
+  padding: 24rpx 30rpx;
+}
+
+.image-swiper-section {
+  height: 104vw;
+  overflow: hidden;
+  border-radius: 0 0 36rpx 36rpx;
+  box-shadow: 0 18rpx 42rpx rgba(37, 49, 44, 0.13);
+}
+
+.swiper-indicator {
+  right: 28rpx;
+  bottom: 28rpx;
+  background: rgba(38, 49, 44, 0.54);
+  backdrop-filter: blur(8px);
+}
+
+.post-info {
+  margin: 24rpx 24rpx 0;
+  padding: 28rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms ease both;
+}
+
+.post-title {
+  color: #26312c;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.post-content {
+  color: #3c4842;
+}
+
+.post-time,
+.comment-time,
+.reply-time,
+.comment-like-count,
+.reply-like-count,
+.expand-text {
+  color: #7f8c85;
+}
+
+.author-avatar,
+.comment-avatar,
+.reply-avatar {
+  box-shadow: 0 6rpx 14rpx rgba(37, 49, 44, 0.12);
+}
+
+.comment-section {
+  margin: 24rpx;
+  padding: 28rpx;
+  border: 0;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+}
+
+.section-title {
+  color: #26312c;
+  font-weight: 800;
+}
+
+.comment-author,
+.reply-author,
+.reply-target,
+.reply-text {
+  color: #2f9c7d;
+}
+
+.reply-list {
+  padding: 16rpx;
+  border-radius: 22rpx;
+  background: #f4f8f5;
+}
+
+.bottom-safe-space {
+  height: 170rpx;
+}
+
+.bottom-bar {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 0;
+  box-shadow: 0 -12rpx 30rpx rgba(37, 49, 44, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.input-section {
+  background: #f2f7f4;
+}
+
+.send-btn {
+  background: linear-gradient(135deg, #ff7f6e 0%, #2f9c7d 100%);
+  box-shadow: 0 12rpx 24rpx rgba(47, 156, 125, 0.18);
+}
+
+.liked-text {
+  color: #ff5964 !important;
+}
+
+.collected-text {
+  color: #f2a51a !important;
 }

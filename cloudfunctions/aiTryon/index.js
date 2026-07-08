@@ -27,12 +27,12 @@ function getRequiredTempURL(urlMap, fileID, fieldName) {
 exports.main = async (event, context) => {
   const { personImageFileID, topGarmentFileID, bottomGarmentFileID } = event
   
-  // 🔑 你的 API Keys
-  const API_KEY = '****************' // 阿里云DashScope API Key
+  // 🔑 你的 API Keys (请替换为你的真实密钥)
+  const API_KEY = '***********' // 阿里云DashScope API Key
   
-  // 👇 百度AI开放平台API配置（可选，用于人像抠图）
-  const BAIDU_AK = '**********'
-  const BAIDU_SK = '********'
+  // 👇 百度AI开放平台API配置 (用于人像抠图)
+  const BAIDU_AK = '*************'
+  const BAIDU_SK = '********************'
 
   try {
     validateCloudFileID(personImageFileID, 'personImageFileID')
@@ -114,11 +114,45 @@ exports.main = async (event, context) => {
 
     if (!isCompleted) return { code: 408, message: 'AI试穿生成超时' }
 
+    // ==========================================
+    // === 4. 调用百度接口进行人像抠图 ===
+    // ==========================================
+    let transparentBase64 = ''
+    try {
+      // 4.1 获取百度 Access Token
+      const tokenRes = await axios.post(
+        `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${BAIDU_AK}&client_secret=${BAIDU_SK}`
+      )
+      const accessToken = tokenRes.data.access_token
+
+      // 4.2 将阿里生成的试穿图下载下来，转为 Base64 给百度
+      const imageRes = await axios.get(finalImageUrl, { responseType: 'arraybuffer' })
+      const imageBase64 = Buffer.from(imageRes.data, 'binary').toString('base64')
+
+      // 4.3 呼叫百度人像分割 API (body_seg)
+      const baiduRes = await axios.post(
+        `https://aip.baidubce.com/rest/2.0/image-classify/v1/body_seg?access_token=${accessToken}`,
+        qs.stringify({ image: imageBase64 }), 
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      )
+
+      if (baiduRes.data && baiduRes.data.foreground) {
+        // 百度的 foreground 字段就是透明背景的人像 base64，加上前缀供前端使用
+        transparentBase64 = 'data:image/png;base64,' + baiduRes.data.foreground
+      } else {
+        console.warn('⚠️ 百度抠图未返回 foreground:', baiduRes.data)
+      }
+    } catch (baiduErr) {
+      console.error('❌ 百度抠图失败:', baiduErr.response?.data || baiduErr.message)
+      // 抠图失败不中断流程，依然返回原图给前端兜底
+    }
+
     // === 5. 返回最终结果 ===
     return {
       code: 200,
       data: { 
         result_url: finalImageUrl,             // 带有背景的原试穿图
+        transparentBase64: transparentBase64,  // 新增：百度返回的透明抠图结果
         message: '试穿生成成功'
       }
     }

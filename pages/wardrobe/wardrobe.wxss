@@ -1,14 +1,17 @@
-/* 我的衣橱页面样式 */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #eef7f2 100%);
+}
+
 .container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #FFFFFF;
+  padding: 0;
+  background: transparent;
 }
 
-/* 搜索框 */
 .search-section {
-  padding: 40rpx 20rpx 20rpx;
+  padding: 30rpx 24rpx 18rpx;
   display: flex;
   align-items: center;
   gap: 16rpx;
@@ -16,44 +19,48 @@
 
 .search-box {
   flex: 1;
-  height: 80rpx;
-  background: #EDEDED;
-  border-radius: 12rpx;
+  height: 82rpx;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24rpx;
+  padding: 0 26rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(47, 156, 125, 0.1);
+  box-shadow: 0 12rpx 30rpx rgba(37, 49, 44, 0.07);
 }
 
 .search-input {
   flex: 1;
   min-width: 0;
-  height: 80rpx;
+  height: 82rpx;
+  color: #26312c;
   font-size: 28rpx;
-  color: #333333;
 }
 
 .search-placeholder {
-  color: #999999;
+  color: #98a39d;
 }
 
 .clear-search {
   width: 56rpx;
   height: 56rpx;
+  border-radius: 50%;
   line-height: 56rpx;
   text-align: center;
-  font-size: 34rpx;
-  color: #999999;
+  color: #7f8c85;
+  font-size: 32rpx;
+  background: rgba(38, 49, 44, 0.06);
 }
 
 .search-icon {
   width: 32rpx;
   height: 32rpx;
+  opacity: 0.76;
 }
 
-/* 季节分类标签 */
 .season-tabs {
-  padding: 0 20rpx 20rpx;
+  padding: 0 24rpx 18rpx;
 }
 
 .tab-scroll {
@@ -62,144 +69,181 @@
 
 .tab-container {
   display: inline-flex;
-  gap: 16rpx;
+  gap: 14rpx;
+  padding-bottom: 4rpx;
 }
 
 .tab-item {
-  padding: 16rpx 32rpx;
-  background: #EDEDED;
-  border-radius: 12rpx;
+  min-width: 92rpx;
+  padding: 16rpx 28rpx;
+  border-radius: 999rpx;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1rpx solid rgba(38, 49, 44, 0.06);
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .tab-item.active {
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 12rpx 24rpx rgba(47, 156, 125, 0.2);
+}
+
+.tab-item:active {
+  transform: scale(0.96);
 }
 
 .tab-text {
-  font-size: 28rpx;
-  color: #333333;
-  font-weight: 400;
+  color: #627068;
+  font-size: 27rpx;
+  font-weight: 600;
 }
 
 .tab-item.active .tab-text {
-  color: #FFFFFF;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 800;
 }
 
-/* 主体内容区 */
 .main-content {
   flex: 1;
+  min-height: 0;
   display: flex;
   overflow: hidden;
 }
 
-/* 左侧分类侧边栏 */
 .sidebar {
-  width: 220rpx;
-  background: #EDEDED;
+  width: 206rpx;
+  margin: 0 0 0 18rpx;
+  padding: 18rpx 0 28rpx;
+  border-radius: 28rpx 28rpx 0 0;
   display: flex;
   flex-direction: column;
-  padding: 20rpx 0;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12rpx 30rpx rgba(37, 49, 44, 0.06);
 }
 
 .category-item {
-  height: 80rpx;
+  min-height: 76rpx;
+  margin: 0 14rpx 10rpx 0;
+  padding: 0 22rpx;
+  border-radius: 0 999rpx 999rpx 0;
   display: flex;
   align-items: center;
-  padding: 0 24rpx;
-  margin: 0 0 8rpx 0;
-  transition: all 0.3s ease;
+  transition: transform 180ms ease, background 180ms ease;
 }
 
 .category-item.active {
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
-  border-radius: 0 12rpx 12rpx 0;
+  background: linear-gradient(135deg, #ffffff 0%, #e8f8f1 100%);
+  box-shadow: 0 10rpx 22rpx rgba(47, 156, 125, 0.12);
+}
+
+.category-item:active {
+  transform: translateX(4rpx);
 }
 
 .category-text {
-  font-size: 28rpx;
-  color: #333333;
-  font-weight: 400;
-}
-
-.category-item.active .category-text {
-  color: #FFFFFF;
+  color: #6d7972;
+  font-size: 27rpx;
   font-weight: 600;
 }
 
-/* 右侧内容区 */
+.category-item.active .category-text {
+  color: #2f9c7d;
+  font-weight: 800;
+}
+
 .content-area {
   flex: 1;
-  background: #FFFFFF;
-  padding: 20rpx;
+  min-width: 0;
+  padding: 0 18rpx 160rpx 18rpx;
   overflow-y: auto;
 }
 
-/* 空状态 */
 .empty-state {
+  min-height: 500rpx;
+  margin: 24rpx 0;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1rpx solid rgba(255, 255, 255, 0.78);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 400rpx;
+  text-align: center;
+  box-shadow: 0 16rpx 36rpx rgba(37, 49, 44, 0.06);
 }
 
 .empty-text {
-  font-size: 28rpx;
-  color: #999999;
-  margin-bottom: 40rpx;
+  max-width: 420rpx;
+  margin-bottom: 36rpx;
+  color: #7f8c85;
+  font-size: 27rpx;
+  line-height: 1.7;
 }
 
-.add-btn {
-  width: 200rpx;
-  height: 80rpx;
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
-  border-radius: 12rpx;
+.add-btn,
+.add-btn-large {
+  min-width: 220rpx;
+  height: 82rpx;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 16rpx 30rpx rgba(47, 156, 125, 0.2);
 }
 
 .add-btn-text {
+  color: #ffffff;
   font-size: 28rpx;
-  color: #FFFFFF;
-  font-weight: 600;
+  font-weight: 800;
 }
 
-/* 衣物网格布局 */
 .clothes-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
+  gap: 18rpx;
 }
 
 .clothes-item {
-  background: #EDEDED;
-  border-radius: 12rpx;
   overflow: hidden;
-  transition: all 0.3s ease;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16rpx 34rpx rgba(37, 49, 44, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  animation: fadeUp 520ms ease both;
+}
+
+.clothes-item:nth-child(2n) {
+  animation-delay: 80ms;
+}
+
+.clothes-item:active {
+  transform: scale(0.97);
+  box-shadow: 0 8rpx 20rpx rgba(37, 49, 44, 0.07);
 }
 
 .clothes-image {
   width: 100%;
-  height: 200rpx;
-  background: #EDEDED;
-}
-
-.clothes-name {
-  font-size: 24rpx;
-  color: #333333;
-  padding: 16rpx 16rpx 8rpx;
-  text-align: center;
+  height: 218rpx;
   display: block;
+  background: #edf3ef;
 }
 
 .clothes-info {
-  padding-bottom: 16rpx;
+  padding: 16rpx 14rpx 18rpx;
+}
+
+.clothes-name {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #26312c;
+  font-size: 25rpx;
+  font-weight: 800;
+  text-align: center;
 }
 
 .tag-box {
@@ -207,51 +251,40 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 8rpx;
-  padding: 0 12rpx;
 }
 
 .tag {
   max-width: 100%;
-  padding: 4rpx 12rpx;
+  padding: 5rpx 12rpx;
   border-radius: 999rpx;
-  background: #FFFFFF;
-  color: #666666;
+  background: #eef6f1;
+  color: #5f6d66;
   font-size: 20rpx;
   line-height: 32rpx;
   word-break: break-all;
 }
 
-/* 右下角悬浮加号按钮 */
 .floating-add-btn {
   position: fixed;
-  right: 40rpx;
-  bottom: 40rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #FFE8E8 0%, #E0F1FF 100%);
-  border-radius: 50rpx;
+  right: 36rpx;
+  bottom: 132rpx;
+  width: 106rpx;
+  height: 106rpx;
+  border-radius: 50%;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  background: linear-gradient(135deg, #ff8a72 0%, #2f9c7d 100%);
+  box-shadow: 0 18rpx 38rpx rgba(47, 156, 125, 0.28);
+  animation: softPulse 2.8s ease-in-out infinite;
+}
+
+.floating-add-btn:active {
+  transform: scale(0.94);
 }
 
 .add-icon {
-  width: 60rpx;
-  height: 60rpx;
-}
-
-/* 平滑过渡动画 */
-.tab-item,
-.category-item,
-.clothes-item {
-  transition: all 0.3s ease;
-}
-
-/* 响应式设计 */
-@media (max-width: 750rpx) {
-  .clothes-grid {
-    grid-template-columns: 1fr;
-  }
+  width: 58rpx;
+  height: 58rpx;
 }

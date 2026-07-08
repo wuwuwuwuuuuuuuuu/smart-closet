@@ -191,3 +191,108 @@
 .option-item.cancel {
   background: #EDEDED;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+}
+
+.container {
+  background: transparent;
+}
+
+.tab-bar {
+  height: 104rpx;
+  margin: 20rpx 24rpx 10rpx;
+  padding: 0 18rpx;
+  border: 0;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14rpx 34rpx rgba(37, 49, 44, 0.08);
+}
+
+.tab-item {
+  height: 80rpx;
+  border-radius: 999rpx;
+}
+
+.tab-item.active {
+  background: linear-gradient(135deg, #eaf8f1 0%, #edf5ff 100%);
+}
+
+.tab-text {
+  color: #6d7972;
+}
+
+.tab-item.active .tab-text {
+  color: #2f9c7d;
+}
+
+.tab-line {
+  bottom: 8rpx;
+  background: transparent;
+}
+
+.tab-item.active .tab-line {
+  width: 42rpx;
+  background: #2f9c7d;
+}
+
+.post-list {
+  padding: 20rpx 18rpx 150rpx;
+}
+
+.grid-container {
+  gap: 18rpx;
+}
+
+.post-card {
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16rpx 36rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms ease both;
+}
+
+.post-card:active {
+  transform: scale(0.98);
+}
+
+.post-image {
+  height: 310rpx;
+  background: #edf3ef;
+}
+
+.post-info {
+  padding: 16rpx 14rpx 18rpx;
+}
+
+.post-title {
+  color: #26312c;
+  font-weight: 800;
+}
+
+.post-time,
+.like-count,
+.empty-text,
+.empty-hint {
+  color: #7f8c85;
+}
+
+.modal {
+  background: rgba(24, 34, 30, 0.48);
+}
+
+.options-modal {
+  border-radius: 34rpx 34rpx 0 0;
+  background: #ffffff;
+  box-shadow: 0 -18rpx 44rpx rgba(37, 49, 44, 0.14);
+}
+
+.option-item {
+  border-bottom-color: rgba(38, 49, 44, 0.08);
+}
+
+.option-item.cancel {
+  background: #f2f7f4;
+}
