@@ -31,7 +31,7 @@
         <text class="rate-value">{{activityRate}}%</text>
       </view>
       <view class="progress-track">
-        <view class="progress-value" style="width: {{activityRate}}%;"></view>
+        <view class="progress-value" style="{{activityRateStyle}}"></view>
       </view>
       <text class="card-desc">最近30天使用过{{activeClothes}}件衣物</text>
     </view>

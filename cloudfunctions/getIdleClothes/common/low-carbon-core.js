@@ -1,5 +1,5 @@
 const PAGE_SIZE = 100
-const IDLE_DAYS = 30
+const IDLE_THRESHOLD_DAYS = 15
 const ACTIVE_DAYS = 30
 
 function pad2(value) {
@@ -118,13 +118,13 @@ function enrichClothing(clothing = {}, todayDateKey) {
     : 0
   const ageUnknown = neverWorn && !createdDateKey
   const idle = lastWornAt
-    ? unusedDays >= IDLE_DAYS
-    : (!ageUnknown && neverWorn && unusedDays >= IDLE_DAYS)
+    ? unusedDays >= IDLE_THRESHOLD_DAYS
+    : (!ageUnknown && neverWorn && unusedDays >= IDLE_THRESHOLD_DAYS)
   const active = Boolean(lastWornAt && isWithinRecentDays(lastWornAt, todayDateKey, ACTIVE_DAYS))
 
   return {
     _id: clothing._id,
-    name: normalizeText(clothing.name) || '未命名衣物',
+    name: normalizeText(clothing.name) || '\u672a\u547d\u540d\u8863\u7269',
     image: normalizeClothingImage(clothing),
     wearCount,
     lastWornAt: lastWornAt || null,
@@ -141,23 +141,23 @@ function buildSuggestions(statistics) {
   const { totalClothes, activityRate, idleClothes, activeClothes } = statistics
 
   if (totalClothes === 0) {
-    return ['衣橱还没有衣物，先添加衣物后再查看使用情况。']
+    return ['\u8863\u6a71\u8fd8\u6ca1\u6709\u8863\u7269\uff0c\u5148\u6dfb\u52a0\u8863\u7269\u540e\u518d\u67e5\u770b\u4f7f\u7528\u60c5\u51b5\u3002']
   }
   if (activeClothes === 0) {
-    suggestions.push('还没有穿搭记录，可以从记录第一套今日穿搭开始。')
+    suggestions.push('\u8fd8\u6ca1\u6709\u7a7f\u642d\u8bb0\u5f55\uff0c\u53ef\u4ee5\u4ece\u8bb0\u5f55\u7b2c\u4e00\u5957\u4eca\u65e5\u7a7f\u642d\u5f00\u59cb\u3002')
   }
   if (idleClothes.length / totalClothes >= 0.3) {
-    suggestions.push(`你有${idleClothes.length}件衣物较长时间未使用，可以尝试重新搭配。`)
+    suggestions.push(`\u4f60\u6709${idleClothes.length}\u4ef6\u8863\u7269\u8f83\u957f\u65f6\u95f4\u672a\u4f7f\u7528\uff0c\u53ef\u4ee5\u5c1d\u8bd5\u91cd\u65b0\u642d\u914d\u3002`)
   }
   if (activityRate < 40) {
-    suggestions.push('最近衣物活跃率较低，可以优先使用较少穿着的衣物。')
+    suggestions.push('\u6700\u8fd1\u8863\u7269\u6d3b\u8dc3\u7387\u8f83\u4f4e\uff0c\u53ef\u4ee5\u4f18\u5148\u4f7f\u7528\u8f83\u5c11\u7a7f\u7740\u7684\u8863\u7269\u3002')
   }
   if (idleClothes.length > 0 && suggestions.length < 3) {
     const longestIdle = idleClothes[0]
-    suggestions.push(`“${longestIdle.name}”已连续${longestIdle.unusedDays}天未使用，可以尝试加入下一次搭配。`)
+    suggestions.push(`\u201c${longestIdle.name}\u201d\u5df2\u8fde\u7eed${longestIdle.unusedDays}\u5929\u672a\u4f7f\u7528\uff0c\u53ef\u4ee5\u5c1d\u8bd5\u52a0\u5165\u4e0b\u4e00\u6b21\u642d\u914d\u3002`)
   }
   if (activityRate >= 70 && suggestions.length < 3) {
-    suggestions.push('最近衣橱使用较均衡，继续保持现有衣物的重复利用。')
+    suggestions.push('\u6700\u8fd1\u8863\u6a71\u4f7f\u7528\u8f83\u5747\u8861\uff0c\u7ee7\u7eed\u4fdd\u6301\u73b0\u6709\u8863\u7269\u7684\u91cd\u590d\u5229\u7528\u3002')
   }
   return suggestions.slice(0, 3)
 }
@@ -205,7 +205,7 @@ async function listAllClothes(gateway, openid, userId) {
 
 module.exports = {
   PAGE_SIZE,
-  IDLE_DAYS,
+  IDLE_THRESHOLD_DAYS,
   ACTIVE_DAYS,
   getShanghaiDateKey,
   toShanghaiDateKey,

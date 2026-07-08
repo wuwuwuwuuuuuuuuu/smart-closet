@@ -7,6 +7,7 @@ Page({
     totalClothes: 0,
     activeClothes: 0,
     activityRate: 0,
+    activityRateStyle: 'width: 0%;',
     idleCount: 0,
     suggestions: [],
     lowCarbonPriority: false,
@@ -38,11 +39,15 @@ Page({
         throw new Error(result && result.message ? result.message : '数据加载失败')
       }
       const data = result.data
+      const activityRate = Number(data.activityRate) || 0
+      const safeActivityRate = Math.max(0, Math.min(100, activityRate))
+
       this.setData({
         loading: false,
         totalClothes: Number(data.totalClothes) || 0,
         activeClothes: Number(data.activeClothes) || 0,
-        activityRate: Number(data.activityRate) || 0,
+        activityRate,
+        activityRateStyle: `width: ${safeActivityRate}%;`,
         idleCount: Number(data.idleCount) || 0,
         suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
         lowCarbonPriority: Boolean(
