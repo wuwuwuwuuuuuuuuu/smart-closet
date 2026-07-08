@@ -1,4 +1,4 @@
-const IDLE_DAYS = 30
+const IDLE_THRESHOLD_DAYS = 15
 
 function pad2(value) {
   return String(value).padStart(2, '0')
@@ -91,8 +91,8 @@ function buildServerLowCarbonSignal(clothing = {}, todayDateKey = getShanghaiDat
   const neverWorn = wearCount === 0
   const unusedDays = calculateUnusedDays(clothing, todayDateKey)
   const idle = lastWornAt
-    ? unusedDays >= IDLE_DAYS
-    : (neverWorn && Boolean(createdAt) && unusedDays >= IDLE_DAYS)
+    ? unusedDays >= IDLE_THRESHOLD_DAYS
+    : (neverWorn && Boolean(createdAt) && unusedDays >= IDLE_THRESHOLD_DAYS)
 
   return {
     clothingId,
@@ -115,7 +115,7 @@ function buildServerLowCarbonSignalMap(clothes = [], todayDateKey = getShanghaiD
 }
 
 module.exports = {
-  IDLE_DAYS,
+  IDLE_THRESHOLD_DAYS,
   getShanghaiDateKey,
   normalizeWearCount,
   normalizeDateKey,

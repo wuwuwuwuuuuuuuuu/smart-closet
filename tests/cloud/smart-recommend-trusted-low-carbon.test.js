@@ -38,6 +38,16 @@ async function run() {
       created_at: null
     },
     {
+      _id: 'E',
+      wearCount: 0,
+      created_at: new Date('2026-06-23T00:00:00+08:00')
+    },
+    {
+      _id: 'F',
+      wearCount: 0,
+      created_at: new Date('2026-06-22T00:00:00+08:00')
+    },
+    {
       _id: 'D',
       wearCount: 5,
       lastWornAt: 'bad-date',
@@ -49,6 +59,10 @@ async function run() {
   assert.strictEqual(trustedSignals.get('B').unusedDays, 40)
   assert.strictEqual(trustedSignals.get('C').unusedDays, 0)
   assert.strictEqual(trustedSignals.get('C').idle, false)
+  assert.strictEqual(trustedSignals.get('E').unusedDays, 14)
+  assert.strictEqual(trustedSignals.get('E').idle, false)
+  assert.strictEqual(trustedSignals.get('F').unusedDays, 15)
+  assert.strictEqual(trustedSignals.get('F').idle, true)
   assert.strictEqual(trustedSignals.get('D').unusedDays, 0)
   assert.ok([...trustedSignals.values()].every(item => Number.isFinite(item.wearCount) && Number.isFinite(item.unusedDays)))
 
