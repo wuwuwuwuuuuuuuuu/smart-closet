@@ -276,3 +276,105 @@
   text-align: center;
   display: block;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+}
+
+.container {
+  padding: 24rpx 24rpx 180rpx;
+  background: transparent;
+}
+
+.nav-bar {
+  margin-bottom: 22rpx;
+}
+
+.nav-title {
+  color: #26312c;
+  font-weight: 900;
+}
+
+.save-btn.active {
+  color: #2f9c7d;
+  font-weight: 800;
+}
+
+.preview-card,
+.form-card {
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16rpx 36rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms ease both;
+}
+
+.form-card {
+  animation-delay: 70ms;
+}
+
+.preview-image {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 24rpx;
+}
+
+.preview-hint,
+.picker-text.placeholder,
+.action-hint {
+  color: #7f8c85;
+}
+
+.form-label {
+  color: #26312c;
+  font-weight: 800;
+}
+
+.form-picker,
+.form-input,
+.material-input,
+.tag-input {
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(47, 156, 125, 0.12);
+  background: #f8fbf8;
+}
+
+.material-tag,
+.season-tag {
+  border-radius: 999rpx;
+  border-color: rgba(47, 156, 125, 0.14);
+  background: #ffffff;
+  color: #526059;
+}
+
+.material-tag.selected,
+.season-tag.selected,
+.add-tag-btn,
+.save-action-btn.active,
+.tag-close {
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.custom-tag {
+  background: #eaf8f1;
+}
+
+.tag-text {
+  color: #2f9c7d;
+}
+
+.action-section {
+  left: 0;
+  right: 0;
+  padding: 22rpx 24rpx calc(34rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+}
+
+.save-action-btn {
+  border-radius: 999rpx;
+  box-shadow: 0 14rpx 30rpx rgba(47, 156, 125, 0.18);
+}

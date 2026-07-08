@@ -105,3 +105,72 @@ page {
   font-size: 28rpx;
   color: #999;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+}
+
+.container {
+  padding: 36rpx 24rpx 58rpx;
+}
+
+.header {
+  margin-bottom: 34rpx;
+  animation: fadeUp 520ms ease both;
+}
+
+.title {
+  color: #26312c;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.subtitle {
+  color: #718078;
+}
+
+.avatar-grid {
+  gap: 0;
+}
+
+.avatar-item {
+  height: 410rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 4rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms 80ms ease both;
+}
+
+.avatar-item:active {
+  transform: scale(0.97);
+}
+
+.avatar-item.active {
+  border-color: #2f9c7d;
+  box-shadow: 0 20rpx 42rpx rgba(47, 156, 125, 0.22);
+}
+
+.current-badge {
+  background: linear-gradient(135deg, rgba(47, 156, 125, 0.94) 0%, rgba(111, 183, 255, 0.94) 100%);
+  font-weight: 800;
+}
+
+.delete-btn {
+  background: rgba(38, 49, 44, 0.58);
+}
+
+.upload-box {
+  border: 2rpx dashed rgba(47, 156, 125, 0.28);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.plus-icon {
+  color: #2f9c7d;
+}
+
+.upload-text {
+  color: #6d7972;
+  font-weight: 700;
+}

@@ -134,3 +134,79 @@
   font-size: 28rpx;
   color: #999999;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+}
+
+.container {
+  background: transparent;
+  padding: 0;
+}
+
+.nav-bar {
+  background: transparent;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #f5fff9 0%, #edf5ff 100%);
+}
+
+.nav-title {
+  color: #26312c;
+  font-weight: 900;
+}
+
+.search-section {
+  padding: 20rpx 24rpx 22rpx;
+  background: transparent;
+}
+
+.search-input {
+  height: 76rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(47, 156, 125, 0.1);
+  box-shadow: 0 12rpx 28rpx rgba(37, 49, 44, 0.07);
+}
+
+.collection-list {
+  padding: 0 18rpx 150rpx;
+}
+
+.grid-container {
+  gap: 18rpx;
+}
+
+.collection-item {
+  height: 340rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16rpx 36rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms ease both;
+}
+
+.collection-item:active {
+  transform: scale(0.98);
+}
+
+.collection-image {
+  height: 260rpx;
+}
+
+.tag {
+  background: #eef7f2;
+  color: #5f6d66;
+}
+
+.empty-state {
+  margin: 36rpx 24rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.empty-text {
+  color: #7f8c85;
+}

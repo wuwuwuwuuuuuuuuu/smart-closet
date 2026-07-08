@@ -186,3 +186,95 @@
   color: #666666;
   font-family: PingFang SC;
 }
+
+/* Visual refresh */
+.upload-modal {
+  background: rgba(20, 31, 27, 0.54);
+}
+
+.modal-content {
+  height: 72vh;
+  border-radius: 38rpx 38rpx 0 0;
+  background: #ffffff;
+  box-shadow: 0 -18rpx 48rpx rgba(37, 49, 44, 0.18);
+}
+
+.preview-section {
+  background: linear-gradient(180deg, #17201c 0%, #26312c 100%);
+}
+
+.preview-overlay {
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.preview-frame {
+  width: 84%;
+  height: 82%;
+  border: 0;
+  border-radius: 30rpx;
+  box-shadow: 0 18rpx 44rpx rgba(0, 0, 0, 0.28);
+}
+
+.countdown-number {
+  color: #ffffff;
+  text-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.32);
+}
+
+.main-guide {
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.32);
+}
+
+.sub-guide {
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.32);
+}
+
+.progress-bar {
+  height: 8rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #2f9c7d 0%, #6fb7ff 100%);
+}
+
+.options-section {
+  padding: 34rpx;
+}
+
+.title {
+  color: #26312c;
+  font-weight: 900;
+}
+
+.switch-label,
+.cancel-text {
+  color: #66736c;
+}
+
+.option-item {
+  border-radius: 26rpx;
+  background: #f2f7f4;
+}
+
+.option-item:first-child {
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 14rpx 28rpx rgba(47, 156, 125, 0.18);
+}
+
+.option-item:first-child .option-text {
+  color: #ffffff;
+}
+
+.option-text {
+  color: #26312c;
+  font-weight: 800;
+}
+
+.cancel-btn {
+  border: 0;
+  border-radius: 999rpx;
+  background: #f7faf8;
+}
