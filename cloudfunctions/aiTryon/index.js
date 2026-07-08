@@ -3,6 +3,7 @@ const axios = require('axios')
 const qs = require('querystring') // 引入 qs 处理百度请求的表单格式
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+const db = cloud.database()
 
 // 检查是否为微信云存储文件ID，避免把本地路径误传给云函数
 function validateCloudFileID(fileID, fieldName) {
@@ -16,6 +17,63 @@ function validateCloudFileID(fileID, fieldName) {
 }
 
 // 从云存储文件ID映射表中取出临时HTTPS链接，缺失时直接抛错
+
+
+function uniqueStringArray(value) {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value
+    .filter(item => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(Boolean))]
+}
+
+async function getCurrentUserId(openid) {
+  try {
+    const res = await db.collection('users')
+      .where({ _openid: openid })
+      .limit(1)
+      .get()
+    return res && res.data && res.data[0] ? res.data[0]._id : ''
+  } catch (error) {
+    console.warn('[AI_TRYON_HISTORY] user lookup failed, continue with OPENID only')
+    return ''
+  }
+}
+
+async function saveTryonRecordSafely({
+  openid,
+  finalImageUrl,
+  personImageFileID,
+  topGarmentFileID,
+  bottomGarmentFileID,
+  clothingIds
+}) {
+  try {
+    const userId = await getCurrentUserId(openid)
+    const now = db.serverDate()
+    await db.collection('tryonRecords').add({
+      data: {
+        _openid: openid,
+        user_id: userId,
+        resultImage: finalImageUrl,
+        imageUrl: finalImageUrl,
+        finalImage: finalImageUrl,
+        personImage: personImageFileID,
+        clothesImages: uniqueStringArray([topGarmentFileID, bottomGarmentFileID]),
+        clothingIds: uniqueStringArray(clothingIds),
+        status: 'success',
+        source: 'aiTryon',
+        createdAt: now,
+        createTime: now
+      }
+    })
+  } catch (error) {
+    console.error('[AI_TRYON_HISTORY] save failed, return try-on result anyway', {
+      message: error && error.message ? error.message : String(error)
+    })
+  }
+}
+
 function getRequiredTempURL(urlMap, fileID, fieldName) {
   const tempURL = urlMap[fileID]
   if (!tempURL) {
@@ -25,10 +83,10 @@ function getRequiredTempURL(urlMap, fileID, fieldName) {
 }
 
 exports.main = async (event, context) => {
-  const { personImageFileID, topGarmentFileID, bottomGarmentFileID } = event
+  const { personImageFileID, topGarmentFileID, bottomGarmentFileID, clothingIds } = event
   
   // 🔑 你的 API Keys
-  const API_KEY = '****************' // 阿里云DashScope API Key
+  const API_KEY = 'sk-d1d0581fac7b42e985a7a677f8f790df' // 阿里云DashScope API Key
   
   // 👇 百度AI开放平台API配置（可选，用于人像抠图）
   const BAIDU_AK = '**********'
@@ -113,6 +171,16 @@ exports.main = async (event, context) => {
     }
 
     if (!isCompleted) return { code: 408, message: 'AI试穿生成超时' }
+
+    const wxContext = cloud.getWXContext()
+    await saveTryonRecordSafely({
+      openid: wxContext.OPENID,
+      finalImageUrl,
+      personImageFileID,
+      topGarmentFileID,
+      bottomGarmentFileID,
+      clothingIds
+    })
 
     // === 5. 返回最终结果 ===
     return {
