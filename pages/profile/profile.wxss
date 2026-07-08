@@ -1,163 +1,194 @@
-/* 页面基础设置 */
 page {
-  background-color: #f5f7f9;
+  background: linear-gradient(180deg, #f7faf6 0%, #edf6f2 100%);
 }
 
 .page-container {
   width: 100%;
   position: relative;
   min-height: 100vh;
+  overflow: hidden;
 }
 
-/* ================= 顶部背景图区域 ================= */
 .header-bg {
   width: 100%;
-  height: 500rpx; /* 控制背景图的高度 */
+  height: 520rpx;
   position: relative;
+  overflow: hidden;
 }
 
 .bg-img {
   width: 100%;
   height: 100%;
+  transform: scale(1.02);
 }
 
 .bg-mask {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  /* 黑色渐变遮罩：上面透明，下面加深，凸显白色人名 */
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%); 
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(20, 31, 27, 0.05) 0%, rgba(20, 31, 27, 0.68) 100%);
 }
 
 .change-bg-tip {
   position: absolute;
-  right: 30rpx;
-  top: 100rpx; /* 避开微信右上角胶囊 */
-  color: rgba(255, 255, 255, 0.9);
+  right: 28rpx;
+  top: 96rpx;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.94);
   font-size: 22rpx;
-  background: rgba(0,0,0,0.35);
-  padding: 10rpx 24rpx;
-  border-radius: 40rpx;
-  backdrop-filter: blur(4px);
+  background: rgba(20, 31, 27, 0.34);
+  backdrop-filter: blur(10px);
 }
 
-/* ================= 悬浮主体内容区 ================= */
 .main-content {
   position: relative;
-  /* 🌟 核心魔法：负边距让整体内容往上拉，与背景图重叠，形成悬浮效果 */
-  margin-top: -160rpx; 
-  padding: 0 30rpx 50rpx;
   z-index: 10;
+  margin-top: -170rpx;
+  padding: 0 26rpx 54rpx;
 }
 
-/* 用户信息（悬浮在背景上） */
 .user-header {
+  min-height: 164rpx;
+  margin-bottom: 30rpx;
+  padding: 18rpx 10rpx;
   display: flex;
   align-items: center;
-  gap: 30rpx;
-  margin-bottom: 50rpx; /* 撑开和下面四宫格的距离 */
+  gap: 28rpx;
+  animation: fadeUp 520ms ease both;
 }
 
 .avatar-container {
-  width: 140rpx;
-  height: 140rpx;
+  width: 148rpx;
+  height: 148rpx;
   border-radius: 50%;
-  /* 加上白底边框，让头像更立体 */
-  border: 6rpx solid rgba(255, 255, 255, 0.8); 
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.15);
   overflow: hidden;
+  border: 6rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14rpx 32rpx rgba(20, 31, 27, 0.24);
+  transition: transform 180ms ease;
+}
+
+.avatar-container:active {
+  transform: scale(0.96);
 }
 
 .user-avatar {
   width: 100%;
   height: 100%;
-  background: #EDEDED;
+  background: #eef3ef;
 }
 
 .user-details {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
 .user-name {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #ffffff; /* 悬浮在深色遮罩上，用白色最清晰 */
-  margin-bottom: 8rpx;
-  text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3); /* 文字阴影增强可读性 */
+  margin-bottom: 10rpx;
+  color: #ffffff;
+  font-size: 42rpx;
+  font-weight: 900;
+  text-shadow: 0 5rpx 16rpx rgba(20, 31, 27, 0.3);
 }
 
 .user-desc {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 25rpx;
+  line-height: 1.5;
 }
 
-/* ================= 你的功能卡片（直接平移你原有的样式，增加悬浮感） ================= */
 .function-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 20rpx;
-  margin-bottom: 32rpx;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+  margin-bottom: 26rpx;
+  animation: fadeUp 560ms 80ms ease both;
 }
 
 .function-item {
-  background: #FFFFFF;
-  border-radius: 20rpx; /* 稍微增大圆角显得更现代 */
-  padding: 30rpx 16rpx;
-  text-align: center;
+  min-height: 150rpx;
+  padding: 24rpx 10rpx;
+  border-radius: 28rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.03); /* 🌟 添加卡片投影 */
+  justify-content: center;
+  gap: 14rpx;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16rpx 34rpx rgba(37, 49, 44, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.function-item:active {
+  transform: translateY(4rpx) scale(0.97);
+  box-shadow: 0 8rpx 18rpx rgba(37, 49, 44, 0.07);
 }
 
 .function-icon {
-  width: 60rpx;
-  height: 60rpx;
+  width: 66rpx;
+  height: 66rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #e7f7f0 0%, #edf5ff 100%);
 }
 
 .icon-img {
-  width: 44rpx; /* 稍微放大一点你原本的图标 */
-  height: 44rpx;
+  width: 42rpx;
+  height: 42rpx;
 }
 
 .function-text {
-  font-size: 24rpx;
-  color: #333333;
-  font-weight: 500;
+  color: #3b4741;
+  font-size: 23rpx;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
-/* ================= 你的设置列表 ================= */
 .settings-section {
-  background: #FFFFFF;
-  border-radius: 20rpx; /* 同样增大圆角 */
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.03); /* 🌟 添加卡片投影 */
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 560ms 160ms ease both;
 }
 
 .setting-item {
-  padding: 36rpx 30rpx;
+  min-height: 96rpx;
+  padding: 0 30rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1rpx solid #F0F0F0;
+  border-bottom: 1rpx solid rgba(38, 49, 44, 0.06);
+  transition: background 160ms ease, transform 160ms ease;
 }
 
 .setting-item:last-child {
-  border-bottom: none;
+  border-bottom: 0;
+}
+
+.setting-item:active {
+  background: #f2f7f4;
+  transform: scale(0.99);
 }
 
 .setting-text {
+  color: #26312c;
   font-size: 28rpx;
-  color: #333333;
+  font-weight: 700;
 }
 
 .arrow {
-  color: #CCCCCC;
+  color: #9aa59f;
   font-family: consolas, sans-serif;
-  font-weight: lighter;
+  font-size: 30rpx;
+  font-weight: 300;
 }

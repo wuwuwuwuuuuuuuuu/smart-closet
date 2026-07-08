@@ -103,3 +103,62 @@ page {
   font-size: 22rpx;
   color: #b5b1ae;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 52%, #f7f2ec 100%);
+}
+
+.login-container {
+  padding: 0 56rpx;
+  overflow: hidden;
+}
+
+.main-content {
+  margin-top: 18vh;
+  animation: fadeUp 560ms ease both;
+}
+
+.logo-image {
+  width: 292rpx;
+  height: 292rpx;
+  margin-bottom: 54rpx;
+  opacity: 1;
+  border-radius: 44rpx;
+  animation: softFloat 3.4s ease-in-out infinite;
+}
+
+.title {
+  color: #26312c;
+  font-size: 58rpx;
+  letter-spacing: 6rpx;
+  text-shadow: 0 8rpx 24rpx rgba(47, 156, 125, 0.08);
+}
+
+.subtitle {
+  color: #66736c;
+  font-size: 26rpx;
+}
+
+.bottom-section {
+  bottom: 9vh;
+}
+
+.wechat-btn {
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  border-radius: 999rpx;
+  box-shadow: 0 18rpx 38rpx rgba(47, 156, 125, 0.24);
+}
+
+.wechat-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 10rpx 24rpx rgba(47, 156, 125, 0.2);
+}
+
+.btn-text {
+  font-weight: 800;
+}
+
+.tips {
+  color: #87928c;
+}

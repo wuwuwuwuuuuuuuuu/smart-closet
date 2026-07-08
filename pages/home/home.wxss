@@ -1,106 +1,145 @@
-/* 首页样式 - 优化布局和尺寸 */
-.container {
-  padding: 0 20rpx;
-  box-sizing: border-box;
-  background: #EDEDED;
+page {
+  background: linear-gradient(180deg, #edf8f3 0%, #f7f6f0 44%, #f4f7f4 100%);
 }
 
-/* 顶部轮播图 */
-.swiper-container {
-  margin: 40rpx 0;
-  height: 400rpx;
+.container {
+  min-height: 100vh;
+  padding: 28rpx 24rpx 48rpx;
+  background: transparent;
 }
+
+.swiper-container {
+  height: 430rpx;
+  margin: 12rpx 0 28rpx;
+  border-radius: 36rpx;
+  overflow: hidden;
+  box-shadow: 0 22rpx 52rpx rgba(41, 62, 54, 0.16);
+  background: #ffffff;
+  animation: fadeUp 520ms ease both;
+}
+
 swiper {
   width: 100%;
   height: 100%;
-  border-radius: 12rpx;
+  border-radius: 36rpx;
   overflow: hidden;
 }
+
 .swiper-image {
   width: 100%;
-  height: 150%;
-  object-fit: contain;
+  height: 100%;
   display: block;
 }
-/* 智能推荐卡片 */
+
 .diary-card {
-  background: #FFFFFF;
-  border-radius: 12rpx;
-  padding: 32rpx;
-  margin: 32rpx 0;
+  min-height: 150rpx;
+  margin: 28rpx 0;
+  padding: 30rpx 34rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, rgba(47, 156, 125, 0.96) 0%, rgba(111, 183, 255, 0.92) 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 120rpx;
+  box-shadow: 0 20rpx 42rpx rgba(47, 156, 125, 0.24);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  animation: fadeUp 560ms 80ms ease both;
+}
+
+.diary-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 12rpx 24rpx rgba(47, 156, 125, 0.2);
 }
 
 .diary-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #333333;
-  font-family: PingFang SC;
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 3rpx 10rpx rgba(27, 74, 61, 0.2);
 }
 
 .diary-icon {
-  width: 144rpx;
-  height: 144rpx;
+  width: 138rpx;
+  height: 138rpx;
   margin-left: 16rpx;
+  animation: softFloat 3.4s ease-in-out infinite;
 }
 
-/* 功能按钮区 */
 .function-grid {
   display: flex;
   justify-content: space-between;
-  margin: 32rpx 0;
+  gap: 22rpx;
+  margin: 28rpx 0;
 }
 
 .function-item {
-  flex: 0 0 48%;
-  background: #FFFFFF;
-  border-radius: 12rpx;
-  padding: 48rpx 0;
+  flex: 1;
+  min-height: 252rpx;
+  padding: 34rpx 18rpx 30rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 240rpx;
+  justify-content: center;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  animation: fadeUp 560ms 140ms ease both;
+}
+
+.function-item:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.function-item:active {
+  transform: translateY(4rpx) scale(0.98);
+  box-shadow: 0 10rpx 24rpx rgba(37, 49, 44, 0.08);
 }
 
 .function-icon {
-  width: 192rpx;
-  height: 192rpx;
-  margin-bottom: 24rpx;
+  width: 158rpx;
+  height: 158rpx;
+  margin-bottom: 22rpx;
+  border-radius: 34rpx;
 }
 
 .function-text {
-  font-size: 32rpx;
-  color: #333333;
-  font-weight: 400;
-  font-family: PingFang SC;
+  font-size: 30rpx;
+  color: #26312c;
+  font-weight: 700;
 }
 
-/* 商品试穿按钮 */
 .product-btn {
+  min-height: 132rpx;
   width: 100%;
-  background: #FFFFFF;
-  border-radius: 12rpx;
-  padding: 32rpx;
+  margin: 30rpx 0 0;
+  padding: 24rpx 34rpx;
+  border-radius: 32rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 32rpx 0;
-  min-height: 120rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #effaf4 100%);
+  border: 1rpx solid rgba(47, 156, 125, 0.12);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  animation: fadeUp 560ms 260ms ease both;
+}
+
+.product-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 10rpx 24rpx rgba(37, 49, 44, 0.08);
 }
 
 .product-icon {
-  width: 144rpx;
-  height: 144rpx;
-  margin-right: 40rpx;
+  width: 118rpx;
+  height: 118rpx;
+  margin-right: 32rpx;
+  border-radius: 28rpx;
 }
 
 .product-text {
   font-size: 32rpx;
-  color: #333333;
-  font-weight: 400;
-  font-family: PingFang SC;
+  color: #26312c;
+  font-weight: 800;
 }

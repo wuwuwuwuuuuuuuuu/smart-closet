@@ -195,3 +195,84 @@ page {
   padding-top: 200rpx;
   color: #999;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #f8faf6 0%, #edf7f2 100%);
+  padding-bottom: 132rpx;
+}
+
+.container {
+  gap: 0;
+}
+
+.detail-card {
+  background: transparent;
+}
+
+.main-image {
+  border-radius: 0 0 36rpx 36rpx;
+  box-shadow: 0 18rpx 42rpx rgba(37, 49, 44, 0.12);
+}
+
+.info-section {
+  margin: 24rpx;
+  padding: 30rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18rpx 40rpx rgba(37, 49, 44, 0.08);
+  animation: fadeUp 520ms ease both;
+}
+
+.clothes-name {
+  color: #26312c;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.category-tag,
+.edit-btn,
+.tag.edit-mode {
+  color: #2f9c7d;
+  background: #eaf8f1;
+}
+
+.detail-list {
+  border-top-color: rgba(38, 49, 44, 0.08);
+}
+
+.label,
+.tags-header,
+.no-tags {
+  color: #7f8c85;
+}
+
+.value {
+  color: #26312c;
+  font-weight: 700;
+}
+
+.tag {
+  background: #f0f6f2;
+  color: #5f6d66;
+}
+
+.tag-input {
+  border-radius: 20rpx;
+  background: #f7fbf8;
+}
+
+.add-btn,
+.save-tags-btn {
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 14rpx 28rpx rgba(47, 156, 125, 0.18);
+}
+
+.bottom-bar {
+  height: 118rpx;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 -12rpx 30rpx rgba(37, 49, 44, 0.08);
+}

@@ -32,17 +32,17 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarBackgroundColor": "#F7FAF7",
     "navigationBarTitleText": "智能衣橱",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FFFFFF",
+    "backgroundColor": "#F4F7F4",
     "enablePullDownRefresh": false
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#333333",
+    "color": "#8A9690",
+    "selectedColor": "#2F9C7D",
     "backgroundColor": "#FFFFFF",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/home/home",

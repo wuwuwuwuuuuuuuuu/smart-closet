@@ -168,3 +168,81 @@
   border-radius: 8rpx;
   font-size: 28rpx;
 }
+
+/* Visual refresh */
+page {
+  background: linear-gradient(180deg, #17201c 0%, #26312c 100%);
+}
+
+.container {
+  background: transparent;
+}
+
+.poster-preview {
+  padding: 30rpx;
+}
+
+.poster-image {
+  border-radius: 34rpx;
+  box-shadow: 0 24rpx 56rpx rgba(0, 0, 0, 0.36);
+}
+
+.action-bar {
+  height: 136rpx;
+  padding: 0 24rpx calc(10rpx + env(safe-area-inset-bottom));
+  border-radius: 36rpx 36rpx 0 0;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -18rpx 44rpx rgba(0, 0, 0, 0.22);
+}
+
+.action-item {
+  min-width: 122rpx;
+  padding: 14rpx 10rpx;
+  border-radius: 24rpx;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.action-item:active {
+  background: #f2f7f4;
+  transform: scale(0.96);
+}
+
+.action-text {
+  color: #26312c;
+  font-weight: 700;
+}
+
+.modal {
+  background: rgba(20, 31, 27, 0.58);
+}
+
+.modal-content {
+  border-radius: 32rpx;
+  background: #ffffff;
+  box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, 0.22);
+}
+
+.modal-header {
+  border-bottom-color: rgba(38, 49, 44, 0.08);
+}
+
+.modal-title,
+.section-title {
+  color: #26312c;
+  font-weight: 900;
+}
+
+.tag-item,
+.tag-input,
+.add-tag-btn {
+  border-radius: 999rpx;
+  background: #f2f7f4;
+  color: #526059;
+}
+
+.tag-item.active,
+.btn-primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2f9c7d 0%, #6fb7ff 100%);
+  box-shadow: 0 14rpx 28rpx rgba(47, 156, 125, 0.18);
+}
