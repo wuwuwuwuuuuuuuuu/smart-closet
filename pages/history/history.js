@@ -29,7 +29,7 @@ Page({
   onShow() {
     console.log('生成历史页显示')
     // 如果需要每次显示都刷新，可以取消下方注释
-    // this.loadHistory(true) 
+    this.loadHistory(true)
   },
 
   // === 🌟 核心升级：接入真实云数据库加载历史数据 ===
@@ -45,9 +45,9 @@ Page({
       const { page, pageSize } = this.data
 
       // 1. 发起数据库查询
-      const res = await db.collection('tryon_history')
-        .where({ userId: userId })           // 只查当前用户的
-        .orderBy('createTime', 'desc')       // 按时间倒序（最新的在最上面）
+      const res = await db.collection('tryonRecords')
+        .where({ user_id: userId, source: 'aiTryon', status: 'success' })           // 只查当前用户的
+        .orderBy('createdAt', 'desc')       // 按时间倒序（最新的在最上面）
         .skip((page - 1) * pageSize)         // 分页跳过前几页的数据
         .limit(pageSize)                     // 限制每页数量
         .get()
@@ -56,8 +56,9 @@ Page({
       const formattedData = res.data.map(item => {
         // 格式化服务器时间为 YYYY-MM-DD
         let dateStr = '未知日期'
-        if (item.createTime) {
-          const dateObj = new Date(item.createTime)
+        const recordTime = item.createdAt || item.createTime || item.created_at
+        if (recordTime) {
+          const dateObj = new Date(recordTime)
           const y = dateObj.getFullYear()
           const m = String(dateObj.getMonth() + 1).padStart(2, '0')
           const d = String(dateObj.getDate()).padStart(2, '0')
@@ -66,7 +67,7 @@ Page({
 
         return {
           id: item._id,            // 数据库自动生成的唯一 ID
-          image: item.finalImage,  // 合成图的 FileID
+          image: item.resultImage || item.imageUrl || item.finalImage,  // 合成图的 FileID
           date: dateStr,
           selected: false,         // 初始状态为未选择
           rawData: item            // 备份完整数据，以后查详情用得着
