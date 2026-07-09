@@ -29,8 +29,7 @@ page {
 }
 
 .idle-card,
-.card-row,
-.switch-card {
+.card-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -115,11 +114,6 @@ page {
   margin-top: 15rpx;
   border-radius: 50%;
   background: #C65E82;
-}
-
-.switch-copy {
-  flex: 1;
-  padding-right: 20rpx;
 }
 
 .empty-wardrobe,
