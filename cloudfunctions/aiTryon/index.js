@@ -86,11 +86,11 @@ exports.main = async (event, context) => {
   const { personImageFileID, topGarmentFileID, bottomGarmentFileID, clothingIds } = event
   
   // 🔑 你的 API Keys
-  const API_KEY = 'sk-d1d0581fac7b42e985a7a677f8f790df' // 阿里云DashScope API Key
+  const API_KEY = '*******************' // 阿里云DashScope API Key
   
   // 👇 百度AI开放平台API配置 (用于人像抠图)
   const BAIDU_AK = '*************'
-  const BAIDU_SK = '********************'
+  const BAIDU_SK = '******************'
 
   try {
     validateCloudFileID(personImageFileID, 'personImageFileID')
