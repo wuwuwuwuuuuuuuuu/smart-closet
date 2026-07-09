@@ -46,17 +46,5 @@
       </view>
     </view>
 
-    <view class="metric-card switch-card">
-      <view class="switch-copy">
-        <text class="card-title">低碳优先推荐</text>
-        <text class="card-desc">优先推荐较少使用的合适衣物</text>
-      </view>
-      <switch
-        checked="{{lowCarbonPriority}}"
-        disabled="{{updatingPriority}}"
-        color="#C65E82"
-        bindchange="onPriorityChange"
-      />
-    </view>
   </block>
 </view>
