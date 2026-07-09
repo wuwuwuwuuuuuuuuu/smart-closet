@@ -30,6 +30,7 @@ Page({
     pendingUserInput: '',
     conversationList: [],
     recommendationResult: null,
+    lowCarbonReason: '',
     isRecommendationLoading: false,
     isLocating: false,
     amapKey: ''
@@ -306,7 +307,7 @@ Page({
     })
   },
 
-  submitRecommendationRequest() {
+  async submitRecommendationRequest() {
     const userQuery = normalizeInput(this.data.pendingUserInput)
     if (!userQuery) {
       return wx.showToast({ title: '请先输入需求', icon: 'none' })
@@ -335,7 +336,12 @@ Page({
           type: 'result-card',
           data: normalizedResult
         })
-        this.setData({ recommendationResult: normalizedResult })
+        this.setData({
+          recommendationResult: normalizedResult,
+          lowCarbonReason: normalizedResult.lowCarbonApplied
+            ? normalizedResult.lowCarbonReason
+            : ''
+        })
       })
       .catch(error => {
         logError('daily.submitRecommendationRequest', error)

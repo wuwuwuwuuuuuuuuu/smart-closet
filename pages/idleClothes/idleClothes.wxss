@@ -1,0 +1,131 @@
+page {
+  min-height: 100%;
+  background: #EDEDED;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 28rpx 24rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.clothes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.clothes-card {
+  min-height: 220rpx;
+  padding: 22rpx;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.clothes-image {
+  flex: none;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 14rpx;
+  background: #F3F3F3;
+}
+
+.clothes-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 11rpx;
+}
+
+.clothes-name {
+  overflow: hidden;
+  color: #333333;
+  font-size: 30rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-line {
+  color: #777777;
+  font-size: 24rpx;
+}
+
+.idle-line {
+  color: #C65E82;
+  font-size: 24rpx;
+}
+
+.card-arrow {
+  color: #BBBBBB;
+  font-size: 38rpx;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  min-height: 520rpx;
+  padding: 70rpx 48rpx;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22rpx;
+  color: #888888;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 92rpx;
+  height: 92rpx;
+  opacity: 0.65;
+}
+
+.state-title {
+  color: #333333;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.state-desc {
+  color: #888888;
+  font-size: 25rpx;
+}
+
+.primary-btn {
+  margin: 4rpx 0 0;
+  padding: 0 42rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 36rpx;
+  color: #FFFFFF;
+  background: #333333;
+  font-size: 26rpx;
+}
+
+.primary-btn::after {
+  border: none;
+}
+
+.loading-dot {
+  width: 34rpx;
+  height: 34rpx;
+  border: 5rpx solid #F2D8E1;
+  border-top-color: #C65E82;
+  border-radius: 50%;
+  animation: rotate 0.8s linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}

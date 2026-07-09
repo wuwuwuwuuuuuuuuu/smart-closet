@@ -164,7 +164,7 @@ function normalizeRecommendationResult(raw = {}) {
     raw = {}
   }
 
-  return {
+  const normalized = {
     requestId: normalizeInput(raw.requestId) || `rec_${Date.now()}`,
     summary: normalizeInput(raw.summary) || '\u5df2\u6839\u636e\u4f60\u7684\u9700\u6c42\u751f\u6210\u667a\u80fd\u63a8\u8350\u3002',
     replyText: normalizeInput(raw.replyText) || '\u6211\u5df2\u7ecf\u6574\u7406\u597d\u63a8\u8350\u601d\u8def\u5566\uff0c\u70b9\u51fb\u4e0b\u65b9\u6309\u94ae\u5373\u53ef\u7ee7\u7eed\u8bd5\u7a7f\u3002',
@@ -184,6 +184,11 @@ function normalizeRecommendationResult(raw = {}) {
     retrievalHitCount: normalizeHitCount(raw.retrievalHitCount),
     fallbackReason: normalizeInput(raw.fallbackReason)
   }
+  if (raw.lowCarbonApplied === true && normalizeInput(raw.lowCarbonReason)) {
+    normalized.lowCarbonApplied = true
+    normalized.lowCarbonReason = normalizeInput(raw.lowCarbonReason)
+  }
+  return normalized
 }
 
 function hasTryOnSelection(result = {}) {

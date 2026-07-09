@@ -22,7 +22,7 @@
           <view class="circle-inner"></view>
         </view>
         
-        <image src="{{item.image}}" class="history-image" mode="aspectFill" />
+        <image src="{{item.image}}" class="history-image" mode="widthFix" />
         <text class="history-date">{{item.date}}</text>
       </view>
     </view>

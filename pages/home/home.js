@@ -17,6 +17,13 @@ Page({
     })
   },
 
+  // 进入今日穿搭记录
+  goToTodayOutfit() {
+    wx.navigateTo({
+      url: '/pages/todayOutfit/todayOutfit'
+    })
+  },
+
   // 服饰上传
   uploadClothes() {
     wx.navigateTo({

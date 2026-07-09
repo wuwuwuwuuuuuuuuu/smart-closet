@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-dot"></view>
+    <text>正在整理闲置衣物...</text>
+  </view>
+
+  <view class="error-state" wx:elif="{{errorMessage}}">
+    <text class="state-title">数据加载失败</text>
+    <button class="primary-btn" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <view class="empty-state" wx:elif="{{clothes.length === 0}}">
+    <image src="/images/icons/wardrobe.png" class="empty-icon" mode="aspectFit" />
+    <text class="state-title">目前没有闲置衣物</text>
+    <text class="state-desc">你的衣橱使用情况比较均衡</text>
+  </view>
+
+  <view class="clothes-list" wx:else>
+    <view
+      class="clothes-card"
+      wx:for="{{clothes}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="openClothesDetail"
+    >
+      <image
+        class="clothes-image"
+        src="{{item.imageFailed ? '/images/icons/wardrobe.png' : item.image}}"
+        mode="aspectFill"
+        data-id="{{item._id}}"
+        binderror="onImageError"
+      />
+      <view class="clothes-info">
+        <text class="clothes-name">{{item.name}}</text>
+        <text class="info-line">累计使用 {{item.wearCount}} 次</text>
+        <block wx:if="{{item.neverWorn}}">
+          <text class="info-line">尚未使用</text>
+          <text class="idle-line">已添加 {{item.unusedDays}} 天</text>
+        </block>
+        <block wx:else>
+          <text class="info-line">最近使用：{{item.lastWornAt}}</text>
+          <text class="idle-line">已连续 {{item.unusedDays}} 天未使用</text>
+        </block>
+      </view>
+      <text class="card-arrow">›</text>
+    </view>
+  </view>
+</view>

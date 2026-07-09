@@ -18,6 +18,14 @@
       </view>
     </view>
 
+    <view
+      wx:if="{{displayImage}}"
+      class="outfit-save-btn {{isOutfitSaving || isOutfitSaved ? 'disabled' : ''}} {{isOutfitSaved ? 'saved' : ''}}"
+      bindtap="saveTodayOutfit"
+    >
+      {{isOutfitSaving ? '保存中...' : (isOutfitSaved ? '已保存今日穿搭' : '保存今日穿搭')}}
+    </view>
+
     <view class="btn-group">
       <view class="btn btn-cancel" bindtap="goBack">返回</view>
       <view class="btn btn-star {{isCollected ? 'collected' : ''}}" bindtap="addToCollection">

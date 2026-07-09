@@ -45,6 +45,30 @@ page { background-color: #1a1a1a; }
   margin-bottom: 50rpx;
 }
 
+.outfit-save-btn {
+  width: 100%;
+  height: 80rpx;
+  margin: 0 0 22rpx;
+  border-radius: 50rpx;
+  color: #FFFFFF;
+  background: #333333;
+  font-size: 28rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.outfit-save-btn.disabled {
+  opacity: 0.58;
+}
+
+.outfit-save-btn.saved {
+  color: #2F9C7D;
+  background: #E8F5F0;
+}
+
 .scene-item {
   display: flex;
   flex-direction: column;

@@ -3,6 +3,10 @@
   "pages": [
     "pages/login/login",
     "pages/home/home",
+    "pages/todayOutfit/todayOutfit",
+    "pages/outfitHistory/outfitHistory",
+    "pages/lowCarbon/lowCarbon",
+    "pages/idleClothes/idleClothes",
     "pages/daily/daily",
     "pages/tryon/tryon",
     "pages/preview/preview",

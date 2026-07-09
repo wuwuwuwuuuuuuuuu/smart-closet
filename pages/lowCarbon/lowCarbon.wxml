@@ -1,0 +1,62 @@
+<view class="page">
+  <text class="page-title">闲置预警</text>
+
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-dot"></view>
+    <text>正在整理衣橱使用情况...</text>
+  </view>
+
+  <view class="error-state" wx:elif="{{errorMessage}}">
+    <text class="state-title">数据加载失败</text>
+    <button class="primary-btn" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="empty-wardrobe" wx:if="{{totalClothes === 0}}">
+      <image src="/images/icons/wardrobe.png" class="empty-icon" mode="aspectFit" />
+      <text class="state-title">闲置衣橱还没有衣物</text>
+    </view>
+
+    <view class="metric-card idle-card" bindtap="goToIdleClothes">
+      <view>
+        <text class="card-title">闲置衣物</text>
+        <text class="card-value">{{idleCount}}件</text>
+      </view>
+      <view class="detail-link">查看详情 <text class="arrow">›</text></view>
+    </view>
+
+    <view class="metric-card">
+      <view class="card-row">
+        <text class="card-title">衣物活跃率</text>
+        <text class="rate-value">{{activityRate}}%</text>
+      </view>
+      <view class="progress-track">
+        <view class="progress-value" style="{{activityRateStyle}}"></view>
+      </view>
+      <text class="card-desc">最近30天使用过{{activeClothes}}件衣物</text>
+    </view>
+
+    <view class="metric-card">
+      <text class="card-title">低碳穿搭建议</text>
+      <view class="suggestion-list">
+        <view class="suggestion-item" wx:for="{{suggestions}}" wx:key="*this">
+          <view class="suggestion-dot"></view>
+          <text>{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="metric-card switch-card">
+      <view class="switch-copy">
+        <text class="card-title">低碳优先推荐</text>
+        <text class="card-desc">优先推荐较少使用的合适衣物</text>
+      </view>
+      <switch
+        checked="{{lowCarbonPriority}}"
+        disabled="{{updatingPriority}}"
+        color="#C65E82"
+        bindchange="onPriorityChange"
+      />
+    </view>
+  </block>
+</view>
